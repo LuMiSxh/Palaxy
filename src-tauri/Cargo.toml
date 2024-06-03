@@ -1,11 +1,11 @@
 [package]
-name = "app"
+name = "KanaDock"
 version = "0.1.0"
 description = "A Tauri App"
-authors = ["you"]
+authors = ["LuMiSxh"]
 license = ""
 repository = ""
-default-run = "app"
+default-run = "KanaDock"
 edition = "2021"
 rust-version = "1.60"
 
@@ -27,6 +27,7 @@ epub-builder = "0.7.4"
 zip = "0.6.6"
 rayon = "1.9.0"
 eyre = "0.6.12"
+reqwest = "0.12.3"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.

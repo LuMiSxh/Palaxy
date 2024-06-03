@@ -11,7 +11,7 @@ export enum Direction {
 }
 
 export interface BaseResult {
-	message: string
+	message: string | null
 }
 
 export interface AnalyzeResult extends BaseResult {

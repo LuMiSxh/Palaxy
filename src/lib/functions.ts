@@ -75,6 +75,8 @@ export async function bridge<R extends BaseResult>(func: string, args: { [key: s
 			args
 		);
 
+		if (!result.message) return result;
+
 		toast.set({
 			type: InfoType.SUCCESS,
 			message: result.message,

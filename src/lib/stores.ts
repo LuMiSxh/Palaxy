@@ -21,3 +21,5 @@ appData.subscribe(a => {
 		return c;
 	})
 })
+
+export const converterTab = writable<number>(0);

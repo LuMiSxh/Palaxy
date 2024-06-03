@@ -7,8 +7,13 @@ mod collector;
 mod generator;
 
 fn main() {
-  tauri::Builder::default()
-    .invoke_handler(tauri::generate_handler![commands::convert, commands::analyze])
-    .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![
+        commands::convert, 
+        commands::analyze,
+        commands::pipe_analyze,
+        commands::pipe_volume,
+    ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }

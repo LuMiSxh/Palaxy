@@ -49,7 +49,7 @@
 				</h6>
 			</header>
 		{/if}
-		<section class="px-4 py-2 text-sm max-w-md font-normal">
+		<section class="px-4 py-2 text-sm max-w-md font-normal animate-none">
 			<slot />
 		</section>
 	</div>

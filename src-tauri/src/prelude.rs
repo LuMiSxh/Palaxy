@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
 // Error types
@@ -49,13 +50,38 @@ pub enum Direction {
 
 #[derive(Serialize, Deserialize)]
 pub struct AnalyzeResult {
-    pub message: String,
+    pub message: Option<String>,
     pub chapter_per_volume: Vec<usize>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct ConvertResult {
-    pub message: String
+    pub message: Option<String>,
+}
+
+// Pipeline types
+#[derive(Serialize, Deserialize, PartialEq)]
+pub enum BundlerFlag {
+    NAME,
+    IMAGE,
+    MANUAL,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct PipeAnalyze {
+    pub message: Option<String>,
+    pub negative: Vec<String>,
+    pub positive: Vec<String>,
+    pub suggest: Vec<String>,
+    pub bundler: BundlerFlag,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct PipeVolume {
+    pub message: Option<String>,
+    pub total_chapters: usize,
+    pub total_volumes: Option<usize>,
+    pub chapters_per_volume: Option<Vec<usize>>,
 }
 
 // Utils

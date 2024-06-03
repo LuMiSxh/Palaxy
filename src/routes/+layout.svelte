@@ -7,7 +7,9 @@
 		initializeStores,
 		setInitialClassState,
 		setModeCurrent,
-		storePopup, TabAnchor, TabGroup,
+		storePopup,
+		TabAnchor,
+		TabGroup,
 		Toast
 	} from '@skeletonlabs/skeleton';
 	import { page } from '$app/stores';
@@ -22,6 +24,7 @@
 	import Transform from '@tabler/icons-svelte/IconTransform.svelte';
 	import Settings from '@tabler/icons-svelte/IconSettings.svelte';
 	import CodeDots from '@tabler/icons-svelte/IconCodeDots.svelte';
+	import RegexOff from '@tabler/icons-svelte/IconRegexOff.svelte';
 
 	// Popup
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
@@ -65,6 +68,29 @@
 			}
 		});
 	}
+
+	const paths = [
+		{
+			path: '/',
+			icon: Home
+		},
+		{
+			path: '/convert',
+			icon: Transform
+		},
+		{
+			path: '/beta_converter',
+			icon: RegexOff
+		},
+		{
+			path: '/scripting',
+			icon: CodeDots
+		},
+		{
+			path: '/settings',
+			icon: Settings
+		}
+	];
 </script>
 
 <svelte:head>
@@ -82,37 +108,24 @@
 				class="bg-gradient-to-tr from-primary-500 to-fuchsia-400 bg-clip-text text-transparent box-decoration-clone">Kana</span>
 			<span class="bg-gradient-to-br from-fuchsia-400 to-indigo-500 bg-clip-text text-transparent box-decoration-clone">Dock</span>
 		</h1>
-			<TabGroup
-				slot="trail"
-				justify="justify-center"
-				active="variant-ghost-primary"
-				hover="hover:variant-soft-primary"
-				flex="flex-1 lg:flex-none"
-				rounded="rounded-md"
-				border=""
-				class="bg-surface-100-800-token w-full"
-			>
-				<TabAnchor class="mx-0.5" href="/" selected={$page.url.pathname === '/'}>
+		<TabGroup
+			slot="trail"
+			justify="justify-center"
+			active="variant-ghost-primary"
+			hover="hover:variant-soft-primary"
+			flex="flex-1 lg:flex-none"
+			rounded="rounded-md"
+			border=""
+			class="bg-surface-100-800-token w-full"
+		>
+			{#each paths as path}
+				<TabAnchor class="mx-0.5" href={path.path} selected={$page.url.pathname === path.path}>
 					<div class="flex items-center justify-center text-center mt-0.5" slot="lead">
-						<Home size="28"/>
+						<svelte:component this={path.icon} size="28" />
 					</div>
 				</TabAnchor>
-				<TabAnchor class="mx-0.5" href="/convert" selected={$page.url.pathname === '/convert'}>
-					<div class="flex items-center justify-center text-center mt-0.5" slot="lead">
-						<Transform size="28"/>
-					</div>
-				</TabAnchor>
-				<TabAnchor class="mx-0.5" href="/scripting" selected={$page.url.pathname === '/scripting'}>
-					<div class="flex items-center justify-center text-center mt-0.5" slot="lead">
-						<CodeDots size="28"/>
-					</div>
-				</TabAnchor>
-				<TabAnchor class="mx-0.5" href="/settings" selected={$page.url.pathname === '/settings'}>
-					<div class="flex items-center justify-center text-center mt-0.5" slot="lead">
-						<Settings size="28"/>
-					</div>
-				</TabAnchor>
-			</TabGroup>
+			{/each}
+		</TabGroup>
 	</AppBar>
 	<slot />
 </AppShell>

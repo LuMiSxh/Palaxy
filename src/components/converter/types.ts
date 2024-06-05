@@ -14,9 +14,9 @@ interface TabAnalyzeResult extends BaseResult {
 }
 
 interface TabVolumeResult extends BaseResult {
-	totalChapters: number;
-	totalVolumes: number | null;
-	chaptersPerVolume: Array<number> | null;
+	total_chapters: number;
+	total_volumes: number | null;
+	chapters_per_volume: Array<number> | null;
 }
 
 export type { TabAnalyzeResult, TabVolumeResult };

@@ -59,7 +59,7 @@ pub struct ConvertResult {
     pub message: Option<String>,
 }
 
-// Pipeline types
+// Workflow types
 #[derive(Serialize, Deserialize, PartialEq)]
 pub enum BundlerFlag {
     NAME,
@@ -68,7 +68,7 @@ pub enum BundlerFlag {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct PipeAnalyze {
+pub struct FlowAnalyze {
     pub message: Option<String>,
     pub negative: Vec<String>,
     pub positive: Vec<String>,
@@ -77,7 +77,7 @@ pub struct PipeAnalyze {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct PipeVolume {
+pub struct FlowVolume {
     pub message: Option<String>,
     pub total_chapters: usize,
     pub total_volumes: Option<usize>,

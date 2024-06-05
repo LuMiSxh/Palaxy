@@ -4,6 +4,7 @@ use std::sync::Arc;
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use regex::Regex;
+// TODO: Use spawn_blocking for threads that dont utilize await
 use tauri::async_runtime::{JoinHandle, spawn};
 use tokio::fs::create_dir;
 
@@ -157,7 +158,7 @@ pub async fn convert(
 // PIPELINE
 
 #[tauri::command(async)]
-pub async fn pipe_analyze(base_path: String) -> Result<PipeAnalyze, Error> {
+pub async fn flow_analyze(base_path: String) -> Result<FlowAnalyze, Error> {
     let now = std::time::Instant::now();
 
     let mut negative: Vec<String> = Vec::new();
@@ -260,7 +261,7 @@ pub async fn pipe_analyze(base_path: String) -> Result<PipeAnalyze, Error> {
 
     let elapsed = now.elapsed();
     Ok(
-        PipeAnalyze {
+        FlowAnalyze {
             message: Some(format!("Finished in: {:.2?}", elapsed)),
             negative,
             positive,
@@ -271,10 +272,11 @@ pub async fn pipe_analyze(base_path: String) -> Result<PipeAnalyze, Error> {
 }
 
 #[tauri::command(async)]
-pub async fn pipe_volume(
+pub async fn flow_volume(
     base_path: String,
     bundler_flag: BundlerFlag,
-) -> Result<PipeVolume, Error> {
+    sensibility: Option<usize>,
+) -> Result<FlowVolume, Error> {
     let now = std::time::Instant::now();
 
     let mut collector = Collector::new(&base_path);
@@ -292,7 +294,7 @@ pub async fn pipe_volume(
     let total_chapters: usize = chapters.len();
     let mut total_volumes: Option<usize> = None;
     let mut chapters_per_volume: Option<Vec<usize>> = None;
-    
+
     match bundler_flag {
         // For manual bundling, the user will have to manually input the remaining information.
         // This will be done in the frontend.
@@ -369,9 +371,11 @@ pub async fn pipe_volume(
         }
         BundlerFlag::IMAGE => {
             // TODO: Is there a way to make the sensibility changeable like in the old version?
+            // Maybe by rerunning the function in the frontend if the result is not satisfactory
             let volume_start_chapters: Vec<usize> = collector.determine_volume_start_chapters(
                 pages,
-                0.75f64,
+                if let Some(sensibility) = sensibility
+                { sensibility as f64 / 100.0 } else { 0.75f64 },
             ).await?;
 
             total_volumes = Some(volume_start_chapters.len());
@@ -388,7 +392,7 @@ pub async fn pipe_volume(
     let elapsed = now.elapsed();
 
     Ok(
-        PipeVolume {
+        FlowVolume {
             message: Some(format!("Finished in: {:.2?}", elapsed)),
             total_chapters,
             total_volumes,

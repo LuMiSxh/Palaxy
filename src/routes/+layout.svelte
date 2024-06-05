@@ -24,7 +24,6 @@
 	import Transform from '@tabler/icons-svelte/IconTransform.svelte';
 	import Settings from '@tabler/icons-svelte/IconSettings.svelte';
 	import CodeDots from '@tabler/icons-svelte/IconCodeDots.svelte';
-	import RegexOff from '@tabler/icons-svelte/IconRegexOff.svelte';
 
 	// Popup
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
@@ -75,12 +74,8 @@
 			icon: Home
 		},
 		{
-			path: '/convert',
+			path: '/converter',
 			icon: Transform
-		},
-		{
-			path: '/beta_converter',
-			icon: RegexOff
 		},
 		{
 			path: '/scripting',

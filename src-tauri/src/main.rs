@@ -11,8 +11,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
         commands::convert, 
         commands::analyze,
-        commands::pipe_analyze,
-        commands::pipe_volume,
+        commands::flow_analyze,
+        commands::flow_volume,
     ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

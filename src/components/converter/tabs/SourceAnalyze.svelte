@@ -3,14 +3,17 @@
 	import { bridge } from '$lib/functions';
 	import { onMount } from 'svelte';
 	import { ProgressRadial } from '@skeletonlabs/skeleton';
-	import ZoomExclamation from '@tabler/icons-svelte/IconZoomExclamation.svelte';
-	import { converterTab } from '$lib/stores';
-	import { BundlerFlag, type TabAnalyzeResult } from '$components/beta_converter/types';
+	import { converterTab, tabDisableBack, tabDisableNext } from '$lib/stores';
+	import { BundlerFlag, type TabAnalyzeResult } from '$components/converter/types';
 
 	export let sourceManga: Writable<string | null>;
 	export let bundlerRecommendation: Writable<BundlerFlag>;
 	let loading = true;
 	let results: TabAnalyzeResult | undefined;
+
+	// Initial state
+	$tabDisableBack = false;
+	$tabDisableNext = true;
 
 	onMount(async () => {
 		if ($sourceManga === null) {
@@ -18,12 +21,13 @@
 			return;
 		}
 
-		const result = await bridge<TabAnalyzeResult>('pipe_analyze', { basePath: $sourceManga });
+		const result = await bridge<TabAnalyzeResult>('flow_analyze', { basePath: $sourceManga });
 		loading = false;
 
 		if (result) {
 			results = result;
 			$bundlerRecommendation = results.bundler;
+			$tabDisableNext = results.negative.length > 0;
 		}
 	});
 
@@ -36,10 +40,7 @@
 		</div>
 	{:else}
 		{#if results}
-
-			<!-- Responsive Container (recommended) -->
-			<div class="table-container">
-				<!-- Native Table Element -->
+			<div class="table-container w-3/4">
 				<table class="table table-hover">
 					<thead>
 					<tr>
@@ -66,31 +67,6 @@
 					{/if}
 					</tbody>
 				</table>
-			</div>
-			<div class="w-full flex justify-evenly pt-4">
-				<button
-					on:click={() => converterTab.update(tab => tab-1)}
-					class="btn variant-ghost-secondary btn-lg"
-				>
-					Go Back
-				</button>
-				<button
-					disabled={results.negative.length > 0}
-					on:click={() => converterTab.update(tab => tab+1)}
-					class="btn variant-ghost-primary btn-lg"
-				>
-					Next Step
-				</button>
-			</div>
-		{:else}
-			<div class="h-full w-full flex flex-col items-center justify-center">
-				<ZoomExclamation class="w-1/4 h-full text-error-500 animate-pulse" />
-				<button
-					on:click={() => converterTab.update(tab => tab-1)}
-					class="btn variant-ghost-error btn-lg"
-				>
-					Go Back
-				</button>
 			</div>
 		{/if}
 	{/if}

@@ -17,7 +17,7 @@
 	import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
 	// ---
 	import { appDataDefault, appDataKey } from '$lib/constants';
-	import { appData, converter, toast } from '$lib/stores';
+	import { appData, toast } from '$lib/stores';
 	import { Theme } from '$lib/types';
 	import { generateToast, setTheme } from '$lib/functions';
 	import Home from '@tabler/icons-svelte/IconHome.svelte';
@@ -32,7 +32,7 @@
 	initializeStores();
 	const toastStore = getToastStore();
 
-	toast.subscribe(t => {
+	toast.subscribe((t) => {
 		if (!t) return;
 
 		const toastSettings = generateToast(t);
@@ -48,18 +48,13 @@
 		} else {
 			appData.set(appDataDefault);
 		}
-
-		// Set the converter's default output directory
-		if ($appData.paths.converted) {
-			$converter.targetDirectory = $appData.paths.converted;
-		}
 	}
 
 	// Theme
 	setTheme($appData.theme);
 
 	if (window) {
-		window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+		window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
 			const newColorScheme = event.matches;
 
 			if ($appData.theme === Theme.SYSTEM) {
@@ -100,8 +95,13 @@
 		</a>
 		<h1 class="h1 select-none">
 			<span
-				class="bg-gradient-to-tr from-primary-500 to-fuchsia-400 bg-clip-text text-transparent box-decoration-clone">Kana</span>
-			<span class="bg-gradient-to-br from-fuchsia-400 to-indigo-500 bg-clip-text text-transparent box-decoration-clone">Dock</span>
+				class="bg-gradient-to-tr from-primary-500 to-fuchsia-400 bg-clip-text text-transparent box-decoration-clone"
+				>Kana</span
+			>
+			<span
+				class="bg-gradient-to-br from-fuchsia-400 to-indigo-500 bg-clip-text text-transparent box-decoration-clone"
+				>Dock</span
+			>
 		</h1>
 		<TabGroup
 			slot="trail"

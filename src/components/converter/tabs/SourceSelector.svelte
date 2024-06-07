@@ -15,10 +15,10 @@
 	$tabDisableBack = true;
 
 	async function select() {
-		$sourceManga = await open({
+		$sourceManga = (await open({
 			directory: true,
 			multiple: false
-		}) as string | null;
+		})) as string | null;
 	}
 
 	$: if ($sourceManga !== null) {
@@ -33,10 +33,7 @@
 </script>
 
 <div class="w-full min-h-full flex items-center justify-center flex-col">
-	<button
-		class="btn variant-ghost-secondary mb-4"
-		on:click={select}
-	>
+	<button class="btn variant-ghost-secondary mb-4" on:click={select}>
 		<BookUpload class="w-12 h-12" />
 	</button>
 	<h4 class="h4 text-center">

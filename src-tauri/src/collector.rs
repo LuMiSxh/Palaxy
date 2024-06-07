@@ -6,7 +6,7 @@ use image::{DynamicImage, GenericImageView, Pixel};
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use regex::Regex;
-use tauri::async_runtime::{JoinHandle, spawn};
+use tauri::async_runtime::{spawn, spawn_blocking, JoinHandle};
 use tokio::fs::{read_dir, ReadDir};
 
 use crate::prelude::*;
@@ -19,11 +19,10 @@ lazy_static! {
     static ref RE: Regex = Regex::new(r"\d+\.?\d*").unwrap();
 }
 
-
 impl Collector {
     pub fn new(base_directory: &str) -> Self {
         Self {
-            base_directory: PathBuf::from(base_directory)
+            base_directory: PathBuf::from(base_directory),
         }
     }
 
@@ -54,7 +53,6 @@ impl Collector {
                 spawn(async move {
                     let mut chapter_images = Self::collect(&chapter_dir).await?;
 
-
                     if let Some(comparator) = comparator {
                         chapter_images.par_sort_by(comparator);
                     }
@@ -79,22 +77,23 @@ impl Collector {
     ) -> Result<Vec<usize>, Error> {
         let mut book_start_chapters: Vec<usize> = Vec::new();
 
-        let handles: Vec<JoinHandle<Result<Option<usize>, Error>>> =
-            images_per_chapter
-                .into_par_iter()
-                .enumerate()
-                .map(|(i, images_per_chapter)| {
-                    spawn(async move {
-                        let cover_path = &images_per_chapter[0];
+        let handles: Vec<JoinHandle<Result<Option<usize>, Error>>> = images_per_chapter
+            .into_par_iter()
+            .enumerate()
+            .map(|(i, images_per_chapter)| {
+                spawn_blocking(move || {
+                    let cover_path = &images_per_chapter[0];
 
-                        let cover_image = image::open(cover_path)?;
+                    let cover_image = image::open(cover_path)?;
 
-                        Ok(
-                            if Collector::is_grayscale(&cover_image, sensibility)
-                            { None } else { Some(i) }
-                        )
+                    Ok(if Collector::is_grayscale(&cover_image, sensibility) {
+                        None
+                    } else {
+                        Some(i)
                     })
-                }).collect();
+                })
+            })
+            .collect();
 
         for handle in handles {
             if let Ok(result) = handle.await? {
@@ -160,7 +159,8 @@ impl Collector {
     }
 
     pub fn check_path<F>(paths: &Vec<PathBuf>, test_case: F) -> Result<Vec<PathBuf>, Error>
-        where F: Fn(&PathBuf) -> bool
+    where
+        F: Fn(&PathBuf) -> bool,
     {
         let mut invalid_paths = Vec::new();
 
@@ -189,12 +189,11 @@ impl Collector {
         Ok(entries)
     }
 
-    pub fn sort_stem_by_name(a: &PathBuf, b: &PathBuf) -> Ordering {
+    pub fn sort_by_stem_number(a: &PathBuf, b: &PathBuf) -> Ordering {
         // This is a closure that takes a PathBuf and returns an Option<usize>.
         // Using this closure avoids copying the same code twice.
-        let closure = |path: &PathBuf| -> Option<usize> {
-            path.file_stem()?.to_str()?.parse::<usize>().ok()
-        };
+        let closure =
+            |path: &PathBuf| -> Option<usize> { path.file_stem()?.to_str()?.parse::<usize>().ok() };
 
         closure(a).cmp(&closure(b))
     }
@@ -203,22 +202,14 @@ impl Collector {
         let (capture, []) = RE
             .captures_iter(
                 s.file_name()
-                    .unwrap_or(
-                        OsStr::new("")
-                    )
+                    .unwrap_or(OsStr::new(""))
                     .to_str()
-                    .unwrap_or("")
+                    .unwrap_or(""),
             )
             .last()?
             .extract();
 
-        Some(
-            capture
-                .trim_start_matches("0")
-                .trim()
-                .parse::<f64>()
-                .ok()?
-        )
+        Some(capture.trim_start_matches("0").trim().parse::<f64>().ok()?)
     }
 
     pub fn sort_name_by_number(a: &PathBuf, b: &PathBuf) -> Ordering {
@@ -226,5 +217,36 @@ impl Collector {
         let bn = Self::regex_parser(b);
 
         an.partial_cmp(&bn).unwrap()
+    }
+
+    pub fn sort_by_name_volume_chapter(a: &PathBuf, b: &PathBuf) -> Ordering {
+        // This closure will extract the volume and chapter number from the file name
+        let num = |path: &PathBuf, first: bool| -> Option<f64> {
+            if first {
+                path.file_name()?
+                    .to_str()?
+                    .split("-")
+                    .next()?
+                    .parse::<f64>()
+                    .ok()
+            } else {
+                path.file_name()?
+                    .to_str()?
+                    .split("-")
+                    .last()?
+                    .parse::<f64>()
+                    .ok()
+            }
+        };
+
+        let an = (num(a, true), num(a, false));
+        let bn = (num(b, true), num(b, false));
+
+        // This will compare the volume number first and then the chapter number
+        if an.0 == bn.0 {
+            an.1.partial_cmp(&bn.1).unwrap()
+        } else {
+            an.0.partial_cmp(&bn.0).unwrap()
+        }
     }
 }

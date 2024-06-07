@@ -17,7 +17,8 @@
 	import SettingsAutomation from '@tabler/icons-svelte/IconSettingsAutomation.svelte';
 
 	const classEnabled = 'text-primary-500';
-	const classDisabled = 'text-gray-400 hover:cursor-default hover:!bg-transparent hover:!text-gray-400';
+	const classDisabled =
+		'text-gray-400 hover:cursor-default hover:!bg-transparent hover:!text-gray-400';
 
 	// stores
 	const stores = {
@@ -71,10 +72,10 @@
 		{#if !tab.hide}
 			<Tab
 				bind:group={$converterTab}
-				name={tab.name? tab.name : "Step " + (i+1)}
+				name={tab.name ? tab.name : 'Step ' + (i + 1)}
 				value={i}
 				disabled={$converterTab < i}
-				class={$converterTab < i? classDisabled : $converterTab === i? classEnabled : ""}
+				class={$converterTab < i ? classDisabled : $converterTab === i ? classEnabled : ''}
 			>
 				<div slot="lead" class="flex items-center justify-center">
 					<svelte:component this={tab.icon} />
@@ -88,12 +89,7 @@
 		{#each tabs as tab, i}
 			{#if $converterTab === i}
 				<div class="w-full h-full">
-					<TabWrapper
-						title={tab.name}
-						instruction={tab.instruction}
-						index={i}
-						length={tabs.length}
-					>
+					<TabWrapper title={tab.name} instruction={tab.instruction} index={i} length={tabs.length}>
 						<svelte:component this={tab.component} {...stores} />
 					</TabWrapper>
 				</div>

@@ -1,4 +1,4 @@
-import { type AppData, type Converter, Direction, FileFormat, Theme } from '$lib/types';
+import { type AppData, Theme } from '$lib/types';
 
 export const appDataKey: string = 'db37c8';
 export const appDataDefault: AppData = {
@@ -10,17 +10,4 @@ export const appDataDefault: AppData = {
 		help: true,
 		info: true
 	}
-}
-
-export const converterDefault: Converter = {
-	running: false,
-	sourceDirectory: null,
-	targetDirectory: null,
-	volumes: [],
-	direction: Direction.LTR,
-	format: FileFormat.EPUB,
-	analysis: {
-		running: false,
-		sensibility: 75
-	}
-}
+};

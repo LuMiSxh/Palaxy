@@ -1,16 +1,16 @@
 body {
-    background: white;
+	background: white;
 }
 
 .fullpage {
-    height: 100%;
-    text-align: center;
-    page-break-inside: avoid !important;
-    page-break-after: always !important;
+	height: 100%;
+	text-align: center;
+	page-break-inside: avoid !important;
+	page-break-after: always !important;
 }
 
 .fullpage img {
-    display: inline-block;
-    height: 100%;
-    margin: 0 auto;
+	display: inline-block;
+	height: 100%;
+	margin: 0 auto;
 }

@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use printpdf::image_crate;
 use serde::{Deserialize, Serialize};
 
 // Error types
@@ -17,6 +18,10 @@ pub enum Error {
     Epub(#[from] eyre::Report),
     #[error(transparent)]
     Zip(#[from] zip::result::ZipError),
+    #[error(transparent)]
+    PrintPdf(#[from] printpdf::Error),
+    #[error(transparent)]
+    PrintPdfImage(#[from] image_crate::error::ImageError),
     #[error("Unsupported: {0}")]
     Unsupported(String),
     #[error("Not found: {0}")]
@@ -25,8 +30,8 @@ pub enum Error {
 
 impl serde::Serialize for Error {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: serde::ser::Serializer,
+    where
+        S: serde::ser::Serializer,
     {
         serializer.serialize_str(self.to_string().as_ref())
     }
@@ -82,6 +87,11 @@ pub struct FlowVolume {
     pub total_chapters: usize,
     pub total_volumes: Option<usize>,
     pub chapters_per_volume: Option<Vec<usize>>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct FlowConvert {
+    pub message: Option<String>,
 }
 
 // Utils

@@ -30,7 +30,6 @@
 			$tabDisableNext = results.negative.length > 0;
 		}
 	});
-
 </script>
 
 <div class="w-full min-h-full flex items-center justify-center flex-col">
@@ -38,16 +37,15 @@
 		<div class="h-full w-full flex items-center justify-center animate-pulse">
 			<ProgressRadial value={undefined} strokeLinecap="round" meter="stroke-secondary-500" />
 		</div>
-	{:else}
-		{#if results}
-			<div class="table-container w-3/4">
-				<table class="table table-hover">
-					<thead>
+	{:else if results}
+		<div class="table-container w-3/4">
+			<table class="table table-hover">
+				<thead>
 					<tr>
 						<th class="table-header">Information</th>
 					</tr>
-					</thead>
-					<tbody>
+				</thead>
+				<tbody>
 					{#each results.negative as sentence}
 						<tr class="!variant-glass-error">
 							<td class="!whitespace-pre-wrap">{sentence}</td>
@@ -65,9 +63,8 @@
 							</tr>
 						{/each}
 					{/if}
-					</tbody>
-				</table>
-			</div>
-		{/if}
+				</tbody>
+			</table>
+		</div>
 	{/if}
 </div>

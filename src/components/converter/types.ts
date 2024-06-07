@@ -3,7 +3,7 @@ import type { BaseResult } from '$lib/types';
 export enum BundlerFlag {
 	NAME = 'NAME',
 	IMAGE = 'IMAGE',
-	MANUAL = 'MANUAL',
+	MANUAL = 'MANUAL'
 }
 
 interface TabAnalyzeResult extends BaseResult {

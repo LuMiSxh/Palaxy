@@ -50,26 +50,25 @@ impl EPub {
         Ok(self)
     }
 
-    pub async fn add_chapter(&mut self, chapter_count: usize, image_paths: &Vec<PathBuf>) -> Result<&mut Self, Error> {
+    pub async fn add_chapter(
+        &mut self,
+        chapter_count: usize,
+        image_paths: &Vec<PathBuf>,
+    ) -> Result<&mut Self, Error> {
         for (i, path) in image_paths.iter().enumerate() {
             let image_file = File::open(&path)?;
             let (image_extension, image_mime) = get_file_info(&path)?;
 
-            let image_name = format!("images/{}/Image-{}.{}", chapter_count, i + 1, image_extension);
+            let image_name = format!("images/{}/{}.{}", chapter_count, i + 1, image_extension);
             let image_xhtml = generate_xhtml(&image_name)?;
 
-            self.epub.add_resource(
-                &image_name,
-                image_file,
-                image_mime,
-            )?;
+            self.epub
+                .add_resource(&image_name, image_file, image_mime)?;
 
-            self.epub.add_content(
-                EpubContent::new(
-                    format!("chapter-{}-{}.xhtml", chapter_count, i + 1),
-                    image_xhtml.as_bytes(),
-                )
-            )?;
+            self.epub.add_content(EpubContent::new(
+                format!("{}-{}.xhtml", chapter_count, i + 1),
+                image_xhtml.as_bytes(),
+            ))?;
         }
         Ok(self)
     }

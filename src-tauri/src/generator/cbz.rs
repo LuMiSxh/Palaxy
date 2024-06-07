@@ -1,9 +1,9 @@
-use std::fs::{File, read};
+use std::fs::{read, File};
 use std::io::Write;
 use std::path::PathBuf;
 
 use zip::write::FileOptions;
-use zip::ZipWriter;
+use zip::{CompressionMethod, ZipWriter};
 
 use crate::prelude::*;
 
@@ -16,13 +16,17 @@ pub struct Cbz {
 impl Cbz {
     pub fn new(output_path: &str, filename: &str) -> Result<Self, Error> {
         let options: FileOptions = FileOptions::default()
-            .compression_method(zip::CompressionMethod::Stored)
+            .compression_method(CompressionMethod::Deflated)
             .unix_permissions(0o755);
 
         let file = File::create(format!("{}/{}.cbz", output_path, filename))?;
         let zip = ZipWriter::new(file);
 
-        Ok(Cbz { zip, options, page_index: 0 })
+        Ok(Cbz {
+            zip,
+            options,
+            page_index: 0,
+        })
     }
 
     pub fn add_page(&mut self, image_path: &PathBuf) -> Result<&mut Self, Error> {

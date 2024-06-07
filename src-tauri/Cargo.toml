@@ -27,7 +27,7 @@ epub-builder = "0.7.4"
 zip = "0.6.6"
 rayon = "1.9.0"
 eyre = "0.6.12"
-reqwest = "0.12.3"
+printpdf = { version = "0.7.0", features = ["image", "embedded_images"] }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.

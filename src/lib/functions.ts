@@ -1,8 +1,12 @@
-import { getModeOsPrefers, setModeCurrent, setModeUserPrefers, type ToastSettings } from '@skeletonlabs/skeleton';
+import {
+	getModeOsPrefers,
+	setModeCurrent,
+	setModeUserPrefers,
+	type ToastSettings
+} from '@skeletonlabs/skeleton';
 import { type BaseResult, InfoType, Theme, type Toast } from '$lib/types';
 import { invoke } from '@tauri-apps/api';
 import { toast } from '$lib/stores';
-
 
 // This function is used to generate toastSettings from a toast object
 export function generateToast(toast: Toast): ToastSettings {
@@ -68,12 +72,12 @@ export function generateRandomString() {
 }
 
 // This function is used to bridge the gap between the frontend and tauri. It is used to call functions from the backend and handle errors.
-export async function bridge<R extends BaseResult>(func: string, args: { [key: string]: unknown }): Promise<R | undefined> {
+export async function bridge<R extends BaseResult>(
+	func: string,
+	args: { [key: string]: unknown }
+): Promise<R | undefined> {
 	try {
-		const result: R = await invoke(
-			func,
-			args
-		);
+		const result: R = await invoke(func, args);
 
 		if (!result.message) return result;
 

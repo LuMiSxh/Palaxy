@@ -27,17 +27,19 @@
 		target: uuid,
 		placement: placement
 	};
-
 </script>
 
 {#if appDataMap[variant]}
 	<!-- Anchor for popup -->
-	<div class="w-min h-min cursor-help select-none p-1 {high? 'relative -top-1' : ''}" use:popup={helpPopup}>
-		{#if variant === "info"}
-			<InfoSquareRounded size={size} class={color} />
+	<div
+		class="w-min h-min cursor-help select-none p-1 {high ? 'relative -top-1' : ''}"
+		use:popup={helpPopup}
+	>
+		{#if variant === 'info'}
+			<InfoSquareRounded {size} class={color} />
 		{/if}
-		{#if variant === "help"}
-			<HelpSquareRounded size={size} class={color} />
+		{#if variant === 'help'}
+			<HelpSquareRounded {size} class={color} />
 		{/if}
 	</div>
 	<!-- Popup -->

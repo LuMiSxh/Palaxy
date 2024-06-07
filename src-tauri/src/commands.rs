@@ -1,161 +1,185 @@
+use std::cmp::Ordering;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use regex::Regex;
-// TODO: Use spawn_blocking for threads that dont utilize await
-use tauri::async_runtime::{JoinHandle, spawn};
+use tauri::async_runtime::{spawn, spawn_blocking, JoinHandle};
 use tokio::fs::create_dir;
 
 use crate::collector::Collector;
 use crate::generator::{cbz, epub, pdf};
 use crate::prelude::*;
 
-lazy_static!(
-    static ref CLIENT: reqwest::Client = reqwest::Client::new();
+lazy_static! {
     static ref REGEX_ANALYZE: Regex = Regex::new(r"\d+-\d+(\.\d+)?").unwrap();
-);
-
-#[tauri::command(async)]
-pub async fn analyze(
-    source_directory: String,
-    sensibility: usize,
-) -> Result<AnalyzeResult, Error> {
-    let now = std::time::Instant::now();
-
-    let mut collector = Collector::new(&source_directory);
-    let calculated_sensibility = sensibility as f64 / 100.0;
-
-    let chapters: Vec<PathBuf> = collector.collect_chapters(None).await?;
-    let chapter_total = chapters.len();
-    let pages: Vec<Vec<PathBuf>> = collector.collect_pages(chapters, None).await?;
-    let book_start_chapters: Vec<usize> = collector.determine_volume_start_chapters(
-        pages,
-        calculated_sensibility,
-    ).await?;
-    let volume_sizes = collector.calculate_volume_sizes(
-        book_start_chapters,
-        chapter_total,
-    )?;
-
-    let elapsed = now.elapsed();
-
-    Ok(AnalyzeResult {
-        message: Some(format!("Finished in: {:.2?}", elapsed)),
-        chapter_per_volume: volume_sizes,
-    })
 }
 
+struct SharedData {
+    name: String,
+    target_directory: String,
+    pages: Vec<Vec<PathBuf>>,
+    chapters_per_volume: Vec<usize>,
+}
+
+// NEW METHOD
 #[tauri::command(async)]
-pub async fn convert(
+pub async fn flow_convert(
     source_directory: String,
     target_directory: String,
-    chapter_per_volume: Vec<usize>,
+    chapters_per_volume: Vec<usize>,
+    bundler_flag: BundlerFlag,
+    create_directory: bool,
     file_format: FileFormat,
     direction: Direction,
-) -> Result<ConvertResult, Error> {
+) -> Result<FlowConvert, Error> {
     let now = std::time::Instant::now();
 
-    let mut collector = Collector::new(&source_directory);
-    let page_directories: Vec<PathBuf> = collector.collect_chapters(None).await?;
-    let chapter_pages: Vec<Vec<PathBuf>> = collector.collect_pages(
-        page_directories,
-        Some(&Collector::sort_stem_by_name),
-    ).await?;
+    // Specify the sorting method for the chapters
+    let chapter_sorter: &'static (dyn Fn(&PathBuf, &PathBuf) -> Ordering + Sync) =
+        match bundler_flag {
+            BundlerFlag::NAME => &Collector::sort_by_name_volume_chapter,
+            _ => &Collector::sort_name_by_number,
+        };
 
-    let manga_name: String = Path::new(&source_directory)
+    // Collect all chapters and pages
+    let mut collector = Collector::new(&source_directory);
+    let chapters: Vec<PathBuf> = collector.collect_chapters(Some(chapter_sorter)).await?;
+    let pages: Vec<Vec<PathBuf>> = collector
+        .collect_pages(chapters, Some(&Collector::sort_by_stem_number))
+        .await?;
+
+    // Specify the manga name
+    let name: String = Path::new(&source_directory)
         .file_name()
         .unwrap()
         .to_string_lossy()
         .into_owned();
 
-    // Create target folder if it doesn't exist
-    let target_directory_full_path = Path::new(&target_directory).join(&manga_name);
-    if !target_directory_full_path.exists() {
-        create_dir(&target_directory_full_path).await?;
-    }
+    // Create target folder if it doesn't exist but is requested,
+    // else check if target directory exists
+    let target_directory_path = match create_directory {
+        true => {
+            let path = Path::new(&target_directory).join(&name);
+            if !path.exists() {
+                create_dir(&path).await?;
+            }
+            Ok(path)
+        }
+        false => {
+            let path = Path::new(&target_directory);
+            if !path.exists() {
+                Err(Error::Io(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "Target directory does not exist",
+                )))
+            } else {
+                Ok(path.join(&name))
+            }
+        }
+    }?
+    .to_str()
+    .unwrap()
+    .to_string();
 
-    let bc = chapter_per_volume.clone();
+    let cpv = chapters_per_volume.clone();
 
-    // TODO: Is there a way to make this more efficient / avoid using Arc?
-    let book_chapters = Arc::new(chapter_per_volume);
-    let images_per_chapter = Arc::new(chapter_pages);
-    let manga_name: Arc<String> = Arc::new(manga_name);
-    let manga_save: Arc<String> = Arc::new(
-        target_directory_full_path.to_string_lossy().into_owned()
-    );
+    let data = Arc::new(SharedData {
+        name,
+        target_directory: target_directory_path,
+        pages,
+        chapters_per_volume,
+    });
 
-    let handles: Vec<JoinHandle<Result<(), Error>>> =
-        bc.into_par_iter().enumerate()
-            .map(|(i, book_chapter)| {
-                // TODO: Is there a way to avoid cloning these?  How do make this more readable?
-                let book_chapters = Arc::clone(&book_chapters);
-                let images_per_chapter = Arc::clone(&images_per_chapter);
-                let manga_name = Arc::clone(&manga_name);
-                let manga_save = Arc::clone(&manga_save);
+    let handles: Vec<JoinHandle<Result<(), Error>>> = cpv
+        .into_iter()
+        .enumerate()
+        .map(|(i, chapters)| {
+            let data = Arc::clone(&data);
 
-                spawn(async move {
-                    let j: usize = book_chapters[0..i].par_iter().sum();
+            // Spawn a new thread for each volume but make sure to use the correct spawning method
+            match file_format {
+                FileFormat::CBZ => spawn_blocking(move || {
+                    let j: usize = data.chapters_per_volume[0..i].par_iter().sum();
 
-                    let volume_name = format!("{} | {}", manga_name, i + 1);
+                    let volume_name = format!("{} | {}", data.name, i + 1);
 
-                    match file_format {
-                        FileFormat::CBZ => {
-                            let mut cbz = cbz::Cbz::new(&manga_save, &volume_name)?;
+                    let mut cbz = cbz::Cbz::new(&data.target_directory, &volume_name)?;
 
-                            for k in j..(j + book_chapter) {
-                                for image in &images_per_chapter[k] {
-                                    cbz.add_page(image)?;
-                                }
-                            }
-
-                            cbz.set_comicinfo(&volume_name, i + 1)?.save()?;
-                        }
-                        FileFormat::EPUB => {
-                            let mut epub = epub::EPub::new()?;
-
-                            epub
-                                .set_cover(&images_per_chapter[j][0])?
-                                .set_lang("en")?
-                                .set_metadata("title", &volume_name)?
-                                .set_metadata("author", "Manga Bundler")?
-                                .set_metadata("direction", if direction == Direction::LTR { "ltr" } else { "rtl" })?;
-
-                            for k in j..(j + book_chapter) {
-                                epub.add_chapter(k + 1, &images_per_chapter[k]).await?;
-                            }
-
-                            epub.save(&manga_save, format!("{}", volume_name).as_str()).await?;
-                        }
-                        FileFormat::PDF => {
-                            let mut pdf = pdf::Pdf::new(&volume_name, &images_per_chapter[j][0])?;
-
-                            for k in (j + 1)..(j + book_chapter) {
-                                for image in &images_per_chapter[k] {
-                                    pdf.add_page(image)?;
-                                }
-                            }
-
-                            pdf.save(&manga_save, &volume_name)?;
+                    for k in j..(j + chapters) {
+                        for page in &data.pages[k] {
+                            cbz.add_page(page)?;
                         }
                     }
 
-                    Ok(())
-                })
-            }).collect();
+                    cbz.set_comicinfo(&volume_name, i + 1)?.save()?;
 
+                    Ok(())
+                }),
+                FileFormat::EPUB => spawn(async move {
+                    let j: usize = data.chapters_per_volume[0..i].par_iter().sum();
+
+                    let volume_name = format!("{} | {}", data.name, i + 1);
+
+                    let mut epub = epub::EPub::new()?;
+
+                    epub.set_cover(&data.pages[j][0])?
+                        .set_lang("en")?
+                        .set_metadata("title", &volume_name)?
+                        .set_metadata("author", "Manga Bundler")?
+                        .set_metadata(
+                            "direction",
+                            if direction == Direction::LTR {
+                                "ltr"
+                            } else {
+                                "rtl"
+                            },
+                        )?;
+
+                    for k in j..(j + chapters) {
+                        epub.add_chapter(k + 1, &data.pages[k]).await?;
+                    }
+
+                    epub.save(&data.target_directory, format!("{}", volume_name).as_str())
+                        .await?;
+
+                    Ok(())
+                }),
+                FileFormat::PDF => spawn_blocking(move || {
+                    let j: usize = data.chapters_per_volume[0..i].par_iter().sum();
+
+                    let volume_name = format!("{} | {}", data.name, i + 1);
+
+                    let mut pdf = pdf::Pdf::new(&volume_name, &data.pages[j][0])?;
+
+                    for k in (j + 1)..(j + chapters) {
+                        for page in &data.pages[k] {
+                            pdf.add_page(page)?;
+                        }
+                    }
+
+                    pdf.save(&data.target_directory, &volume_name)?;
+
+                    Ok(())
+                }),
+            }
+        })
+        .collect();
+
+    // Wait for all threads to finish
     for handle in handles {
-        handle.await??;
+        match handle.await {
+            Ok(_) => {}
+            Err(e) => return Err(Error::from(e)),
+        }
     }
 
     let elapsed = now.elapsed();
-    Ok(ConvertResult {
+    Ok(FlowConvert {
         message: Some(format!("Finished in: {:.2?}", elapsed)),
     })
 }
-
-// PIPELINE
 
 #[tauri::command(async)]
 pub async fn flow_analyze(base_path: String) -> Result<FlowAnalyze, Error> {
@@ -171,7 +195,10 @@ pub async fn flow_analyze(base_path: String) -> Result<FlowAnalyze, Error> {
 
     let mut pages = match chapters.is_empty() {
         true => Vec::new(),
-        false => collector.collect_pages(chapters.clone(), None).await?.concat(),
+        false => collector
+            .collect_pages(chapters.clone(), None)
+            .await?
+            .concat(),
     };
     // Filter out all non-file paths
     pages = pages.into_iter().filter(|path| path.is_file()).collect();
@@ -195,11 +222,14 @@ pub async fn flow_analyze(base_path: String) -> Result<FlowAnalyze, Error> {
     }
 
     // Check if the directories contain numbers
-    let inv_dir_num = Collector::check_path(
-        &chapters,
-        |path|
-            path.file_name().unwrap().to_str().unwrap().chars().any(char::is_numeric),
-    )?;
+    let inv_dir_num = Collector::check_path(&chapters, |path| {
+        path.file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .chars()
+            .any(char::is_numeric)
+    })?;
     // If there are directories without numbers,
     // add one to the negative list as an example with an explanation as to why
     if !inv_dir_num.is_empty() {
@@ -211,11 +241,9 @@ pub async fn flow_analyze(base_path: String) -> Result<FlowAnalyze, Error> {
     }
 
     // Check if the directories are using the correct naming convention
-    let inv_dir_naming = Collector::check_path(
-        &chapters,
-        |path|
-            REGEX_ANALYZE.is_match(path.file_name().unwrap().to_str().unwrap()),
-    )?;
+    let inv_dir_naming = Collector::check_path(&chapters, |path| {
+        REGEX_ANALYZE.is_match(path.file_name().unwrap().to_str().unwrap())
+    })?;
     // If there are directories without the correct naming convention,
     // add an example with the naming convention to the suggest list
     if !inv_dir_naming.is_empty() {
@@ -243,11 +271,15 @@ pub async fn flow_analyze(base_path: String) -> Result<FlowAnalyze, Error> {
     }
 
     // Check if the files are only using numbers as their name
-    let inv_file_num = Collector::check_path(
-        &pages,
-        |path|
-            path.file_stem().unwrap().to_str().unwrap().replace(".", "").chars().all(char::is_numeric),
-    )?;
+    let inv_file_num = Collector::check_path(&pages, |path| {
+        path.file_stem()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .replace(".", "")
+            .chars()
+            .all(char::is_numeric)
+    })?;
     // If there are files without numbers,
     // add one to the negative list as an example with an explanation as to why
     if !inv_file_num.is_empty() {
@@ -260,15 +292,13 @@ pub async fn flow_analyze(base_path: String) -> Result<FlowAnalyze, Error> {
     }
 
     let elapsed = now.elapsed();
-    Ok(
-        FlowAnalyze {
-            message: Some(format!("Finished in: {:.2?}", elapsed)),
-            negative,
-            positive,
-            suggest,
-            bundler,
-        }
-    )
+    Ok(FlowAnalyze {
+        message: Some(format!("Finished in: {:.2?}", elapsed)),
+        negative,
+        positive,
+        suggest,
+        bundler,
+    })
 }
 
 #[tauri::command(async)]
@@ -281,15 +311,17 @@ pub async fn flow_volume(
 
     let mut collector = Collector::new(&base_path);
 
-    let mut chapters: Vec<PathBuf> = collector.collect_chapters(
-        if bundler_flag == BundlerFlag::IMAGE
-        { Some(&Collector::sort_name_by_number) } else { None }
-    ).await?;
+    let mut chapters: Vec<PathBuf> = collector
+        .collect_chapters(if bundler_flag == BundlerFlag::IMAGE {
+            Some(&Collector::sort_name_by_number)
+        } else {
+            None
+        })
+        .await?;
 
-    let pages: Vec<Vec<PathBuf>> = collector.collect_pages(
-        chapters.clone(),
-        Some(&Collector::sort_stem_by_name),
-    ).await?;
+    let pages: Vec<Vec<PathBuf>> = collector
+        .collect_pages(chapters.clone(), Some(&Collector::sort_by_stem_number))
+        .await?;
 
     let total_chapters: usize = chapters.len();
     let mut total_volumes: Option<usize> = None;
@@ -307,33 +339,17 @@ pub async fn flow_volume(
             let mut extra: bool = false;
 
             // Step 1: Sort the chapters by their chapter number
-            chapters.par_sort_by(|a, b| {
-                // The naming convention is "VOLUME-CHAPTER"
-                // This closure will split the name at the "-"
-                // and parse the numbers
-                let num = |path: &PathBuf, first: bool| -> Option<f64> {
-                    if first {
-                        path.file_name()?.to_str()?.split("-").next()?.parse::<f64>().ok()
-                    } else {
-                        path.file_name()?.to_str()?.split("-").last()?.parse::<f64>().ok()
-                    }
-                };
-
-                let an = (num(a, true), num(a, false));
-                let bn = (num(b, true), num(b, false));
-
-                // This will compare the volume number first and then the chapter number
-                if an.0 == bn.0 {
-                    an.1.partial_cmp(&bn.1).unwrap()
-                } else {
-                    an.0.partial_cmp(&bn.0).unwrap()
-                }
-            });
+            chapters.par_sort_by(Collector::sort_by_name_volume_chapter);
 
             // Step 2: Determine the start of each volume
             for (i, chapter) in chapters.iter().enumerate() {
                 let closure = |path: &PathBuf| -> Option<usize> {
-                    path.file_name()?.to_str()?.split("-").next()?.parse::<usize>().ok()
+                    path.file_name()?
+                        .to_str()?
+                        .split("-")
+                        .next()?
+                        .parse::<usize>()
+                        .ok()
                 };
 
                 let volume_number = closure(chapter).unwrap();
@@ -370,20 +386,21 @@ pub async fn flow_volume(
             total_volumes = Some(tmp.len());
         }
         BundlerFlag::IMAGE => {
-            // TODO: Is there a way to make the sensibility changeable like in the old version?
-            // Maybe by rerunning the function in the frontend if the result is not satisfactory
-            let volume_start_chapters: Vec<usize> = collector.determine_volume_start_chapters(
-                pages,
-                if let Some(sensibility) = sensibility
-                { sensibility as f64 / 100.0 } else { 0.75f64 },
-            ).await?;
+            let volume_start_chapters: Vec<usize> = collector
+                .determine_volume_start_chapters(
+                    pages,
+                    if let Some(sensibility) = sensibility {
+                        sensibility as f64 / 100.0
+                    } else {
+                        0.75f64
+                    },
+                )
+                .await?;
 
             total_volumes = Some(volume_start_chapters.len());
 
-            let volume_sizes = collector.calculate_volume_sizes(
-                volume_start_chapters,
-                total_chapters,
-            )?;
+            let volume_sizes =
+                collector.calculate_volume_sizes(volume_start_chapters, total_chapters)?;
 
             chapters_per_volume = Some(volume_sizes);
         }
@@ -391,12 +408,10 @@ pub async fn flow_volume(
 
     let elapsed = now.elapsed();
 
-    Ok(
-        FlowVolume {
-            message: Some(format!("Finished in: {:.2?}", elapsed)),
-            total_chapters,
-            total_volumes,
-            chapters_per_volume,
-        }
-    )
+    Ok(FlowVolume {
+        message: Some(format!("Finished in: {:.2?}", elapsed)),
+        total_chapters,
+        total_volumes,
+        chapters_per_volume,
+    })
 }

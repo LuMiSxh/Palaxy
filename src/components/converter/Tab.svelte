@@ -32,27 +32,25 @@
 	<div class="card-footer pb-0 w-full flex justify-between">
 		{#if index > 0}
 			<button
-				on:click={() => converterTab.update(tab => tab-1)}
+				on:click={() => converterTab.update((tab) => tab - 1)}
 				disabled={$tabDisableBack}
 				class="btn variant-ghost-secondary btn-lg"
 			>
 				Go Back
 			</button>
 		{:else}
-			<div class="w-0.5">
-			</div>
+			<div class="w-0.5"></div>
 		{/if}
 		{#if index < length - 1}
 			<button
 				disabled={$tabDisableNext}
-				on:click={() => converterTab.update(tab => tab+1)}
+				on:click={() => converterTab.update((tab) => tab + 1)}
 				class="btn variant-ghost-primary btn-lg"
 			>
 				Next Step
 			</button>
 		{:else}
-			<div class="w-0.5">
-			</div>
+			<div class="w-0.5"></div>
 		{/if}
 	</div>
 </div>

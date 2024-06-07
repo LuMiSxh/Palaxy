@@ -7,8 +7,8 @@
 	import { BundlerFlag } from '$components/converter/types';
 	import Scan from '@tabler/icons-svelte/IconScan.svelte';
 	import {
-		TabConfigureBundler,
-		TabSelectBundler,
+		TabConfigureConverter,
+		TabVolumeSorter,
 		TabSourceAnalyze,
 		TabSourceSelector,
 		TabVolumeSelector,
@@ -45,7 +45,7 @@
 		{
 			name: 'Bundling Method',
 			instruction: 'Please select the desired volume bundling method',
-			component: TabSelectBundler,
+			component: TabVolumeSorter,
 			hide: true
 		},
 		{
@@ -58,7 +58,7 @@
 			name: 'Configure Converter',
 			instruction: 'Configure the converter with your preferred settings',
 			icon: SettingsAutomation,
-			component: TabConfigureBundler,
+			component: TabConfigureConverter,
 			hide: false
 		}
 	];

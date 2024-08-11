@@ -3,16 +3,18 @@
 	import { BundlerFlag } from '$components/converter/types';
 	import { appData, converterTab, tabDisableBack, tabDisableNext } from '$lib/stores';
 	import { Direction, FileFormat } from '$lib/types';
-	import { open } from '@tauri-apps/api/dialog';
+	import { open } from '@tauri-apps/plugin-dialog';
 	import { ProgressRadial, SlideToggle } from '@skeletonlabs/skeleton';
-	import DatabaseImport from '@tabler/icons-svelte/IconDatabaseImport.svelte';
-	import Folder from '@tabler/icons-svelte/IconFolder.svelte';
-	import FileInfo from '@tabler/icons-svelte/IconFileInfo.svelte';
-	import LetterSpacing from '@tabler/icons-svelte/IconLetterSpacing.svelte';
-	import Rotate_2 from '@tabler/icons-svelte/IconRotate2.svelte';
 	import { bridge } from '$lib/functions';
-	import SquareX from '@tabler/icons-svelte/IconSquareX.svelte';
-	import SquareCheck from '@tabler/icons-svelte/IconSquareCheck.svelte';
+	import {
+		IconDatabaseImport,
+		IconFileInfo,
+		IconFolder,
+		IconLetterSpacing,
+		IconRotate2,
+		IconSquareCheck,
+		IconSquareX
+	} from '@tabler/icons-svelte';
 
 	export let bundler: Writable<BundlerFlag | null>;
 	export let sourceManga: Writable<string | null>;
@@ -92,12 +94,12 @@
 		</div>
 	{:else if error}
 		<div class="h-full w-full flex flex-col items-center justify-center">
-			<SquareX size="128" class="text-error-600 dark:text-error-600" />
+			<IconSquareX size="128" class="text-error-600 dark:text-error-600" />
 			<h3 class="h3 text-error-600 dark:text-error-600">Oops! Something went wrong!</h3>
 		</div>
 	{:else if success}
 		<div class="h-full w-full flex flex-col items-center justify-center">
-			<SquareCheck size="128" class="text-success-500" />
+			<IconSquareCheck size="128" class="text-success-500" />
 			<button
 				class="btn btn-large variant-filled-success dark:variant-soft-success"
 				on:click={() => {
@@ -120,7 +122,7 @@
 					<tbody class="select-none">
 						<tr on:click={select}>
 							<td class="font-bold text-secondary-500 flex items-center">
-								<DatabaseImport class="mr-0.5" />
+								<IconDatabaseImport class="mr-0.5" />
 								Target Directory
 							</td>
 							<td>
@@ -135,7 +137,7 @@
 						</tr>
 						<tr>
 							<td class="font-bold text-secondary-500 flex items-center">
-								<Folder class="mr-0.5" />
+								<IconFolder class="mr-0.5" />
 								Create Folder
 							</td>
 							<td>
@@ -161,7 +163,7 @@
 					<tbody class="select-none">
 						<tr on:click={changeFileFormat} class="select-none">
 							<td class="font-bold text-secondary-500 flex items-center">
-								<FileInfo class="mr-0.5" />
+								<IconFileInfo class="mr-0.5" />
 								File Format
 							</td>
 							<td>
@@ -177,7 +179,7 @@
 								: 'opacity-50 !cursor-not-allowed'}"
 						>
 							<td class="font-bold text-secondary-500 flex items-center">
-								<LetterSpacing class="mr-0.5" />
+								<IconLetterSpacing class="mr-0.5" />
 								Reading Direction
 							</td>
 							<td>
@@ -196,7 +198,7 @@
 					on:click={convert}
 				>
 					<span class="flex items-center">
-						<Rotate_2 class="mr-0.5" />
+						<IconRotate2 class="mr-0.5" />
 						Start Conversion
 					</span>
 				</button>

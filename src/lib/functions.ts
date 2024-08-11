@@ -5,8 +5,8 @@ import {
 	type ToastSettings
 } from '@skeletonlabs/skeleton';
 import { type BaseResult, InfoType, Theme, type Toast } from '$lib/types';
-import { invoke } from '@tauri-apps/api';
 import { toast } from '$lib/stores';
+import { invoke } from '@tauri-apps/api/core';
 
 // This function is used to generate toastSettings from a toast object
 export function generateToast(toast: Toast): ToastSettings {

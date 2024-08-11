@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { Writable } from 'svelte/store';
-	import BookUpload from '@tabler/icons-svelte/IconBookUpload.svelte';
-	import { open } from '@tauri-apps/api/dialog';
+	import { open } from '@tauri-apps/plugin-dialog';
 	import { tabDisableBack, tabDisableNext } from '$lib/stores';
 	import { BundlerFlag } from '$components/converter/types';
+	import { IconBookUpload } from '@tabler/icons-svelte';
 
 	export let sourceManga: Writable<string | null>;
 	export let bundlerRecommendation: Writable<BundlerFlag>;
@@ -34,7 +34,7 @@
 
 <div class="w-full min-h-full flex items-center justify-center flex-col">
 	<button class="btn variant-ghost-secondary mb-4" on:click={select}>
-		<BookUpload class="w-12 h-12" />
+		<IconBookUpload class="w-12 h-12" />
 	</button>
 	<h4 class="h4 text-center">
 		Selected Directory: <br />

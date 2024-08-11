@@ -1,10 +1,9 @@
 <script lang="ts">
 	import type { PopupSettings } from '@skeletonlabs/skeleton';
 	import { popup } from '@skeletonlabs/skeleton';
-	import InfoSquareRounded from '@tabler/icons-svelte/IconInfoSquareRounded.svelte';
 	import { appData } from '$lib/stores';
-	import HelpSquareRounded from '@tabler/icons-svelte/IconHelpSquareRounded.svelte';
 	import { generateRandomString } from '$lib/functions';
+	import { IconHelpSquareRounded, IconInfoSquareRounded } from '@tabler/icons-svelte';
 
 	const uuid = generateRandomString();
 
@@ -36,10 +35,10 @@
 		use:popup={helpPopup}
 	>
 		{#if variant === 'info'}
-			<InfoSquareRounded {size} class={color} />
+			<IconInfoSquareRounded {size} class={color} />
 		{/if}
 		{#if variant === 'help'}
-			<HelpSquareRounded {size} class={color} />
+			<IconHelpSquareRounded {size} class={color} />
 		{/if}
 	</div>
 	<!-- Popup -->

@@ -20,8 +20,7 @@
 	import { appData, toast } from '$lib/stores';
 	import { Theme } from '$lib/types';
 	import { generateToast, setTheme } from '$lib/functions';
-	import Transform from '@tabler/icons-svelte/IconTransform.svelte';
-	import Settings from '@tabler/icons-svelte/IconSettings.svelte';
+	import { IconSettings, IconTransform } from '@tabler/icons-svelte';
 
 	// Popup
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
@@ -64,11 +63,11 @@
 	const paths = [
 		{
 			path: '/',
-			icon: Transform
+			icon: IconTransform
 		},
 		{
 			path: '/settings',
-			icon: Settings
+			icon: IconSettings
 		}
 	];
 </script>

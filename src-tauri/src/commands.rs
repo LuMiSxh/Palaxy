@@ -183,7 +183,22 @@ pub async fn flow_convert(
 
 #[tauri::command(async)]
 pub async fn flow_analyze(base_path: String) -> Result<FlowAnalyze, Error> {
-    let now = std::time::Instant::now();
+    // Closures for use in this function
+    let has_perms = |path: &PathBuf| {
+        path.metadata()
+            .map(|meta| !meta.permissions().readonly())
+            .unwrap_or(false)
+    };
+
+    let is_valid = |path: &PathBuf| {
+        path.extension()
+            .and_then(|ext| ext.to_str())
+            .map(|ext| match ext {
+                "jpg" | "jpeg" | "png" | "gif" | "webp" | "bmp" => true,
+                _ => false,
+            })
+            .unwrap_or(false)
+    };
 
     let mut negative: Vec<String> = Vec::new();
     let mut positive: Vec<String> = Vec::new();
@@ -203,22 +218,18 @@ pub async fn flow_analyze(base_path: String) -> Result<FlowAnalyze, Error> {
     // Filter out all non-file paths
     pages = pages.into_iter().filter(|path| path.is_file()).collect();
 
-    // Check if there are directories
+    // Check if there are no subdirectories present
     if chapters.is_empty() {
-        negative.push(
-            String::from(
-                "There are no subdirectories in the base path. Make sure to have them with the chapter images inside."
-            )
-        );
+        negative.push(String::from(
+            "No subdirectories found in the base path. Ensure they exist with images inside.",
+        ));
     }
 
     // Check if there are files
     if pages.is_empty() && !chapters.is_empty() {
-        negative.push(
-            String::from(
-                "There are no files in the subdirectories. Make sure the the chapter images are inside those"
-            )
-        );
+        negative.push(String::from(
+            "Subdirectories contain no files. Verify that chapter images are placed inside.",
+        ));
     }
 
     // Check if the directories contain numbers
@@ -234,10 +245,35 @@ pub async fn flow_analyze(base_path: String) -> Result<FlowAnalyze, Error> {
     // add one to the negative list as an example with an explanation as to why
     if !inv_dir_num.is_empty() {
         negative.push(
-            format!("The directory: {:?} does not contain numbers. \nMake sure it does or the sorting algorithm won't work.",
+            format!("Directory '{:?}' lacks numerical identifiers. \nRequired for sorting algorithm functionality.",
                     inv_dir_num[0].file_name().unwrap()
             )
         );
+    }
+
+    // Check if the chapters have the required permissions
+    for chapter in &chapters {
+        if !has_perms(chapter) {
+            negative.push(format!(
+                "Directory '{:?}' lacks write permissions. \nRequired for full functionality.",
+                chapter.file_name().unwrap()
+            ));
+            // Break the loop if one directory is invalid. No need to check the rest.
+            break;
+        }
+    }
+
+    // Check if the images have a valid extension
+    for page in &pages {
+        if !is_valid(page) {
+            negative.push(
+                format!("File '{:?}' has an invalid extension. \nSupported formats: jpg, jpeg, png, gif, webp, bmp.",
+                        page.file_name().unwrap()
+                )
+            );
+            // Break the loop if one file is invalid. No need to check the rest.
+            break;
+        }
     }
 
     // Check if the directories are using the correct naming convention
@@ -249,7 +285,7 @@ pub async fn flow_analyze(base_path: String) -> Result<FlowAnalyze, Error> {
     if !inv_dir_naming.is_empty() {
         suggest.push(
             String::from(
-                "You are not using the recommended naming convention for the subdirectories which would speed up the bundling. \nPlease use: \"VOLUME-CHAPTER\". Example: \"002-032\""
+                "Subdirectory naming convention not followed; use 'VOLUME-CHAPTER' (e.g., '002-032') for faster bundling."
             )
         );
     }
@@ -258,14 +294,14 @@ pub async fn flow_analyze(base_path: String) -> Result<FlowAnalyze, Error> {
     if inv_dir_num.is_empty() && inv_dir_naming.is_empty() {
         positive.push(
             String::from(
-                "All directories are correctly named and contain numbers. \nThe automatic bundling will work correctly and does not have to use the fallback mechanism."
+                "Directories correctly named and numbered. Automatic bundling will proceed without fallback mechanisms."
             )
         );
         bundler = BundlerFlag::NAME;
     } else {
         positive.push(
             String::from(
-                "The automatic bundling will work, but it will use the fallback mechanism. \nThis will slow down the bundling process and may result in errors."
+                "Automatic bundling will use fallback mechanisms, potentially slowing the process and increasing error risk."
             )
         );
     }
@@ -283,17 +319,14 @@ pub async fn flow_analyze(base_path: String) -> Result<FlowAnalyze, Error> {
     // If there are files without numbers,
     // add one to the negative list as an example with an explanation as to why
     if !inv_file_num.is_empty() {
-        negative.push(
-            format!(
-                "The file: {:?} doesnt contain numbers. \nMake sure it does or the sorting and bundling won't work.",
-                inv_file_num[0].file_name().unwrap()
-            )
-        );
+        negative.push(format!(
+            "File '{:?}' lacks numerical naming. Required for effective sorting and bundling.",
+            inv_file_num[0].file_name().unwrap()
+        ));
     }
 
-    let elapsed = now.elapsed();
     Ok(FlowAnalyze {
-        message: Some(format!("Finished in: {:.2?}", elapsed)),
+        message: None,
         negative,
         positive,
         suggest,

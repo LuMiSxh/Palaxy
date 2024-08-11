@@ -2,62 +2,118 @@
 	import { Tab, TabGroup } from '@skeletonlabs/skeleton';
 	import { writable } from 'svelte/store';
 	import { converterTab } from '$lib/stores';
-	import BookUpload from '@tabler/icons-svelte/IconBookUpload.svelte';
-	import Books from '@tabler/icons-svelte/IconBooks.svelte';
 	import { BundlerFlag } from '$components/converter/types';
-	import Scan from '@tabler/icons-svelte/IconScan.svelte';
 	import {
 		TabConfigureConverter,
-		TabVolumeSorter,
 		TabSourceAnalyze,
 		TabSourceSelector,
 		TabVolumeSelector,
+		TabVolumeSorter,
 		TabWrapper
 	} from '$components/converter';
-	import SettingsAutomation from '@tabler/icons-svelte/IconSettingsAutomation.svelte';
+	import type { ComponentType } from 'svelte';
+	import { createFSMStore, type Transition, type TransitionValue } from '$lib/fsm';
+	import {
+		IconBooks,
+		IconBookUpload,
+		IconScan,
+		IconSettingsAutomation
+	} from '@tabler/icons-svelte';
 
 	const classEnabled = 'text-primary-500';
 	const classDisabled =
 		'text-gray-400 hover:cursor-default hover:!bg-transparent hover:!text-gray-400';
+
+	// FSM
+	const transitions: Transition<string>[] = [
+		{
+			From: 'Load Source',
+			Via: 'Source Selected',
+			To: 'Analyze Source'
+		},
+		{
+			From: 'Analyze Source',
+			Via: 'Analyzed',
+			To: 'Bundling Method'
+		},
+		{
+			From: 'Bundling Method',
+			Via: 'Method Selected',
+			To: 'Volume Bundling'
+		},
+		{
+			From: 'Volume Bundling',
+			Via: 'Volumes Bundled',
+			To: 'Configure Converter'
+		}
+	];
+
+	const transitionValues: TransitionValue<string, number>[] = [
+		{
+			Transition: 'Load Source',
+			Value: 1
+		},
+		{
+			Transition: 'Analyze Source',
+			Value: 2
+		},
+		{
+			Transition: 'Bundling Method',
+			Value: 3
+		},
+		{
+			Transition: 'Volume Bundling',
+			Value: 4
+		}
+	];
 
 	// stores
 	const stores = {
 		sourceManga: writable<string | null>(null),
 		bundlerRecommendation: writable<BundlerFlag>(BundlerFlag.IMAGE),
 		bundler: writable<BundlerFlag | null>(null),
-		cpv: writable<Array<number>>([])
+		cpv: writable<Array<number>>([]),
+		fsm: createFSMStore(transitions, transitionValues)
 	};
 
-	const tabs = [
+	interface TabInfo {
+		name: string;
+		instruction?: string;
+		icon?: ComponentType;
+		component: ComponentType;
+		hide: boolean;
+	}
+
+	const tabs: TabInfo[] = [
 		{
 			name: 'Load Source',
 			instruction: 'Please select a directory to use as source material',
-			icon: BookUpload,
+			icon: IconBookUpload,
 			component: TabSourceSelector,
 			hide: false
 		},
 		{
 			name: 'Analyze Source',
-			icon: Scan,
+			icon: IconScan,
 			component: TabSourceAnalyze,
 			hide: false
 		},
 		{
 			name: 'Bundling Method',
 			instruction: 'Please select the desired volume bundling method',
-			component: TabVolumeSorter,
+			component: TabVolumeSelector,
 			hide: true
 		},
 		{
 			name: 'Volume Bundling',
-			icon: Books,
-			component: TabVolumeSelector,
+			icon: IconBooks,
+			component: TabVolumeSorter,
 			hide: false
 		},
 		{
 			name: 'Configure Converter',
 			instruction: 'Configure the converter with your preferred settings',
-			icon: SettingsAutomation,
+			icon: IconSettingsAutomation,
 			component: TabConfigureConverter,
 			hide: false
 		}

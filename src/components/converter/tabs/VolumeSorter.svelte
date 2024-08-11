@@ -2,10 +2,8 @@
 	import type { Writable } from 'svelte/store';
 	import { BundlerFlag } from '$components/converter/types';
 	import { ListBox, ListBoxItem } from '@skeletonlabs/skeleton';
-	import Prompt from '@tabler/icons-svelte/IconPrompt.svelte';
-	import PhotoScan from '@tabler/icons-svelte/IconPhotoScan.svelte';
-	import TextScan_2 from '@tabler/icons-svelte/IconTextScan2.svelte';
 	import { tabDisableBack, tabDisableNext } from '$lib/stores';
+	import { IconPhotoScan, IconPrompt, IconTextScan2 } from '@tabler/icons-svelte';
 
 	export let bundler: Writable<BundlerFlag | null>;
 	export let bundlerRecommendation: Writable<BundlerFlag>;
@@ -23,13 +21,13 @@
 	<ListBox class="variant-glass-surface h-full mt-2">
 		<ListBoxItem bind:group={$bundler} name="Manual" value={BundlerFlag.MANUAL} class="px-7 py-3">
 			<svelte:fragment slot="lead">
-				<Prompt class="text-primary-500" />
+				<IconPrompt class="text-primary-500" />
 			</svelte:fragment>
 			Choose volume size manually
 		</ListBoxItem>
 		<ListBoxItem bind:group={$bundler} name="Image" value={BundlerFlag.IMAGE} class="px-7 py-3">
 			<svelte:fragment slot="lead">
-				<PhotoScan class="text-primary-500" />
+				<IconPhotoScan class="text-primary-500" />
 			</svelte:fragment>
 			Calculate volume size based on cover images
 		</ListBoxItem>
@@ -41,7 +39,7 @@
 			class="px-7 py-3"
 		>
 			<svelte:fragment slot="lead">
-				<TextScan_2 class="text-primary-500" />
+				<IconTextScan2 class="text-primary-500" />
 			</svelte:fragment>
 			Calculate volume size based on directory naming convention
 		</ListBoxItem>

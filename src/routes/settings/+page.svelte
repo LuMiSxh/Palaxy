@@ -9,7 +9,7 @@
 		SlideToggle
 	} from '@skeletonlabs/skeleton';
 	import { Theme } from '$lib/types';
-	import { open } from '@tauri-apps/api/dialog';
+	import { open } from '@tauri-apps/plugin-dialog';
 	import { version } from '$app/environment';
 
 	// Popups
@@ -54,7 +54,7 @@
 				<table class="table table-hover">
 					<tbody>
 						<tr>
-							<td class="font-bold text-secondary-500"> Name </td>
+							<td class="font-bold text-secondary-500"> Name</td>
 							<td>
 								<code>
 									{#await getName()}
@@ -68,7 +68,7 @@
 							</td>
 						</tr>
 						<tr>
-							<td class="font-bold text-secondary-500"> App Version </td>
+							<td class="font-bold text-secondary-500"> App Version</td>
 							<td>
 								<code>
 									{#await getVersion()}
@@ -82,7 +82,7 @@
 							</td>
 						</tr>
 						<tr>
-							<td class="font-bold text-secondary-500"> Tauri Version </td>
+							<td class="font-bold text-secondary-500"> Tauri Version</td>
 							<td>
 								<code>
 									{#await getTauriVersion()}
@@ -96,7 +96,7 @@
 							</td>
 						</tr>
 						<tr>
-							<td class="font-bold text-secondary-500"> Svelte Version Hash </td>
+							<td class="font-bold text-secondary-500"> Svelte Version Hash</td>
 							<td>
 								<code>
 									{version}
@@ -118,7 +118,7 @@
 				<table class="table table-interactive">
 					<tbody>
 						<tr use:popup={popupTheme}>
-							<td class="font-bold text-secondary-500"> Theme </td>
+							<td class="font-bold text-secondary-500"> Theme</td>
 							<td>
 								<code>
 									{$appData.theme}
@@ -126,7 +126,7 @@
 							</td>
 						</tr>
 						<tr use:popup={popupDefaultTargetPath}>
-							<td class="font-bold text-secondary-500"> Default Target Path </td>
+							<td class="font-bold text-secondary-500"> Default Target Path</td>
 							<td>
 								<code>
 									{$appData.paths.converted
@@ -138,7 +138,7 @@
 							</td>
 						</tr>
 						<tr use:popup={popupShowHelp}>
-							<td class="font-bold text-secondary-500"> Show help </td>
+							<td class="font-bold text-secondary-500"> Show help</td>
 							<td>
 								<code>
 									{$appData.popups.help ? 'Yes' : 'No'}
@@ -146,7 +146,7 @@
 							</td>
 						</tr>
 						<tr use:popup={popupShowInfo}>
-							<td class="font-bold text-secondary-500"> Show info </td>
+							<td class="font-bold text-secondary-500"> Show info</td>
 							<td>
 								<code>
 									{$appData.popups.info ? 'Yes' : 'No'}
@@ -177,7 +177,7 @@
 
 <div class="card variant-glass-surface p-4 w-36 shadow-xl" data-popup="popupDefaultTargetPath">
 	<div class="grid grid-cols-1 grid-rows-2 gap-2">
-		<button class="btn variant-filled-success" on:click={selectTargetDirectory}> Select </button>
+		<button class="btn variant-filled-success" on:click={selectTargetDirectory}> Select</button>
 		<button class="btn variant-filled-error" on:click={() => ($appData.paths.converted = null)}>
 			Remove
 		</button>

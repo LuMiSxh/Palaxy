@@ -6,8 +6,7 @@
 	import { bridge } from '$lib/functions';
 	import { ProgressRadial, RangeSlider } from '@skeletonlabs/skeleton';
 	import { InfoType, type Toast } from '$lib/types';
-	import Plus from '@tabler/icons-svelte/IconPlus.svelte';
-	import Minus from '@tabler/icons-svelte/IconMinus.svelte';
+	import { IconMinus, IconPlus } from '@tabler/icons-svelte';
 
 	export let bundler: Writable<BundlerFlag | null>;
 	export let sourceManga: Writable<string | null>;
@@ -127,7 +126,7 @@
 										$cpv = $cpv;
 									}}
 								>
-									<Minus size={18} />
+									<IconMinus size={18} />
 								</button>
 							</td>
 						</tr>
@@ -152,7 +151,7 @@
 								class="btn variant-filled-success dark:variant-soft-success h-7"
 								on:click={addVolume}
 							>
-								<Plus size={18} />
+								<IconPlus size={18} />
 							</button>
 						</td>
 					</tr>

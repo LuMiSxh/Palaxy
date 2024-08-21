@@ -12,4 +12,5 @@ vite.config.ts.timestamp-*
 .vscode
 target
 src-tauri/gen
+src-tauri/target
 pnpm-lock.yaml

@@ -1,19 +1,22 @@
 <script lang="ts">
-	import { converterTab, tabDisableBack, tabDisableNext } from '$lib/stores';
+	import { IconCaretLeftFilled, IconCaretRightFilled } from "@tabler/icons-svelte"
+	import { disableBack, disableNext, index } from "$components/converter/stores"
 
-	export let title: string | undefined = undefined;
-	export let instruction: string | undefined = undefined;
+	export let title: string | undefined = undefined
+	export let instruction: string | undefined = undefined
 
-	export let index: number = 0;
-	export let length: number = 0;
+	export let idx: number = 0
+	export let length: number = 0
 </script>
 
-<div class="card min-h-[70vh] flex items-start px-3 mx-4 py-0 justify-center flex-col">
+<div
+	class="flex h-full max-h-screen w-full flex-grow flex-col bg-surface-50 shadow-inner dark:bg-surface-600"
+>
 	<!-- Top -->
-	<div class="card-header pt-0">
+	<div class="card-header h-[3rem] pt-0">
 		{#if title}
 			<h1
-				class="text-3xl font-bold bg-gradient-to-bl from-secondary-500 to-purple-600 bg-clip-text text-transparent box-decoration-clone"
+				class="bg-gradient-to-r from-primary-500 to-tertiary-500 to-30% box-decoration-clone bg-clip-text text-3xl font-bold text-transparent"
 			>
 				{title}
 			</h1>
@@ -25,29 +28,29 @@
 		{/if}
 	</div>
 	<!-- Tab Element -->
-	<div class="w-full px-2 min-h-[45vh] flex items-center justify-center">
+	<div class="flex flex-grow items-center justify-center text-center">
 		<slot />
 	</div>
 	<!-- Bottom -->
-	<div class="card-footer pb-0 w-full flex justify-between">
-		{#if index > 0}
+	<div class="flex h-[3rem] w-full justify-between px-3 pb-3">
+		{#if idx > 0}
 			<button
-				on:click={() => converterTab.update((tab) => tab - 1)}
-				disabled={$tabDisableBack}
-				class="btn variant-ghost-secondary btn-lg"
+				on:click={() => index.update(tab => tab - 1)}
+				disabled={$disableBack}
+				class="variant-ghost-secondary btn btn-lg"
 			>
-				Go Back
+				<IconCaretLeftFilled size="24" />
 			</button>
 		{:else}
 			<div class="w-0.5"></div>
 		{/if}
-		{#if index < length - 1}
+		{#if idx < length - 1}
 			<button
-				disabled={$tabDisableNext}
-				on:click={() => converterTab.update((tab) => tab + 1)}
-				class="btn variant-ghost-primary btn-lg"
+				disabled={$disableNext}
+				on:click={() => index.update(tab => tab + 1)}
+				class="variant-ghost-primary btn btn-lg"
 			>
-				Next Step
+				<IconCaretRightFilled size="24" />
 			</button>
 		{:else}
 			<div class="w-0.5"></div>

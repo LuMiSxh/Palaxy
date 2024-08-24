@@ -2,97 +2,100 @@ import {
 	getModeOsPrefers,
 	setModeCurrent,
 	setModeUserPrefers,
-	type ToastSettings
-} from '@skeletonlabs/skeleton';
-import { type BaseResult, InfoType, Theme, type Toast } from '$lib/types';
-import { toast } from '$lib/stores';
-import { invoke } from '@tauri-apps/api/core';
+	type ToastSettings,
+} from "@skeletonlabs/skeleton"
+import { type BaseResult, InfoType, Theme, type Toast } from "$lib/types"
+import { toast } from "$lib/stores"
+import { invoke } from "@tauri-apps/api/core"
+import { tabIndex } from "$components/converter"
+import { get } from "svelte/store"
 
 // This function is used to generate toastSettings from a toast object
 export function generateToast(toast: Toast): ToastSettings {
-	let classes = 'variant-filled-secondary';
+	let classes = "variant-filled-secondary"
 	switch (toast.type) {
 		case InfoType.ERROR:
-			classes = 'variant-filled-error';
-			break;
+			classes = "variant-filled-error"
+			break
 		case InfoType.SUCCESS:
-			classes = 'variant-filled-success';
-			break;
+			classes = "variant-filled-success"
+			break
 		case InfoType.WARNING:
-			classes = 'variant-filled-warning';
-			break;
+			classes = "variant-filled-warning"
+			break
 		default:
-			break;
+			break
 	}
 
 	return {
 		message: toast.message,
 		timeout: toast.timeout,
 		hideDismiss: true,
-		classes
-	} as ToastSettings;
+		classes,
+	} as ToastSettings
 }
 
 // This function is used to set the theme for the aoo with the help of the skeleton library
 export function setTheme(theme: Theme) {
 	switch (theme) {
 		case Theme.SYSTEM:
-			setModeCurrent(getModeOsPrefers());
-			break;
+			setModeCurrent(getModeOsPrefers())
+			break
 		case Theme.DARK:
-			setModeUserPrefers(false);
-			setModeCurrent(false);
-			break;
+			setModeUserPrefers(false)
+			setModeCurrent(false)
+			break
 		case Theme.LIGHT:
-			setModeUserPrefers(true);
-			setModeCurrent(true);
-			break;
+			setModeUserPrefers(true)
+			setModeCurrent(true)
+			break
 	}
 }
 
 // This function is used to generate a random string. It is used to generate popup ids.
-const randomStringLength: number = 10;
-const generatedRandomStrings: string[] = [];
+const randomStringLength: number = 10
+const generatedRandomStrings: string[] = []
 
 export function generateRandomString() {
-	const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	const charactersLength = characters.length;
-	let result = '';
+	const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+	const charactersLength = characters.length
+	let result = ""
 
 	for (let i = 0; i < randomStringLength; i++) {
-		result += characters.charAt(Math.floor(Math.random() * charactersLength));
+		result += characters.charAt(Math.floor(Math.random() * charactersLength))
 	}
 
 	if (generatedRandomStrings.includes(result)) {
-		return generateRandomString();
+		return generateRandomString()
 	}
-	generatedRandomStrings.push(result);
+	generatedRandomStrings.push(result)
 
-	return result;
+	return result
 }
 
 // This function is used to bridge the gap between the frontend and tauri. It is used to call functions from the backend and handle errors.
 export async function bridge<R extends BaseResult>(
 	func: string,
-	args: { [key: string]: unknown }
+	args: { [key: string]: unknown } | undefined = undefined,
 ): Promise<R | undefined> {
 	try {
-		const result: R = await invoke(func, args);
+		const result: R = await invoke(func, args)
 
-		if (!result.message) return result;
+		if (!result.message) return result
 
 		toast.set({
 			type: InfoType.SUCCESS,
 			message: result.message,
-			timeout: 5000
-		} as Toast);
+			timeout: 5000,
+		} as Toast)
 
-		return result;
+		return result
 	} catch (e) {
+		if (get(tabIndex) > 0) tabIndex.update(n => n - 1)
 		toast.set({
 			type: InfoType.ERROR,
 			message: e as string,
-			timeout: 5000
-		} as Toast);
+			timeout: 5000,
+		} as Toast)
 	}
 }

@@ -1,47 +1,59 @@
 <script lang="ts">
-	import type { Writable } from 'svelte/store';
-	import { open } from '@tauri-apps/plugin-dialog';
-	import { tabDisableBack, tabDisableNext } from '$lib/stores';
-	import { BundlerFlag } from '$components/converter/types';
-	import { IconBookUpload } from '@tabler/icons-svelte';
+	import { open } from "@tauri-apps/plugin-dialog"
+	import { BundleFlag } from "$components/converter/types"
+	import { IconFolderFilled } from "@tabler/icons-svelte"
+	import { bridge } from "$lib/functions"
+	import { onDestroy, onMount } from "svelte"
+	import {
+		bundle,
+		bundleRecommendation,
+		chapterSizes,
+		disableNext,
+		source,
+	} from "$components/converter/stores"
 
-	export let sourceManga: Writable<string | null>;
-	export let bundlerRecommendation: Writable<BundlerFlag>;
-	export let bundler: Writable<BundlerFlag | null>;
-	export let cpv: Writable<Array<number>>;
+	// Reset ALL writable stores and the tauri AppState
+	$source = null
+	$bundleRecommendation = BundleFlag.MANUAL
+	$bundle = null
+	$chapterSizes = []
 
 	// Initial state
-	$tabDisableNext = true;
-	$tabDisableBack = true;
+	$disableNext = true
+
+	onMount(async () => {
+		await bridge("reset")
+	})
+
+	const unsubscribe = source.subscribe(value => {
+		$disableNext = value === null
+	})
+
+	onDestroy(() => {
+		unsubscribe()
+	})
 
 	async function select() {
-		$sourceManga = (await open({
+		$source = (await open({
 			directory: true,
-			multiple: false
-		})) as string | null;
-	}
+			multiple: false,
+		})) as string | null
 
-	$: if ($sourceManga !== null) {
-		$tabDisableNext = false;
+		if ($source !== null) await bridge("set_source", { source: $source })
 	}
-
-	// Reset ALL writable stores
-	$sourceManga = null;
-	$bundlerRecommendation = BundlerFlag.IMAGE;
-	$bundler = null;
-	$cpv = [];
 </script>
 
-<div class="w-full min-h-full flex items-center justify-center flex-col">
-	<button class="btn variant-ghost-secondary mb-4" on:click={select}>
-		<IconBookUpload class="w-12 h-12" />
+<div class="grid w-1/2 grid-cols-1 grid-rows-2 gap-4 p-8">
+	<button class="variant-filled-primary btn dark:variant-ghost-primary" on:click={select}>
+		<IconFolderFilled size="24" class="text-white" />
 	</button>
-	<h4 class="h4 text-center">
-		Selected Directory: <br />
-		{#if $sourceManga === null}
-			<code class="code">No directory selected</code>
+	<code
+		class="code variant-glass-primary flex items-center justify-center rounded-xl p-0.5 text-center text-black dark:variant-glass-primary dark:text-white"
+	>
+		{#if $source === null}
+			No directory selected
 		{:else}
-			<code class="code">{$sourceManga}</code>
+			{$source}
 		{/if}
-	</h4>
+	</code>
 </div>

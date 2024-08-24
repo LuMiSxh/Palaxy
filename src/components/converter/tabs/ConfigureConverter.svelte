@@ -1,134 +1,118 @@
 <script lang="ts">
-	import type { Writable } from 'svelte/store';
-	import { BundlerFlag } from '$components/converter/types';
-	import { appData, converterTab, tabDisableBack, tabDisableNext } from '$lib/stores';
-	import { Direction, FileFormat } from '$lib/types';
-	import { open } from '@tauri-apps/plugin-dialog';
-	import { ProgressRadial, SlideToggle } from '@skeletonlabs/skeleton';
-	import { bridge } from '$lib/functions';
+	import { appData, toast } from "$lib/stores"
+	import { Direction, FileFormat, InfoType, type Toast } from "$lib/types"
+	import { open } from "@tauri-apps/plugin-dialog"
+	import { SlideToggle } from "@skeletonlabs/skeleton"
+	import { bridge } from "$lib/functions"
 	import {
-		IconDatabaseImport,
-		IconFileInfo,
-		IconFolder,
-		IconLetterSpacing,
+		IconAdjustmentsFilled,
+		IconArrowAutofitContentFilled,
+		IconCategoryFilled,
+		IconFolderFilled,
 		IconRotate2,
-		IconSquareCheck,
-		IconSquareX
-	} from '@tabler/icons-svelte';
+	} from "@tabler/icons-svelte"
+	import { disableBack, disableNext, index, loading } from "$components/converter/stores"
 
-	export let bundler: Writable<BundlerFlag | null>;
-	export let sourceManga: Writable<string | null>;
-	export let cpv: Writable<Array<number> | null>;
+	let targetDirectory: string | null = $appData.paths.converted
+	let createDirectory: boolean = true
+	let fileFormat: FileFormat = FileFormat.CBZ
+	let direction: Direction = Direction.LTR
 
-	let targetDirectory: string | null = $appData.paths.converted;
-	let createDirectory: boolean = true;
-	let fileFormat: FileFormat = FileFormat.CBZ;
-	let direction: Direction = Direction.LTR;
-
-	let allFormats = Object.values(FileFormat);
+	let allFormats = Object.values(FileFormat)
 
 	// States
-	let loading = false;
-	let error = false;
-	let success = false;
+	let success = false
 
 	// Initial state
-	$tabDisableBack = false;
-	$tabDisableNext = true;
+	$disableBack = false
+	$disableNext = true
 
 	// Functions
 	async function select() {
 		targetDirectory = (await open({
 			directory: true,
-			multiple: false
-		})) as string | null;
+			multiple: false,
+		})) as string | null
 	}
 
 	function changeFileFormat() {
 		// Cycle through all formats and select the next one
-		fileFormat = allFormats[(allFormats.indexOf(fileFormat) + 1) % allFormats.length];
+		fileFormat = allFormats[(allFormats.indexOf(fileFormat) + 1) % allFormats.length]
 	}
 
 	function changeReadingDirection() {
 		if (fileFormat === FileFormat.EPUB)
-			direction = direction === Direction.LTR ? Direction.RTL : Direction.LTR;
+			direction = direction === Direction.LTR ? Direction.RTL : Direction.LTR
 	}
 
 	async function convert() {
-		$tabDisableBack = true;
-		loading = true;
-		error = false;
-		success = false;
+		$disableBack = true
+		$loading = true
+		success = false
 
-		if (!targetDirectory || !sourceManga) {
-			error = true;
-			loading = false;
-			return;
+		if (!targetDirectory) {
+			toast.set({
+				type: InfoType.ERROR,
+				message: "Please select a target directory",
+				timeout: 5000,
+			} as Toast)
+			$loading = false
+			return
 		}
 
-		const result = await bridge('flow_convert', {
-			sourceDirectory: $sourceManga,
-			targetDirectory,
-			chaptersPerVolume: $cpv,
-			bundlerFlag: $bundler,
+		const result = await bridge("convert", {
 			createDirectory,
+			target: targetDirectory,
 			fileFormat,
-			direction
-		});
+			direction,
+		})
 
-		loading = false;
+		$loading = false
 
 		if (result) {
-			success = true;
-		} else {
-			error = true;
+			success = true
 		}
-		$tabDisableBack = false;
+		$disableBack = false
 	}
 </script>
 
-<div class="w-full min-h-full flex items-center justify-center flex-col">
-	{#if loading}
-		<div class="h-full w-full flex items-center justify-center animate-pulse">
-			<ProgressRadial value={undefined} strokeLinecap="round" meter="stroke-secondary-500" />
-		</div>
-	{:else if error}
-		<div class="h-full w-full flex flex-col items-center justify-center">
-			<IconSquareX size="128" class="text-error-600 dark:text-error-600" />
-			<h3 class="h3 text-error-600 dark:text-error-600">Oops! Something went wrong!</h3>
-		</div>
+<div class="flex h-full w-full flex-col items-center justify-center">
+	{#if $loading}
+		<div></div>
 	{:else if success}
-		<div class="h-full w-full flex flex-col items-center justify-center">
-			<IconSquareCheck size="128" class="text-success-500" />
+		<div class="relative flex flex-col items-center justify-center">
+			<div class="relative m-5 h-[50vh]">
+				<img
+					src="/favicon.png"
+					alt="Palaxy Avatar"
+					class="radial h-[50vh] object-cover backdrop-blur"
+				/>
+			</div>
 			<button
-				class="btn btn-large variant-filled-success dark:variant-soft-success"
+				class="btn-large variant-filled-primary btn dark:variant-ghost-primary"
 				on:click={() => {
-					$converterTab = 0;
+					$index = 0
 				}}
 			>
 				Convert Another
 			</button>
 		</div>
 	{:else}
-		<div class="flex w-full h-full items-start justify-around">
-			<div class="table-container w-1/3">
-				<table class="table table-interactive">
-					<thead>
-						<tr>
-							<th></th>
-							<th></th>
-						</tr>
-					</thead>
+		<div class="grid h-full w-full grid-cols-3 grid-rows-1 gap-2">
+			<div class="table-container flex items-center justify-center px-2">
+				<table class="table table-interactive m-2">
 					<tbody class="select-none">
 						<tr on:click={select}>
-							<td class="font-bold text-secondary-500 flex items-center">
-								<IconDatabaseImport class="mr-0.5" />
+							<td class="flex items-center font-bold">
+								<IconFolderFilled class="mr-0.5 text-secondary-500" />
 								Target Directory
 							</td>
 							<td>
 								<code class="code whitespace-pre-wrap">
 									{#if targetDirectory}
-										{targetDirectory.substring(targetDirectory.lastIndexOf('/') + 1)}
+										{targetDirectory.substring(
+											targetDirectory.lastIndexOf("/") + 1,
+										)}
 									{:else}
 										Select a directory
 									{/if}
@@ -136,8 +120,8 @@
 							</td>
 						</tr>
 						<tr>
-							<td class="font-bold text-secondary-500 flex items-center">
-								<IconFolder class="mr-0.5" />
+							<td class="flex items-center font-bold">
+								<IconCategoryFilled class="mr-0.5 text-secondary-500" />
 								Create Folder
 							</td>
 							<td>
@@ -152,18 +136,12 @@
 					</tbody>
 				</table>
 			</div>
-			<div class="table-container w-1/3">
+			<div class="table-container flex items-center justify-center px-2">
 				<table class="table table-interactive">
-					<thead>
-						<tr>
-							<th></th>
-							<th></th>
-						</tr>
-					</thead>
 					<tbody class="select-none">
 						<tr on:click={changeFileFormat} class="select-none">
-							<td class="font-bold text-secondary-500 flex items-center">
-								<IconFileInfo class="mr-0.5" />
+							<td class="flex items-center font-bold">
+								<IconAdjustmentsFilled class="mr-0.5 text-secondary-500" />
 								File Format
 							</td>
 							<td>
@@ -176,10 +154,10 @@
 							on:click={changeReadingDirection}
 							class="select-none {fileFormat === FileFormat.EPUB
 								? ''
-								: 'opacity-50 !cursor-not-allowed'}"
+								: '!cursor-not-allowed opacity-50'}"
 						>
-							<td class="font-bold text-secondary-500 flex items-center">
-								<IconLetterSpacing class="mr-0.5" />
+							<td class="flex items-center font-bold">
+								<IconArrowAutofitContentFilled class="mr-0.5 text-secondary-500" />
 								Reading Direction
 							</td>
 							<td>
@@ -191,9 +169,9 @@
 					</tbody>
 				</table>
 			</div>
-			<div class="w-1/4 min-h-40 flex items-center justify-around">
+			<div class="flex w-full items-center justify-around p-2">
 				<button
-					class="btn btn-large variant-filled-primary dark:variant-soft-primary"
+					class="btn-large variant-filled-primary btn dark:variant-soft-primary"
 					disabled={!targetDirectory}
 					on:click={convert}
 				>
@@ -206,3 +184,9 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	.radial {
+		background: radial-gradient(circle, #aa0ef5 25%, #ffd6ff 50%, transparent 70%);
+	}
+</style>

@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "build": {
-    "beforeBuildCommand": "npm run build",
-    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "pnpm run build",
+    "beforeDevCommand": "pnpm run dev",
     "frontendDist": "../build",
     "devUrl": "http://localhost:5173"
   },
@@ -39,11 +39,11 @@
         "depends": []
       }
     },
-    "createUpdaterArtifacts": "v1Compatible"
+    "createUpdaterArtifacts": true
   },
-  "productName": "Kana Dock",
+  "productName": "Palaxy",
   "version": "0.2.0",
-  "identifier": "kana.dock",
+  "identifier": "Pala.Xy",
   "plugins": {},
   "app": {
     "windows": [
@@ -59,7 +59,42 @@
     ],
     "macOSPrivateApi": true,
     "security": {
-      "csp": null
+      "csp": null,
+      "capabilities": [
+        {
+          "identifier": "app",
+            "description": "Capability for the core app",
+            "windows": [
+              "*"
+            ],
+            "permissions": [
+              "core:app:allow-tauri-version",
+              "core:app:allow-version",
+              "core:app:allow-name"
+            ]
+        },
+        {
+          "identifier": "dialog",
+          "description": "Capability for the dialog plugin",
+          "windows": [
+            "*"
+          ],
+          "permissions": [
+            "dialog:allow-open",
+            "dialog:deny-ask",
+            "dialog:deny-confirm",
+            "dialog:deny-save"
+          ]
+        }
+      ],
+      "assetProtocol": {
+        "enable": true,
+        "scope": {
+          "allow": [
+            "**"
+          ]
+        }
+      }
     }
   }
 }

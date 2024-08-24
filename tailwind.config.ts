@@ -1,17 +1,18 @@
-import { join } from 'path';
-import type { Config } from 'tailwindcss';
-import forms from '@tailwindcss/forms';
-import typography from '@tailwindcss/typography';
-import { skeleton } from '@skeletonlabs/tw-plugin';
+import { join } from "path"
+import type { Config } from "tailwindcss"
+import forms from "@tailwindcss/forms"
+import typography from "@tailwindcss/typography"
+import { skeleton } from "@skeletonlabs/tw-plugin"
+import { purpleGalaxyTheme } from "./PurpleGalaxy"
 
 export default {
-	darkMode: 'class',
+	darkMode: "class",
 	content: [
-		'./src/**/*.{html,js,svelte,ts}',
-		join(require.resolve('@skeletonlabs/skeleton'), '../**/*.{html,js,svelte,ts}')
+		"./src/**/*.{html,js,svelte,ts}",
+		join(require.resolve("@skeletonlabs/skeleton"), "../**/*.{html,js,svelte,ts}"),
 	],
 	theme: {
-		extend: {}
+		extend: {},
 	},
 	plugins: [
 		forms,
@@ -20,11 +21,12 @@ export default {
 			themes: {
 				preset: [
 					{
-						name: 'crimson',
-						enhancements: true
-					}
-				]
-			}
-		})
-	]
-} satisfies Config;
+						name: "crimson",
+						enhancements: true,
+					},
+				],
+				custom: [purpleGalaxyTheme],
+			},
+		}),
+	],
+} satisfies Config

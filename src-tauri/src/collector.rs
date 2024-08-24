@@ -20,9 +20,9 @@ lazy_static! {
 }
 
 impl Collector {
-    pub fn new(base_directory: &str) -> Self {
+    pub fn new(base_directory: &PathBuf) -> Self {
         Self {
-            base_directory: PathBuf::from(base_directory),
+            base_directory: base_directory.clone(),
         }
     }
 
@@ -30,7 +30,7 @@ impl Collector {
         &mut self,
         comparator: Option<&'static (dyn Fn(&PathBuf, &PathBuf) -> Ordering + Sync)>,
     ) -> Result<Vec<PathBuf>, Error> {
-        let mut chapters = Self::collect(&self.base_directory).await?;
+        let mut chapters = Self::collect(&self.base_directory, true).await?;
 
         if let Some(comparator) = comparator {
             chapters.par_sort_by(comparator);
@@ -51,7 +51,7 @@ impl Collector {
             .enumerate()
             .map(|(index, chapter_dir)| {
                 spawn(async move {
-                    let mut chapter_images = Self::collect(&chapter_dir).await?;
+                    let mut chapter_images = Self::collect(&chapter_dir, false).await?;
 
                     if let Some(comparator) = comparator {
                         chapter_images.par_sort_by(comparator);
@@ -63,8 +63,11 @@ impl Collector {
             .collect();
 
         for handle in handles {
-            let (i, chapter_images) = handle.await??;
-            pages.insert(i, chapter_images);
+            match handle.await {
+                Ok(Ok((i, chapter_images))) => pages.insert(i, chapter_images),
+                Ok(Err(e)) => return Err(e),
+                Err(e) => return Err(Error::AsyncTaskError(e.to_string())),
+            }
         }
 
         Ok(pages)
@@ -173,7 +176,7 @@ impl Collector {
         Ok(invalid_paths)
     }
 
-    pub async fn collect(directory: &PathBuf) -> Result<Vec<PathBuf>, Error> {
+    pub async fn collect(directory: &PathBuf, only_dirs: bool) -> Result<Vec<PathBuf>, Error> {
         let mut entries: Vec<PathBuf> = Vec::new();
         let mut paths: ReadDir = read_dir(directory).await?;
 
@@ -181,6 +184,16 @@ impl Collector {
             // exclude hidden files
             if path.file_name().to_str().unwrap().starts_with(".") {
                 continue;
+            }
+            
+            // If only_dirs is true, we only want to collect directories and raise an error if we find a file.
+            if only_dirs && !path.path().is_dir() {
+                return Err(Error::InvalidPath(path.path(), "Directory expected".to_string()));
+            }
+            
+            // If only_dirs is false, we only want to collect files and raise an error if we find a directory.
+            if !only_dirs && path.path().is_dir() {
+                return Err(Error::InvalidPath(path.path(), "File expected".to_string()));
             }
 
             entries.push(path.path());

@@ -38,8 +38,7 @@
       "deb": {
         "depends": []
       }
-    },
-    "createUpdaterArtifacts": true
+    }
   },
   "productName": "Palaxy",
   "version": "0.2.0",

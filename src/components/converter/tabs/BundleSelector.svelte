@@ -6,7 +6,13 @@
 	import { RangeSlider } from "@skeletonlabs/skeleton"
 	import { InfoType, type Toast } from "$lib/types"
 	import { IconMinus, IconPlus } from "@tabler/icons-svelte"
-	import { bundle, chapterSizes, disableBack, disableNext, loading } from "$components/converter/stores"
+	import {
+		bundle,
+		chapterSizes,
+		disableBack,
+		disableNext,
+		loading,
+	} from "$components/converter/stores"
 
 	let results: CommandBundle | undefined
 	let sensibility: number = 75
@@ -103,20 +109,44 @@
 	{#if $loading}
 		<div class="w-0.5"></div>
 	{:else if $bundle === BundleFlag.MANUAL}
-		<div class="table-container relative w-full h-full p-2 overflow-y-auto">
+		<div class="table-container relative h-full w-full overflow-y-auto p-2">
 			<table class="table table-interactive">
 				<thead>
-				<tr class="select-none">
-					<th class="text-center">Volume</th>
-					<th class="text-center">Chapters</th>
-				</tr>
+					<tr class="select-none">
+						<th class="text-center">Volume</th>
+						<th class="text-center">Chapters</th>
+					</tr>
 				</thead>
 				<tbody>
-				<!-- eslint-disable-next-line -->
-				{#each $chapterSizes as _, i}
-					<tr class="select-none">
-						<td class="font-bold text-center">
-							{i + 1}
+					<!-- eslint-disable-next-line -->
+					{#each $chapterSizes as _, i}
+						<tr class="select-none">
+							<td class="text-center font-bold">
+								{i + 1}
+							</td>
+							<td class="flex items-center justify-evenly">
+								<input
+									class="input h-7 w-1/2"
+									type="number"
+									min="1"
+									max="999"
+									bind:value={$chapterSizes[i]}
+								/>
+								<button
+									class="variant-filled-secondary btn h-7"
+									on:click={() => {
+										$chapterSizes.splice(i, 1)
+										$chapterSizes = $chapterSizes
+									}}
+								>
+									<IconMinus size={18} />
+								</button>
+							</td>
+						</tr>
+					{/each}
+					<tr class="select-non">
+						<td class="text-center font-bold text-secondary-500">
+							{$chapterSizes.length + 1}
 						</td>
 						<td class="flex items-center justify-evenly">
 							<input
@@ -124,143 +154,118 @@
 								type="number"
 								min="1"
 								max="999"
-								bind:value={$chapterSizes[i]}
+								bind:value={tempChapters}
+								bind:this={input}
+								on:keydown={handleKeyDown}
 							/>
-							<button
-								class="variant-filled-secondary btn h-7"
-								on:click={() => {
-										$chapterSizes.splice(i, 1)
-										$chapterSizes = $chapterSizes
-									}}
-							>
-								<IconMinus size={18} />
+							<button class="variant-filled-primary btn h-7" on:click={addVolume}>
+								<IconPlus size={18} />
 							</button>
 						</td>
 					</tr>
-				{/each}
-				<tr class="select-non">
-					<td class="font-bold text-secondary-500 text-center">
-						{$chapterSizes.length + 1}
-					</td>
-					<td class="flex items-center justify-evenly">
-						<input
-							class="input h-7 w-1/2"
-							type="number"
-							min="1"
-							max="999"
-							bind:value={tempChapters}
-							bind:this={input}
-							on:keydown={handleKeyDown}
-						/>
-						<button
-							class="variant-filled-primary btn h-7"
-							on:click={addVolume}
-						>
-							<IconPlus size={18} />
-						</button>
-					</td>
-				</tr>
 				</tbody>
 			</table>
 		</div>
 	{:else}
 		<div
-			class={"grid h-full w-full gap-2 grid-rows-1 " + ($bundle === BundleFlag.IMAGE? "grid-cols-3" : "grid-cols-2")}
+			class={"grid h-full w-full grid-rows-1 gap-2 " +
+				($bundle === BundleFlag.IMAGE ? "grid-cols-3" : "grid-cols-2")}
 		>
-			<div class="table-container w-full h-full p-2">
+			<div class="table-container h-full w-full p-2">
 				<table class="table table-hover">
 					<thead>
-					<tr>
-						<th></th>
-						<th class="text-center">Results</th>
-					</tr>
-					</thead>
-					<tbody>
-					<tr>
-						<td>Detected Chapters</td>
-						<td>
-							<code class="">
-								{results?.total_chapters}
-							</code>
-						</td>
-					</tr>
-					<tr>
-						<td>Detected Volumes</td>
-						<td>
-							<code class="">
-								{results?.total_volumes}
-							</code>
-						</td>
-					</tr>
-					</tbody>
-				</table>
-			</div>
-			<div class="table-container h-full w-full p-2 overflow-y-auto">
-				<table class="table table-hover">
-					<thead>
-					<tr>
-						<th class="text-center">Volume</th>
-						<th class="text-center">Chapters</th>
-					</tr>
-					</thead>
-					<tbody>
-					{#each $chapterSizes as chapters, i}
 						<tr>
-							<td class="font-bold text-center text-primary-500">
-								{i + 1}
-							</td>
-							<td class="text-center">
+							<th></th>
+							<th class="text-center">Results</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>Detected Chapters</td>
+							<td>
 								<code class="">
-									{chapters}
+									{results?.total_chapters}
 								</code>
 							</td>
 						</tr>
-					{/each}
+						<tr>
+							<td>Detected Volumes</td>
+							<td>
+								<code class="">
+									{results?.total_volumes}
+								</code>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div class="table-container h-full w-full overflow-y-auto p-2">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th class="text-center">Volume</th>
+							<th class="text-center">Chapters</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each $chapterSizes as chapters, i}
+							<tr>
+								<td class="text-center font-bold text-primary-500">
+									{i + 1}
+								</td>
+								<td class="text-center">
+									<code class="">
+										{chapters}
+									</code>
+								</td>
+							</tr>
+						{/each}
 					</tbody>
 				</table>
 			</div>
 			{#if $bundle === BundleFlag.IMAGE}
-				<div class="table-container w-full h-full p-2">
+				<div class="table-container h-full w-full p-2">
 					<table class="table table-hover">
 						<thead>
-						<tr>
-							<th>Image Detection</th>
-						</tr>
+							<tr>
+								<th>Image Detection</th>
+							</tr>
 						</thead>
 						<tbody>
-						<tr>
-							<td>
-								<RangeSlider
-									name="range-slider"
-									class="w-full"
-									bind:value={sensibility}
-									max={100}
-									step={5}
-									ticked
-								>
-									Grayscale Sensibility:
-									<code class="text-white">
-										{sensibility}%
-									</code>
-								</RangeSlider>
-							</td>
-						</tr>
-						<tr>
-							<td class="flex h-full w-full items-center justify-around pt-4">
-								<button
-									class="variant-filled-primary btn"
-									on:click={runBundler}
-								>
-									Rerun Bundler
-								</button>
-								<button
-									class="variant-filled-secondary btn"
-									on:click={() => ($bundle = BundleFlag.MANUAL)}
-								>
-									Manual Bundling
-								</button>
-							</td>
-						</tbody>
+							<tr>
+								<td>
+									<RangeSlider
+										name="range-slider"
+										class="w-full"
+										bind:value={sensibility}
+										max={100}
+										step={5}
+										ticked
+									>
+										Grayscale Sensibility:
+										<code class="text-white">
+											{sensibility}%
+										</code>
+									</RangeSlider>
+								</td>
+							</tr>
+							<tr>
+								<td class="flex h-full w-full items-center justify-around pt-4">
+									<button
+										class="variant-filled-primary btn"
+										on:click={runBundler}
+									>
+										Rerun Bundler
+									</button>
+									<button
+										class="variant-filled-secondary btn"
+										on:click={() => ($bundle = BundleFlag.MANUAL)}
+									>
+										Manual Bundling
+									</button>
+								</td>
+							</tr></tbody
+						>
 					</table>
 				</div>
 			{/if}

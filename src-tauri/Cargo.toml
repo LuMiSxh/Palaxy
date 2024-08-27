@@ -24,7 +24,7 @@ image = "0.25.0"
 lazy_static = { version = "1.4.0", features = [] }
 tokio = { version = "1.35.1", features = ["fs"] }
 epub-builder = "0.7.4"
-zip = "0.6.6"
+zip = "2.2.0"
 rayon = "1.9.0"
 eyre = "0.6.12"
 printpdf = { version = "0.7.0", features = ["image", "embedded_images"] }

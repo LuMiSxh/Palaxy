@@ -393,7 +393,8 @@ pub async fn convert(
                         }
                     }
 
-                    cbz.set_comicinfo(&volume_name, i + 1)?.save()?;
+                    cbz.set_comicinfo(&volume_name, i + 1)?;
+                    cbz.save()?;
 
                     Ok(())
                 }),

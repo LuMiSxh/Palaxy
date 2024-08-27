@@ -1,8 +1,15 @@
 ![Palaxy](./assets/palaxy-banner.png)
 
+# -- Connector Support --
+
+This branch is used for the development of a connector for the Palaxy application. Connectors can be written in Luau
+and are used to connect the application to different websites. The connector is used to download manga from the website
+and provide it to the application.
+
 # Installation
 
-You can install Palaxy by going to the [releases page](https://github.com/LuMiSxh/Palaxy/releases) and downloading the latest version for your
+You can install Palaxy by going to the [releases page](https://github.com/LuMiSxh/Palaxy/releases) and downloading the
+latest version for your
 operating system. Please keep in mind that Palaxy is still in development and may have bugs. An
 automatic updater is planned for the future but is not available at the moment, you therefore have
 to manually check for updates on the release page.

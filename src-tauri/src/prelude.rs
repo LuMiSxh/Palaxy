@@ -21,12 +21,20 @@ pub enum Error {
     PrintPdf(#[from] printpdf::Error),
     #[error(transparent)]
     PrintPdfImage(#[from] image_crate::error::ImageError),
+    #[error(transparent)]
+    Reqwest(#[from] reqwest::Error),
+    #[error(transparent)]
+    Mlua(#[from] mlua::Error),
     #[error("The given path '{0}' is invalid: {1}")]
     InvalidPath(PathBuf, String),
     #[error("Asynchronous task failed: {0}")]
     AsyncTaskError(String),
     #[error("Unsupported: {0}")]
     Unsupported(String),
+    #[error("Luau Error: {0}")]
+    Luau(String),
+    #[error("Luau Injection Error: {0}")]
+    LuauInjector(String),
     #[error("Not found: {0}")]
     NotFound(String),
 }

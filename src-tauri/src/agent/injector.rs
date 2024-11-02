@@ -48,7 +48,7 @@ fn table_to_hashmap(table: Option<Table>) -> Option<HashMap<String, String>> {
 pub fn inject_functions(lua: &Lua) -> EResult<()> {
     let globals = lua.globals();
 
-    match globals.set(
+    globals.set(
         "fetchHtml",
         lua.create_async_function(
             |_, (url, query, options): (String, String, Option<Table>)| async move {
@@ -57,15 +57,10 @@ pub fn inject_functions(lua: &Lua) -> EResult<()> {
                 let result = fetch_html(url, query, options_map).await.into_lua_err()?;
                 Ok(result)
             }
-        ).unwrap(),
-    ) {
-        Ok(_) => {}
-        Err(e) => {
-            return Err(Error::LuauInjector(e.to_string()));
-        }
-    }
+        ).map_err(|e| Error::Lua(e.to_string()))?,
+    ).map_err(|e| Error::Lua(e.to_string()))?;
 
-    match globals.set(
+    globals.set(
         "fetchJson",
         lua.create_async_function(
             |_, (url, options): (String, Option<Table>)| async move {
@@ -74,43 +69,27 @@ pub fn inject_functions(lua: &Lua) -> EResult<()> {
                 let result = fetch_json(url, options_map).await.into_lua_err()?;
                 Ok(result)
             }
-        ).unwrap(),
-    ) {
-        Ok(_) => {}
-        Err(e) => {
-            return Err(Error::LuauInjector(e.to_string()));
-        }
-    }
+        ).map_err(|e| Error::Lua(e.to_string()))?,
+    ).map_err(|e| Error::Lua(e.to_string()))?;
 
-    match globals.set(
+    globals.set(
         "getAbsPath",
         lua.create_function(
             |_, (src, base_url): (String, String)| {
                 Ok(get_abs_path(src, base_url).into_lua_err()?)
             }
-        ).unwrap(),
-    ) {
-        Ok(_) => {}
-        Err(e) => {
-            return Err(Error::LuauInjector(e.to_string()));
-        }
-    }
+        ).map_err(|e| Error::Lua(e.to_string()))?,
+    ).map_err(|e| Error::Lua(e.to_string()))?;
 
-    match globals.set(
+    globals.set(
         "getAbsLink",
         lua.create_function(
             |_, (element, base_url): (Table, String)| {
                 let element_map = table_to_hashmap(Some(element));
                 Ok(get_abs_link(element_map.unwrap(), base_url).into_lua_err()?)
             }
-        )
-            .unwrap(),
-    ) {
-        Ok(_) => {}
-        Err(e) => {
-            return Err(Error::LuauInjector(e.to_string()));
-        }
-    }
+        ).map_err(|e| Error::Lua(e.to_string()))?,
+    ).map_err(|e| Error::Lua(e.to_string()))?;
 
     Ok(())
 }

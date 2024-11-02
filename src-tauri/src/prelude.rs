@@ -1,6 +1,7 @@
 use printpdf::image_crate;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use serde::de::StdError;
 
 // Error types
 #[derive(Debug, thiserror::Error)]
@@ -23,20 +24,18 @@ pub enum Error {
     PrintPdfImage(#[from] image_crate::error::ImageError),
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
-    #[error(transparent)]
-    Mlua(#[from] mlua::Error),
     #[error("The given path '{0}' is invalid: {1}")]
     InvalidPath(PathBuf, String),
     #[error("Asynchronous task failed: {0}")]
     AsyncTaskError(String),
     #[error("Unsupported: {0}")]
     Unsupported(String),
-    #[error("Luau Error: {0}")]
-    Luau(String),
-    #[error("Luau Injection Error: {0}")]
-    LuauInjector(String),
     #[error("Not found: {0}")]
     NotFound(String),
+    #[error("Boxed error: {0}")]
+    Boxed(#[from] Box<dyn StdError + Send + Sync>),
+    #[error("Lua/MLua error: {0}")]
+    Lua(String),
 }
 
 impl serde::Serialize for Error {

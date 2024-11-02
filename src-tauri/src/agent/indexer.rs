@@ -25,20 +25,24 @@ pub async fn index_agents(directory: &str) -> EResult<Vec<AgentMetadata>> {
 
         if path.is_file() & path.ends_with(".luau") {
             let content = fs::read_to_string(&path)?;
-            lua.load(&content).exec()?;
+            lua.load(&content).exec().map_err(|e| Error::Lua(e.to_string()))?;
 
             for pair in lua.globals().pairs::<String, mlua::Table>() {
-                let (_, table) = pair?;
-                if table.get::<_, bool>("__is_agent").unwrap_or(false) {
+                let table = match pair { 
+                    Ok((_, table)) => table,
+                    Err(e) => return Err(Error::Lua(e.to_string())),
+                };
+                
+                if table.get::<bool>("__is_agent").unwrap_or(false) {
                     let metadata = AgentMetadata {
-                        id: table.get::<_, String>("Id")?,
-                        label: table.get::<_, String>("Label")?,
-                        url: table.get::<_, String>("Url")?,
-                        path: table.get::<_, String>("Path")?,
-                        query_mangas: table.get::<_, String>("QueryMangas")?,
-                        query_chapters: table.get::<_, String>("QueryChapters")?,
-                        query_pages: table.get::<_, String>("QueryPages")?,
-                        query_manga_title: table.get::<_, String>("QueryMangaTitle")?,
+                        id: table.get::<String>("Id").map_err(|e| Error::Lua(e.to_string()))?,
+                        label: table.get::<String>("Label").map_err(|e| Error::Lua(e.to_string()))?,
+                        url: table.get::<String>("Url").map_err(|e| Error::Lua(e.to_string()))?,
+                        path: table.get::<String>("Path").map_err(|e| Error::Lua(e.to_string()))?,
+                        query_mangas: table.get::<String>("QueryMangas").map_err(|e| Error::Lua(e.to_string()))?,
+                        query_chapters: table.get::<String>("QueryChapters").map_err(|e| Error::Lua(e.to_string()))?,
+                        query_pages: table.get::<String>("QueryPages").map_err(|e| Error::Lua(e.to_string()))?,
+                        query_manga_title: table.get::<String>("QueryMangaTitle").map_err(|e| Error::Lua(e.to_string()))?,
                     };
                     agents.push(metadata);
                 }

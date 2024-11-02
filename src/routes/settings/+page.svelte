@@ -12,6 +12,7 @@
 	import { open } from "@tauri-apps/plugin-dialog"
 	import { version } from "$app/environment"
 	import { onMount } from "svelte"
+	import { bridge } from "$lib/functions"
 
 	// Popups
 	const popupTheme: PopupSettings = {
@@ -40,6 +41,13 @@
 			directory: true,
 			multiple: false,
 		})) as string | null
+	}
+
+	// TODO: Remove / move from testing
+
+	async function testAgent() {
+		const result = await bridge("test_agents")
+		console.log(result)
 	}
 </script>
 
@@ -136,6 +144,7 @@
 			</tbody>
 		</table>
 	</div>
+	<button on:click={testAgent}>CLICK ME</button>
 </div>
 <!-- popups -->
 <div class="card variant-soft-tertiary w-36 p-4 shadow-2xl" data-popup="popupTheme">

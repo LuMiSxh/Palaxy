@@ -52,13 +52,3 @@ function getAbsLink(element: Element, baseUrl: string)
     -- This function gets replaced by Rust
     return ""
 end
-
-return {
-    fetchHtml = fetchHtml,
-    fetchJson = fetchJson,
-    getAbsPath = getAbsPath,
-    getAbsLink = getAbsLink,
-    Agent = {} :: Agent,
-    Manga = {} :: Manga,
-    FetchOptions = {} :: FetchOptions,
-}

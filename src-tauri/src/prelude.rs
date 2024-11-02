@@ -1,6 +1,7 @@
 use printpdf::image_crate;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use mlua::Lua;
 use serde::de::StdError;
 
 // Error types
@@ -24,6 +25,8 @@ pub enum Error {
     PrintPdfImage(#[from] image_crate::error::ImageError),
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
+    #[error(transparent)]
+    MLua(#[from] mlua::Error),
     #[error("The given path '{0}' is invalid: {1}")]
     InvalidPath(PathBuf, String),
     #[error("Asynchronous task failed: {0}")]
@@ -49,9 +52,10 @@ impl serde::Serialize for Error {
 
 pub type EResult<T> = Result<T, Error>;
 
-// App state
+// App states
+
 #[derive(Serialize, Deserialize, Clone, Default)]
-pub struct AppState {
+pub struct AppStateConverter {
     pub name: String,
     pub source: PathBuf,
     pub bundle_flag: BundleFlag,
@@ -59,7 +63,7 @@ pub struct AppState {
     pub data: Vec<Vec<PathBuf>>,
 }
 
-impl AppState {
+impl AppStateConverter {
     pub fn reset(&mut self) {
         self.source = PathBuf::default();
         self.bundle_flag = BundleFlag::default();
@@ -67,6 +71,15 @@ impl AppState {
         self.data = Vec::default();
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct AppStateLua {
+    pub source: PathBuf,
+    pub lua: Lua,
+    pub agents: Vec<AgentMetadata>
+}
+
+// Command return types
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct CommandDefault {
@@ -132,6 +145,21 @@ pub enum BundleFlag {
     IMAGE,
     #[default]
     MANUAL,
+}
+
+#[derive(Debug, Clone)]
+pub struct AgentMetadata {
+    pub id: String,
+    pub label: String,
+    pub url: String,
+    pub path: String,
+    pub query_mangas: String,
+    pub query_chapters: String,
+    pub query_pages: String,
+    pub query_manga_title: String,
+    pub get_mangas: mlua::Function,
+    pub get_chapters: mlua::Function,
+    pub get_pages: mlua::Function
 }
 
 // Utils

@@ -33,7 +33,7 @@
       "signingIdentity": null
     },
     "resources": [
-      "../agents/*"
+      "resources/**/*"
     ],
     "shortDescription": "",
     "linux": {

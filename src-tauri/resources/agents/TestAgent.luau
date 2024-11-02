@@ -1,11 +1,5 @@
 -- !strict
 
-local AgentModule = require("Agent")
-type Agent = AgentModule.Agent
-type Manga = AgentModule.Manga
-local fetchJson = AgentModule.fetchJson
-local fetchHtml = AgentModule.fetchHtml
-
 local function getMangas(self)
     local url = self.Url .. self.QueryMangas
     local response = fetchHtml(url, self.QueryMangas, self.FetchOptions)
@@ -13,21 +7,21 @@ local function getMangas(self)
     return response
 end
 
-local function getChapters(self, manga: Manga)
+local function getChapters(self, manga)
     local url = self.Url .. self.QueryChapters .. "?mangaId=" .. manga.id
     local response = fetchJson(url, self.FetchOptions)
     -- Assuming response is a table of chapters
     return response
 end
 
-local function getPages(self, manga: Manga)
+local function getPages(self, manga)
     local url = self.Url .. self.QueryPages .. "?mangaId=" .. manga.id
     local response = fetchJson(url, self.FetchOptions)
     -- Assuming response is a table of pages
     return response
 end
 
-local ExampleAgent: Agent = {
+local TestAgent = {
     Id = "",
     Label = "",
     Url = "",
@@ -42,4 +36,4 @@ local ExampleAgent: Agent = {
     getPages = getPages
 }
 
-return ExampleAgent
+return TestAgent

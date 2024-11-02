@@ -10,6 +10,7 @@ dependencies = [
  "eyre",
  "image 0.25.4",
  "lazy_static",
+ "log",
  "mlua",
  "printpdf",
  "rayon",

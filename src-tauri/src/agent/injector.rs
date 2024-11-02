@@ -57,8 +57,8 @@ pub fn inject_functions(lua: &Lua) -> EResult<()> {
                 let result = fetch_html(url, query, options_map).await.into_lua_err()?;
                 Ok(result)
             }
-        ).map_err(|e| Error::Lua(e.to_string()))?,
-    ).map_err(|e| Error::Lua(e.to_string()))?;
+        )?,
+    )?;
 
     globals.set(
         "fetchJson",
@@ -69,8 +69,8 @@ pub fn inject_functions(lua: &Lua) -> EResult<()> {
                 let result = fetch_json(url, options_map).await.into_lua_err()?;
                 Ok(result)
             }
-        ).map_err(|e| Error::Lua(e.to_string()))?,
-    ).map_err(|e| Error::Lua(e.to_string()))?;
+        )?,
+    )?;
 
     globals.set(
         "getAbsPath",
@@ -78,8 +78,8 @@ pub fn inject_functions(lua: &Lua) -> EResult<()> {
             |_, (src, base_url): (String, String)| {
                 Ok(get_abs_path(src, base_url).into_lua_err()?)
             }
-        ).map_err(|e| Error::Lua(e.to_string()))?,
-    ).map_err(|e| Error::Lua(e.to_string()))?;
+        )?,
+    )?;
 
     globals.set(
         "getAbsLink",
@@ -88,8 +88,8 @@ pub fn inject_functions(lua: &Lua) -> EResult<()> {
                 let element_map = table_to_hashmap(Some(element));
                 Ok(get_abs_link(element_map.unwrap(), base_url).into_lua_err()?)
             }
-        ).map_err(|e| Error::Lua(e.to_string()))?,
-    ).map_err(|e| Error::Lua(e.to_string()))?;
+        )?,
+    )?;
 
     Ok(())
 }

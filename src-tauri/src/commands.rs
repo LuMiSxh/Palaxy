@@ -18,7 +18,7 @@ lazy_static! {
 // -- RESET --
 
 #[tauri::command(async)]
-pub async fn reset(state: State<'_, Mutex<AppState>>) -> EResult<CommandDefault> {
+pub async fn reset(state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
     let mut state = state.lock().await;
     state.reset();
     Ok(CommandDefault::default())
@@ -27,7 +27,7 @@ pub async fn reset(state: State<'_, Mutex<AppState>>) -> EResult<CommandDefault>
 // -- SETTER --
 
 #[tauri::command(async)]
-pub async fn set_source(source: String, state: State<'_, Mutex<AppState>>) -> EResult<CommandDefault> {
+pub async fn set_source(source: String, state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
     let mut state = state.lock().await;
     state.source = PathBuf::from(source);
 
@@ -41,21 +41,21 @@ pub async fn set_source(source: String, state: State<'_, Mutex<AppState>>) -> ER
 }
 
 #[tauri::command(async)]
-pub async fn set_volume_sizes(sizes: Vec<usize>, state: State<'_, Mutex<AppState>>) -> EResult<CommandDefault> {
+pub async fn set_volume_sizes(sizes: Vec<usize>, state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
     let mut state = state.lock().await;
     state.volume_sizes = sizes;
     Ok(CommandDefault::default())
 }
 
 #[tauri::command(async)]
-pub async fn set_bundle_flag(flag: BundleFlag, state: State<'_, Mutex<AppState>>) -> EResult<CommandDefault> {
+pub async fn set_bundle_flag(flag: BundleFlag, state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
     let mut state = state.lock().await;
     state.bundle_flag = flag;
     Ok(CommandDefault::default())
 }
 
 #[tauri::command(async)]
-pub async fn set_data(data: Vec<Vec<PathBuf>>, state: State<'_, Mutex<AppState>>) -> EResult<CommandDefault> {
+pub async fn set_data(data: Vec<Vec<PathBuf>>, state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
     let mut state = state.lock().await;
     state.data = data;
     Ok(CommandDefault::default())
@@ -64,7 +64,7 @@ pub async fn set_data(data: Vec<Vec<PathBuf>>, state: State<'_, Mutex<AppState>>
 // -- GETTER --
 
 #[tauri::command(async)]
-pub async fn get_data(state: State<'_, Mutex<AppState>>) -> EResult<CommandGetData> {
+pub async fn get_data(state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandGetData> {
     let state = state.lock().await;
     Ok(CommandGetData {
         message: None,
@@ -75,7 +75,7 @@ pub async fn get_data(state: State<'_, Mutex<AppState>>) -> EResult<CommandGetDa
 // -- PROCESSES --
 
 #[tauri::command(async)]
-pub async fn analyze(state: State<'_, Mutex<AppState>>) -> EResult<CommandAnalyze> {
+pub async fn analyze(state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandAnalyze> {
     let state = state.lock().await;
 
     fn has_perms(path: &PathBuf) -> bool {
@@ -209,7 +209,7 @@ pub async fn analyze(state: State<'_, Mutex<AppState>>) -> EResult<CommandAnalyz
 #[tauri::command(async)]
 pub async fn bundle(
     sensibility: Option<usize>,
-    state: State<'_, Mutex<AppState>>,
+    state: State<'_, Mutex<AppStateConverter>>,
 ) -> EResult<CommandBundle> {
     let now = std::time::Instant::now();
     let mut state = state.lock().await;
@@ -333,7 +333,7 @@ pub async fn convert(
     target: String,
     file_format: FileFormat,
     direction: Direction,
-    state: State<'_, Mutex<AppState>>,
+    state: State<'_, Mutex<AppStateConverter>>,
 ) -> EResult<CommandDefault> {
     let now = std::time::Instant::now();
     let state = state.lock().await;
@@ -463,4 +463,20 @@ pub async fn convert(
             elapsed.as_secs_f64()
         )),
     })
+}
+
+
+#[tauri::command(async)]
+pub async fn test_agents(
+    state: State<'_, Mutex<AppStateLua>>,
+) -> EResult<CommandDefault> {
+    let state = state.lock().await;
+
+    println!("{:?}", state.agents);
+    
+    Ok(
+        CommandDefault {
+            message: Some(format!("{:?}", state.agents)),
+        }
+    )
 }

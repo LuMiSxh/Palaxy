@@ -9,6 +9,7 @@ mod collector;
 mod commands;
 mod generator;
 mod prelude;
+mod agents;
 
 fn main() {
     Builder::default()

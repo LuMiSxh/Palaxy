@@ -11,7 +11,6 @@ dependencies = [
  "image 0.25.4",
  "lazy_static",
  "log",
- "mlua",
  "printpdf",
  "rayon",
  "regex",
@@ -2448,15 +2447,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "luau0-src"
-version = "0.11.0+luau647"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca47356c40f9121e3b3d582bf7355e8b25751b2e8afdfda49cf05775dfbc6b0a"
-dependencies = [
- "cc",
-]
-
-[[package]]
 name = "mac"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2567,34 +2557,6 @@ dependencies = [
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys 0.52.0",
-]
-
-[[package]]
-name = "mlua"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f6ddbd668297c46be4bdea6c599dcc1f001a129586272d53170b7ac0a62961e"
-dependencies = [
- "bstr",
- "either",
- "futures-util",
- "libloading 0.8.5",
- "mlua-sys",
- "num-traits",
- "parking_lot",
- "rustc-hash",
-]
-
-[[package]]
-name = "mlua-sys"
-version = "0.6.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9eebac25c35a13285456c88ee2fde93d9aee8bcfdaf03f9d6d12be3391351ec"
-dependencies = [
- "cc",
- "cfg-if",
- "luau0-src",
- "pkg-config",
 ]
 
 [[package]]
@@ -3867,12 +3829,6 @@ name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "719b953e2095829ee67db738b3bfa9fa368c94900df327b3f07fe6e794d2fe1f"
-
-[[package]]
-name = "rustc-hash"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "583034fd73374156e66797ed8e5b0d5690409c9226b22d87cb7f19821c05d152"
 
 [[package]]
 name = "rustc_version"

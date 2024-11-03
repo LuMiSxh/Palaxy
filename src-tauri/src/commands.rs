@@ -464,19 +464,3 @@ pub async fn convert(
         )),
     })
 }
-
-
-#[tauri::command(async)]
-pub async fn test_agents(
-    state: State<'_, Mutex<AppStateLua>>,
-) -> EResult<CommandDefault> {
-    let state = state.lock().await;
-
-    println!("{:?}", state.agents);
-    
-    Ok(
-        CommandDefault {
-            message: Some(format!("{:?}", state.agents)),
-        }
-    )
-}

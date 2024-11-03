@@ -29,7 +29,6 @@ rayon = "1.10.0"
 eyre = "0.6.12"
 printpdf = { version = "0.7.0", features = ["image", "embedded_images"] }
 tauri-plugin-dialog = "2.0.3"
-mlua = { version = "0.10.0", features = ["luau-jit", "async", "send", "error-send"] }
 reqwest = "0.12.7"
 scraper = "0.21.0"
 log = "0.4.22"

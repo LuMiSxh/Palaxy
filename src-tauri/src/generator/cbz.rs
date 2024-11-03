@@ -2,20 +2,20 @@ use std::fs::{read, File};
 use std::io::Write;
 use std::path::PathBuf;
 
-use zip::write::FileOptions;
+use zip::write::{SimpleFileOptions};
 use zip::{CompressionMethod, ZipWriter};
 
 use crate::prelude::*;
 
 pub struct Cbz {
     zip: ZipWriter<File>,
-    options: FileOptions,
+    options: SimpleFileOptions,
     page_index: usize,
 }
 
 impl Cbz {
     pub fn new(output_path: &str, filename: &str) -> Result<Self, Error> {
-        let options: FileOptions = FileOptions::default()
+        let options: SimpleFileOptions = SimpleFileOptions::default()
             .compression_method(CompressionMethod::Deflated)
             .unix_permissions(0o755);
 
@@ -37,7 +37,7 @@ impl Cbz {
 
         self.zip.start_file(
             format!("page_{:03}.{}", self.page_index, image_extension),
-            Default::default(),
+            self.options,
         )?;
         self.zip.write_all(&mut image_file)?;
 
@@ -58,7 +58,7 @@ impl Cbz {
         Ok(self)
     }
 
-    pub fn save(&mut self) -> Result<(), Error> {
+    pub fn save(self) -> Result<(), Error> {
         self.zip.finish()?;
         Ok(())
     }

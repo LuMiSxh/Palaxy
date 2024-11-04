@@ -42,13 +42,6 @@
 			multiple: false,
 		})) as string | null
 	}
-
-	// TODO: Remove / move from testing
-
-	async function testAgent() {
-		const result = await bridge("test_agents")
-		console.log(result)
-	}
 </script>
 
 <div class="grid h-full w-full grid-cols-2 grid-rows-1 gap-2 p-2">
@@ -144,7 +137,6 @@
 			</tbody>
 		</table>
 	</div>
-	<button on:click={testAgent}>CLICK ME</button>
 </div>
 <!-- popups -->
 <div class="card variant-soft-tertiary w-36 p-4 shadow-2xl" data-popup="popupTheme">

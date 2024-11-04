@@ -1,7 +1,8 @@
-use crate::agents::{fetch_json, Agent, Element, Url};
+use crate::agents::{fetch_json, Agent, AgentMeta, Element, Url};
 use crate::prelude::*;
 use reqwest::Client;
 use std::collections::HashMap;
+use async_trait::async_trait;
 
 #[derive(Debug)]
 pub struct MangaDex {
@@ -10,6 +11,7 @@ pub struct MangaDex {
     request_options: HashMap<String, String>,
 }
 
+#[async_trait]
 impl Agent for MangaDex {
     fn new(client: Client) -> Self {
         let mut request_options = HashMap::new();
@@ -20,6 +22,15 @@ impl Agent for MangaDex {
             client,
             api: "https://api.mangadex.org".to_string(),
             request_options,
+        }
+    }
+
+    fn representation(&self) -> AgentMeta {
+        AgentMeta {
+            name: "MangaDex".to_string(),
+            url: "https://mangadex.org".to_string(),
+            icon: Some("https://mangadex.org/favicon.ico".to_string()),
+            tags: vec!["Multilingual".to_string(), "Scanlation".to_string(), "Updates".to_string(), "Experimental".to_string()],
         }
     }
 

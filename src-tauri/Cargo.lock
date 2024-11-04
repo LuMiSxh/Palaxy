@@ -6,6 +6,7 @@ version = 3
 name = "Palaxy"
 version = "0.2.0"
 dependencies = [
+ "async-trait",
  "epub-builder",
  "eyre",
  "image 0.25.4",

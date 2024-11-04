@@ -1,6 +1,7 @@
 use printpdf::image_crate;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use crate::agents::{Agent, AgentMeta};
 
 // Error types
 #[derive(Debug, thiserror::Error)]
@@ -64,6 +65,10 @@ impl AppStateConverter {
     }
 }
 
+pub(crate) struct AppStateAgents {
+    pub agents: Vec<Box<dyn Agent>>
+}
+
 // Command return types
 
 #[derive(Serialize, Deserialize, Default)]
@@ -92,6 +97,12 @@ pub struct CommandAnalyze {
     pub positive: Vec<String>,
     pub suggest: Vec<String>,
     pub flag: BundleFlag,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CommandListAgents {
+    pub message: Option<String>,
+    pub agents: Vec<AgentMeta>,
 }
 
 // Types shared between frontend and tauri

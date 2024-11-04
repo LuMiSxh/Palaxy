@@ -72,3 +72,6 @@
 		{/if}
 	{/each}
 </div>
+<a href="/agents" class="bg-red-600 text-blue-700 p-10">
+	<h1>TEST</h1>
+</a>

@@ -31,7 +31,6 @@ printpdf = { version = "0.7.0", features = ["image", "embedded_images"] }
 tauri-plugin-dialog = "2.0.3"
 reqwest = "0.12.7"
 scraper = "0.21.0"
-log = "0.4.22"
 async-trait = "0.1.83"
 
 [features]

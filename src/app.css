@@ -1,0 +1,9 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@layer components {
+	.label-experimental {
+		@apply chip label-text preset-tonal-warning px-1 py-0;
+	}
+}

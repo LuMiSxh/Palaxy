@@ -1,32 +1,24 @@
-import { join } from "path"
-import type { Config } from "tailwindcss"
-import forms from "@tailwindcss/forms"
-import typography from "@tailwindcss/typography"
-import { skeleton } from "@skeletonlabs/tw-plugin"
-import { purpleGalaxyTheme } from "./PurpleGalaxy"
+import containerQueries from '@tailwindcss/container-queries';
+import forms from '@tailwindcss/forms';
+import typography from '@tailwindcss/typography';
+import type { Config } from 'tailwindcss';
+
+import { contentPath, skeleton } from '@skeletonlabs/skeleton/plugin';
+import { nosh } from '@skeletonlabs/skeleton/themes';
 
 export default {
-	darkMode: "class",
-	content: [
-		"./src/**/*.{html,js,svelte,ts}",
-		join(require.resolve("@skeletonlabs/skeleton"), "../**/*.{html,js,svelte,ts}"),
-	],
+	content: ['./src/**/*.{html,js,svelte,ts}', contentPath(import.meta.url, 'svelte')],
+	darkMode: 'class',
 	theme: {
-		extend: {},
+		extend: {}
 	},
+
 	plugins: [
-		forms,
-		typography,
 		skeleton({
-			themes: {
-				preset: [
-					{
-						name: "crimson",
-						enhancements: true,
-					},
-				],
-				custom: [purpleGalaxyTheme],
-			},
+			themes: [nosh]
 		}),
-	],
-} satisfies Config
+		typography,
+		forms,
+		containerQueries
+	]
+} satisfies Config;

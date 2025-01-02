@@ -1,177 +1,130 @@
 <script lang="ts">
-	import { getName, getTauriVersion, getVersion } from "@tauri-apps/api/app"
-	import { appData } from "$lib/stores"
-	import {
-		ListBox,
-		ListBoxItem,
-		popup,
-		type PopupSettings,
-		SlideToggle,
-	} from "@skeletonlabs/skeleton"
-	import { Theme } from "$lib/types"
-	import { open } from "@tauri-apps/plugin-dialog"
-	import { version } from "$app/environment"
-	import { onMount } from "svelte"
-	import { bridge } from "$lib/functions"
+	import { getName, getTauriVersion, getVersion } from '@tauri-apps/api/app';
+	import { FeatureFlag, SupportedLanguages, Theme } from '$types/appdata';
+	import { convertToTitleCase, ffIsEnabled } from '$lib/utils';
+	import { appData } from '$stores/appdata.js';
 
-	// Popups
-	const popupTheme: PopupSettings = {
-		event: "click",
-		target: "popupTheme",
-		placement: "bottom",
-	}
-	const popupDefaultTargetPath: PopupSettings = {
-		event: "click",
-		target: "popupDefaultTargetPath",
-		placement: "bottom",
-	}
-	const popupShowHelp: PopupSettings = {
-		event: "click",
-		target: "popupShowHelp",
-		placement: "bottom",
+	const themeEntries = Object.entries(Theme).filter(([key, _]) => isNaN(Number(key)));
+	const langEntries = Object.entries(SupportedLanguages).filter(([key, _]) => isNaN(Number(key)));
+
+	let featureInput = $state(unParseInput($appData.featureFlags));
+
+	$effect(() => {
+		if (featureInput === '') return;
+		$appData.featureFlags = parseInput(featureInput);
+	});
+
+	function parseInput(input: string): FeatureFlag[] {
+		return input
+			.split(' ')
+			.map(Number)
+			.filter((n) => !isNaN(n)) as FeatureFlag[];
 	}
 
-	onMount(async () => {
-		console.log(await getTauriVersion())
-	})
-
-	// file logic
-	async function selectTargetDirectory() {
-		$appData.paths.converted = (await open({
-			directory: true,
-			multiple: false,
-		})) as string | null
+	function unParseInput(flags: FeatureFlag[]): string {
+		return flags.map(String).join(' ');
 	}
 </script>
 
-<div class="grid h-full w-full grid-cols-2 grid-rows-1 gap-2 p-2">
-	<div class="table-container flex h-full w-full flex-col items-center justify-center p-2">
-		<!-- Native Table Element -->
-		<table class="table table-hover">
-			<tbody>
-				<tr>
-					<td class="font-bold text-primary-500"> Name</td>
-					<td>
-						<code>
-							{#await getName()}
-								<div class="placeholder w-3/4 animate-pulse" />
-							{:then name}
-								{name}
-							{:catch error}
-								{error.message}
-							{/await}
-						</code>
-					</td>
-				</tr>
-				<tr>
-					<td class="font-bold text-primary-500"> App Version</td>
-					<td>
-						<code>
-							{#await getVersion()}
-								<div class="placeholder w-3/4 animate-pulse" />
-							{:then name}
-								{name}
-							{:catch error}
-								{error.message}
-							{/await}
-						</code>
-					</td>
-				</tr>
-				<tr>
-					<td class="font-bold text-primary-500"> Tauri Version</td>
-					<td>
-						<code>
-							{#await getTauriVersion()}
-								<div class="placeholder w-3/4 animate-pulse" />
-							{:then name}
-								{name}
-							{:catch error}
-								{error.message}
-							{/await}
-						</code>
-					</td>
-				</tr>
-				<tr>
-					<td class="font-bold text-primary-500"> Svelte Version Hash</td>
-					<td>
-						<code>
-							{version}
-						</code>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+<div class="grid h-full w-full select-none grid-cols-3 grid-rows-3 gap-10">
+	<div class="flex h-full w-full items-center justify-center" style="grid-column: 1; grid-row: 1;">
+		{#await getName()}
+			<label class="label w-1/2">
+				<label for="name" class="label-text">Name</label>
+				<input id="name" readonly class="input preset-outlined-primary-500 dark:preset-tonal" value={'Loading...'} />
+			</label>
+		{:then name}
+			<label class="label w-1/2">
+				<label for="name" class="label-text">Name</label>
+				<input id="name" readonly class="input preset-outlined-primary-500 dark:preset-tonal" value={name} />
+			</label>
+		{:catch error}
+			<label class="label w-1/2">
+				<label for="name" class="label-text">Name</label>
+				<input id="name" readonly class="input preset-filled-error-500" value={error.message} />
+			</label>
+		{/await}
 	</div>
-	<div class="table-container flex h-full w-full flex-col items-center justify-center p-2">
-		<!-- Native Table Element -->
-		<table class="table table-interactive">
-			<tbody>
-				<tr use:popup={popupTheme}>
-					<td class="font-bold text-primary-500"> Theme</td>
-					<td>
-						<code>
-							{$appData.theme}
-						</code>
-					</td>
-				</tr>
-				<tr use:popup={popupDefaultTargetPath}>
-					<td class="font-bold text-primary-500"> Default Target Path</td>
-					<td>
-						<code>
-							{$appData.paths.converted
-								? $appData.paths.converted.substring(
-										$appData.paths.converted.lastIndexOf("/") + 1,
-									)
-								: "Not Set"}
-						</code>
-					</td>
-				</tr>
-				<tr use:popup={popupShowHelp}>
-					<td class="font-bold text-primary-500"> Show help</td>
-					<td>
-						<code>
-							{$appData.popups.help ? "Yes" : "No"}
-						</code>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+	<div class="flex h-full w-full items-center justify-center" style="grid-column: 1; grid-row: 2;">
+		{#await getVersion()}
+			<label class="label w-1/2">
+				<label for="aV" class="label-text">App Version</label>
+				<input id="aV" readonly class="input preset-outlined-secondary-500 dark:preset-tonal" value={'Loading...'} />
+			</label>
+		{:then aVersion}
+			<label class="label w-1/2">
+				<label for="aV" class="label-text">App Version</label>
+				<input id="aV" readonly class="input preset-outlined-secondary-500 dark:preset-tonal" value={aVersion} />
+			</label>
+		{:catch error}
+			<label class="label w-1/2">
+				<label for="aV" class="label-text">App Version</label>
+				<input id="aV" readonly class="input preset-filled-error-500" value={error.message} />
+			</label>
+		{/await}
 	</div>
-</div>
-<!-- popups -->
-<div class="card variant-soft-tertiary w-36 p-4 shadow-2xl" data-popup="popupTheme">
-	<ListBox class="variant-soft-surface">
-		<ListBoxItem bind:group={$appData.theme} name="medium" value={Theme.SYSTEM}
-			>System
-		</ListBoxItem>
-		<ListBoxItem bind:group={$appData.theme} name="medium" value={Theme.DARK}>Dark</ListBoxItem>
-		<ListBoxItem bind:group={$appData.theme} name="medium" value={Theme.LIGHT}
-			>Light
-		</ListBoxItem>
-	</ListBox>
-	<div class="variant-soft-tertiary arrow" />
-</div>
-
-<div class="card variant-soft-tertiary w-36 p-4 shadow-2xl" data-popup="popupDefaultTargetPath">
-	<div class="grid grid-cols-1 grid-rows-2 gap-2">
-		<button class="variant-filled-primary btn" on:click={selectTargetDirectory}> Select</button>
-		<button
-			class="variant-filled-secondary btn"
-			on:click={() => ($appData.paths.converted = null)}
+	<div class="flex h-full w-full items-center justify-center" style="grid-column: 1; grid-row: 3;">
+		{#await getTauriVersion()}
+			<label class="label w-1/2">
+				<label for="tV" class="label-text">Tauri Version</label>
+				<input id="tV" readonly class="input preset-outlined-tertiary-500 dark:preset-tonal" value={'Loading...'} />
+			</label>
+		{:then tVersion}
+			<label class="label w-1/2">
+				<label for="tV" class="label-text">Tauri Version</label>
+				<input id="tV" readonly class="input preset-outlined-tertiary-500 dark:preset-tonal" value={tVersion} />
+			</label>
+		{:catch error}
+			<label class="label w-1/2">
+				<label for="tV" class="label-text">Tauri Version</label>
+				<input id="tV" readonly class="input preset-filled-error-500" value={error.message} />
+			</label>
+		{/await}
+	</div>
+	<div class="flex h-full w-full items-center justify-center" style="grid-column: 2; grid-row: 1;">
+		<label class="label">
+			<label for="theme" class="label-text">Theme</label>
+			<select
+				id="theme"
+				class="select w-1/2 preset-outlined-primary-500 dark:preset-tonal"
+				bind:value={$appData.theme}
+			>
+				{#each themeEntries as [k, v]}
+					<option class="capitalize" value={v}>{convertToTitleCase(k)}</option>
+				{/each}
+			</select>
+		</label>
+	</div>
+	<div class="flex h-full w-full items-center justify-center" style="grid-column: 2; grid-row: 2;">
+		<label class="label">
+			<label for="feature" class="label-text">Experimental Features</label>
+			<input
+				id="feature"
+				class="select w-1/2 preset-outlined-secondary-500 dark:preset-tonal"
+				bind:value={featureInput}
+			/>
+		</label>
+	</div>
+	{#if ffIsEnabled($appData, FeatureFlag.CHANGE_LANGUAGE)}
+		<div
+			class="flex h-full w-full items-center justify-center"
+			style="grid-column: 2; grid-row: 3;"
 		>
-			Remove
-		</button>
-	</div>
-	<div class="variant-soft-tertiary arrow" />
-</div>
-
-<div class="card variant-soft-tertiary w-36 p-4 shadow-2xl" data-popup="popupShowHelp">
-	<div class="flex items-center justify-center">
-		<SlideToggle
-			name="Show Popup"
-			bind:checked={$appData.popups.help}
-			active="bg-primary-500"
-		/>
-	</div>
-	<div class="variant-soft-tertiary arrow" />
+			<label class="label">
+				<label for="lang" class="label-text"
+					>Language <span class="label-experimental">Experimental</span></label
+				>
+				<select
+					id="lang"
+					class="select w-1/2 preset-outlined-tertiary-500 dark:preset-tonal"
+					bind:value={$appData.language}
+				>
+					{#each langEntries as [k, v]}
+						<option class="capitalize" value={v}>{convertToTitleCase(k)}</option>
+					{/each}
+				</select>
+			</label>
+		</div>
+	{/if}
+	<!-- TODO: Add autofill for converter (create folder, target path, conversion type (Modal?) -->
 </div>

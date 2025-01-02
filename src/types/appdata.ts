@@ -12,7 +12,9 @@ export enum SupportedLanguages {
 }
 
 export enum FeatureFlag {
-	CHANGE_LANGUAGE = 11
+	CHANGE_LANGUAGE = 11,
+	SEARCH_MANGA = 12,
+	BROWSE_AGENTS = 13
 }
 
 export interface AppData {

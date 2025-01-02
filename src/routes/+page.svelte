@@ -1,7 +1,5 @@
 <script lang="ts">
 	import {
-		IconHeadset,
-		IconQuestionMark,
 		IconSearch,
 		IconSettings,
 		IconTransform,
@@ -26,7 +24,7 @@
 	// });
 </script>
 
-<div class="grid h-full w-full select-none grid-cols-3 grid-rows-2 gap-10 p-3">
+<div class="grid h-full w-full select-none grid-cols-2 grid-rows-2 gap-10 p-3">
 	<div
 		role="button"
 		onkeydown={() => null}
@@ -55,7 +53,7 @@
 			tabindex="0"
 			onclick={() => goto('/search')}
 			class="relative flex h-full w-full preset-tonal flex-col overflow-hidden rounded-xl p-3 shadow-lg transition-transform hover:scale-105 active:scale-95"
-			style="grid-column: 2; grid-row: 1;"
+			style="grid-column: 1; grid-row: 2;"
 		>
 			<div class="absolute inset-0 z-10">
 				<div
@@ -79,7 +77,7 @@
 			tabindex="0"
 			onclick={() => goto('/agents')}
 			class="relative flex h-full w-full preset-tonal flex-col overflow-hidden rounded-xl p-3 shadow-lg transition-transform hover:scale-105 active:scale-95"
-			style="grid-column: 3; grid-row: 1;"
+			style="grid-column: 2; grid-row: 2;"
 		>
 			<div class="absolute inset-0 z-10">
 				<div
@@ -102,7 +100,7 @@
 		tabindex="0"
 		onclick={() => goto('/settings')}
 		class="relative flex h-full w-full preset-tonal flex-col overflow-hidden rounded-xl p-3 shadow-lg transition-transform hover:scale-105 active:scale-95"
-		style="grid-column: 1; grid-row: 2;"
+		style="grid-column: 2; grid-row: 1;"
 	>
 		<div class="absolute inset-0 z-10">
 			<div
@@ -114,45 +112,5 @@
 			<p class="mr-3 mt-6">Change Palaxy's settings to better suit your needs and preferences.</p>
 		</div>
 		<IconSettings size="60" class="absolute right-3 top-3" />
-	</div>
-	<div
-		role="button"
-		onkeydown={() => null}
-		tabindex="0"
-		onclick={() => goto('/learn-more')}
-		class="relative flex h-full w-full preset-tonal flex-col overflow-hidden rounded-xl p-3 shadow-lg transition-transform hover:scale-105 active:scale-95"
-		style="grid-column: 2; grid-row: 2;"
-	>
-		<div class="absolute inset-0 z-10">
-			<div
-				class="absolute right-0 top-0 h-2/3 w-2/3 bg-gradient-to-bl from-blue-400/80 to-transparent blur-2xl"
-			></div>
-		</div>
-		<div class="z-20 ml-3 mt-3">
-			<h1 class="text-2xl font-bold">Learn More</h1>
-			<p class="mr-3 mt-6">
-				Learn how to use Palaxy and its features to get the most out of your experience.
-			</p>
-		</div>
-		<IconQuestionMark size="60" class="absolute right-3 top-3" />
-	</div>
-	<div
-		role="button"
-		onkeydown={() => null}
-		tabindex="0"
-		onclick={() => goto('/support')}
-		class="relative flex h-full w-full preset-tonal flex-col overflow-hidden rounded-xl p-3 shadow-lg transition-transform hover:scale-105 active:scale-95"
-		style="grid-column: 3; grid-row: 2;"
-	>
-		<div class="absolute inset-0 z-10">
-			<div
-				class="absolute right-0 top-0 h-2/3 w-2/3 bg-gradient-to-bl from-red-400/80 to-transparent blur-2xl"
-			></div>
-		</div>
-		<div class="z-20 ml-3 mt-3">
-			<h1 class="text-2xl font-bold">Support</h1>
-			<p class="mr-3 mt-6">Need help? Found a bug? Have a suggestion? Contact us for support.</p>
-		</div>
-		<IconHeadset size="60" class="absolute right-3 top-3" />
 	</div>
 </div>

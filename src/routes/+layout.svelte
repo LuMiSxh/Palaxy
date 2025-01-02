@@ -16,8 +16,6 @@
 		'/search': 'Search',
 		'/agents': 'Agents',
 		'/settings': 'Settings',
-		'/learn-more': 'Learn More',
-		'/support': 'Support'
 	};
 
 	let currentPath = $derived(pathMap[page.route.id === null ? '/' : page.route.id]);

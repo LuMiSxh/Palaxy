@@ -49,12 +49,12 @@
 		{#await getVersion()}
 			<label class="label w-1/2">
 				<label for="aV" class="label-text">App Version</label>
-				<input id="aV" readonly class="input preset-outlined-secondary-500 dark:preset-tonal" value={'Loading...'} />
+				<input id="aV" readonly class="input preset-outlined-primary-700 dark:preset-tonal" value={'Loading...'} />
 			</label>
 		{:then aVersion}
 			<label class="label w-1/2">
 				<label for="aV" class="label-text">App Version</label>
-				<input id="aV" readonly class="input preset-outlined-secondary-500 dark:preset-tonal" value={aVersion} />
+				<input id="aV" readonly class="input preset-outlined-primary-700 dark:preset-tonal" value={aVersion} />
 			</label>
 		{:catch error}
 			<label class="label w-1/2">
@@ -67,12 +67,12 @@
 		{#await getTauriVersion()}
 			<label class="label w-1/2">
 				<label for="tV" class="label-text">Tauri Version</label>
-				<input id="tV" readonly class="input preset-outlined-tertiary-500 dark:preset-tonal" value={'Loading...'} />
+				<input id="tV" readonly class="input preset-outlined-primary-900 dark:preset-tonal" value={'Loading...'} />
 			</label>
 		{:then tVersion}
 			<label class="label w-1/2">
 				<label for="tV" class="label-text">Tauri Version</label>
-				<input id="tV" readonly class="input preset-outlined-tertiary-500 dark:preset-tonal" value={tVersion} />
+				<input id="tV" readonly class="input preset-outlined-primary-900 dark:preset-tonal" value={tVersion} />
 			</label>
 		{:catch error}
 			<label class="label w-1/2">
@@ -100,7 +100,7 @@
 			<label for="feature" class="label-text">Experimental Features</label>
 			<input
 				id="feature"
-				class="select w-1/2 preset-outlined-secondary-500 dark:preset-tonal"
+				class="select w-1/2 preset-outlined-primary-700 dark:preset-tonal"
 				bind:value={featureInput}
 			/>
 		</label>
@@ -116,7 +116,7 @@
 				>
 				<select
 					id="lang"
-					class="select w-1/2 preset-outlined-tertiary-500 dark:preset-tonal"
+					class="select w-1/2 preset-outlined-primary-900 dark:preset-tonal"
 					bind:value={$appData.language}
 				>
 					{#each langEntries as [k, v]}

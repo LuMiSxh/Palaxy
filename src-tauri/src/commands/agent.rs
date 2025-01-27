@@ -3,6 +3,7 @@ use tokio::sync::Mutex;
 use crate::prelude::*;
 
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn get_agent_list(
     state: State<'_, Mutex<AppStateAgents>>,
 ) -> EResult<CommandListAgents> {

@@ -1,8 +1,8 @@
 use crate::agents::{fetch_html, Agent, AgentMeta, Element, Url};
 use crate::prelude::*;
+use async_trait::async_trait;
 use reqwest::Client;
 use std::collections::HashMap;
-use async_trait::async_trait;
 
 #[derive(Debug)]
 pub struct KissManga {
@@ -15,21 +15,21 @@ pub struct KissManga {
 impl Agent for KissManga {
     fn new(client: Client) -> Self {
         let mut request_options = HashMap::new();
-        request_options.insert("User-Agent".to_string(), "Mozilla/5.0".to_string());
+        request_options.insert("User-Agent".into(), "Mozilla/5.0".into());
 
         KissManga {
             client,
-            url: "https://kissmanga.org".to_string(),
+            url: "https://kissmanga.org".into(),
             request_options,
         }
     }
 
     fn representation(&self) -> AgentMeta {
         AgentMeta {
-            name: "KissManga".to_string(),
+            name: "KissManga".into(),
             url: self.url.clone(),
             icon: None,
-            tags: vec!["English".to_string(), "Webtoon".to_string(), "Experimental".to_string()],
+            tags: vec!["English".into(), "Webtoon".into(), "Experimental".into()],
         }
     }
 
@@ -57,13 +57,17 @@ impl Agent for KissManga {
             &self.client,
             &uri,
             "div#leftside div.full div.episodeList div.full div.listing.full div div h3 a",
-            Some(&self.request_options)
-        ).await?;
+            Some(&self.request_options),
+        )
+        .await?;
 
-        Ok(data.into_iter().map(|element| Element {
-            id: element.clone(),
-            title: element.replace(&manga.title, "").trim().to_string(),
-        }).collect())
+        Ok(data
+            .into_iter()
+            .map(|element| Element {
+                id: element.clone(),
+                title: element.replace(&manga.title, "").trim().to_string(),
+            })
+            .collect())
     }
 
     async fn get_pages(&self, chapter: Element) -> EResult<Vec<Url>> {
@@ -72,8 +76,9 @@ impl Agent for KissManga {
             &self.client,
             &uri,
             "div.barContent div.full div.full.watch_container div#centerDivVideo source",
-            Some(&self.request_options)
-        ).await?;
+            Some(&self.request_options),
+        )
+        .await?;
 
         Ok(data.into_iter().map(|element| element).collect())
     }
@@ -86,12 +91,16 @@ impl KissManga {
             &self.client,
             &uri,
             "div.listing div.item_movies_in_cat div a.item_movies_link",
-            Some(&self.request_options)
-        ).await?;
+            Some(&self.request_options),
+        )
+        .await?;
 
-        Ok(data.into_iter().map(|element| Element {
-            id: element.clone(),
-            title: element.trim().to_string(),
-        }).collect())
+        Ok(data
+            .into_iter()
+            .map(|element| Element {
+                id: element.clone(),
+                title: element.trim().into(),
+            })
+            .collect())
     }
 }

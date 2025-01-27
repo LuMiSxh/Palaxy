@@ -1,29 +1,31 @@
+use crate::agents::{Agent, AgentMeta};
 use printpdf::image_crate;
 use serde::{Deserialize, Serialize};
+use specta::Type;
 use std::path::PathBuf;
-use crate::agents::{Agent, AgentMeta};
 
 // Error types
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, thiserror::Error, Type)]
+#[serde(tag = "type", content = "data")]
 pub enum Error {
     #[error(transparent)]
-    Io(#[from] std::io::Error),
+    Io(#[from] #[serde(skip)] std::io::Error),
     #[error(transparent)]
-    Regex(#[from] regex::Error),
+    Regex(#[from] #[serde(skip)] regex::Error),
     #[error(transparent)]
-    Tauri(#[from] tauri::Error),
+    Tauri(#[from] #[serde(skip)] tauri::Error),
     #[error(transparent)]
-    Image(#[from] image::ImageError),
+    Image(#[from] #[serde(skip)] image::ImageError),
     #[error(transparent)]
-    Epub(#[from] eyre::Report),
+    Epub(#[from] #[serde(skip)] eyre::Report),
     #[error(transparent)]
-    Zip(#[from] zip::result::ZipError),
+    Zip(#[from] #[serde(skip)] zip::result::ZipError),
     #[error(transparent)]
-    PrintPdf(#[from] printpdf::Error),
+    PrintPdf(#[from] #[serde(skip)] printpdf::Error),
     #[error(transparent)]
-    PrintPdfImage(#[from] image_crate::error::ImageError),
+    PrintPdfImage(#[from] #[serde(skip)] image_crate::error::ImageError),
     #[error(transparent)]
-    Reqwest(#[from] reqwest::Error),
+    Reqwest(#[from] #[serde(skip)] reqwest::Error),
     #[error("The given path '{0}' is invalid: {1}")]
     InvalidPath(PathBuf, String),
     #[error("Asynchronous task failed: {0}")]
@@ -47,7 +49,7 @@ pub type EResult<T> = Result<T, Error>;
 
 // App states
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default, Type)]
 pub struct AppStateConverter {
     pub name: String,
     pub source: PathBuf,
@@ -66,23 +68,23 @@ impl AppStateConverter {
 }
 
 pub(crate) struct AppStateAgents {
-    pub agents: Vec<Box<dyn Agent>>
+    pub agents: Vec<Box<dyn Agent>>,
 }
 
 // Command return types
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Type)]
 pub struct CommandDefault {
     pub message: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Type)]
 pub struct CommandGetData {
     pub message: Option<String>,
     pub data: Vec<Vec<PathBuf>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Type)]
 pub struct CommandBundle {
     pub message: Option<String>,
     pub total_chapters: usize,
@@ -90,7 +92,7 @@ pub struct CommandBundle {
     pub chapter_sizes: Option<Vec<usize>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Type)]
 pub struct CommandAnalyze {
     pub message: Option<String>,
     pub negative: Vec<String>,
@@ -99,14 +101,14 @@ pub struct CommandAnalyze {
     pub flag: BundleFlag,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Type)]
 pub struct CommandListAgents {
     pub message: Option<String>,
     pub agents: Vec<AgentMeta>,
 }
 
 // Types shared between frontend and tauri
-#[derive(Serialize, Deserialize, Clone, Copy, Default)]
+#[derive(Serialize, Deserialize, Clone, Copy, Default, Type)]
 pub enum FileFormat {
     PDF,
     EPUB,
@@ -114,7 +116,7 @@ pub enum FileFormat {
     CBZ,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Default)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Default, Type)]
 pub enum Direction {
     #[default]
     #[serde(rename = "Left to Right")]
@@ -123,19 +125,19 @@ pub enum Direction {
     RTL,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Type)]
 pub struct AnalyzeResult {
     pub message: Option<String>,
     pub chapter_per_volume: Vec<usize>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Type)]
 pub struct ConvertResult {
     pub message: Option<String>,
 }
 
 // Workflow types
-#[derive(Serialize, Deserialize, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Default, Type)]
 pub enum BundleFlag {
     NAME,
     IMAGE,

@@ -1,8 +1,8 @@
 use crate::agents::{fetch_json, Agent, AgentMeta, Element, Url};
 use crate::prelude::*;
+use async_trait::async_trait;
 use reqwest::Client;
 use std::collections::HashMap;
-use async_trait::async_trait;
 
 #[derive(Debug)]
 pub struct MangaDex {
@@ -16,37 +16,42 @@ impl Agent for MangaDex {
     fn new(client: Client) -> Self {
         let mut request_options = HashMap::new();
         request_options.insert("x-referer".to_string(), "https://mangadex.org".to_string());
-        request_options.insert("x-sec-ch-ua".to_string(), "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"96\", \"Google Chrome\";v=\"96\"".to_string());
+        request_options.insert(
+            "x-sec-ch-ua".into(),
+            "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"96\", \"Google Chrome\";v=\"96\"".into(),
+        );
 
         MangaDex {
             client,
-            api: "https://api.mangadex.org".to_string(),
+            api: "https://api.mangadex.org".into(),
             request_options,
         }
     }
 
     fn representation(&self) -> AgentMeta {
         AgentMeta {
-            name: "MangaDex".to_string(),
-            url: "https://mangadex.org".to_string(),
-            icon: Some("https://mangadex.org/favicon.ico".to_string()),
-            tags: vec!["Multilingual".to_string(), "Scanlation".to_string(), "Updates".to_string(), "Experimental".to_string()],
+            name: "MangaDex".into(),
+            url: "https://mangadex.org".into(),
+            icon: Some("https://mangadex.org/favicon.ico".into()),
+            tags: vec![
+                "Multilingual".into(),
+                "Scanlation".into(),
+                "Updates".into(),
+                "Experimental".into(),
+            ],
         }
     }
 
     async fn get_mangas(&self) -> EResult<Vec<Element>> {
         let url = "https://websites.hakuneko.download/mangadex.json";
-        Ok(
-            fetch_json(
-                &self.client,
-                url,
-                Some(&self.request_options),
-            )
-                .await?
-                .into_iter()
-                .map(|(id, title)| Element { id, title: title.to_string() })
-                .collect()
-        )
+        Ok(fetch_json(&self.client, url, Some(&self.request_options))
+            .await?
+            .into_iter()
+            .map(|(id, title)| Element {
+                id,
+                title: title.to_string(),
+            })
+            .collect())
     }
 
     async fn get_chapters(&self, manga: Element) -> EResult<Vec<Element>> {
@@ -75,62 +80,83 @@ impl Agent for MangaDex {
         let hash = data["chapter"]["hash"].to_string();
         let files = data["chapter"]["data"].as_array().unwrap();
 
-        Ok(files.iter().map(|file| format!("{}/data/{}/{}", base_url, hash, file.to_string())).collect())
+        Ok(files
+            .iter()
+            .map(|file| format!("{}/data/{}/{}", base_url, hash, file.to_string()))
+            .collect())
     }
 }
 
 impl MangaDex {
     async fn get_chapters_from_page(&self, manga: &Element, page: usize) -> EResult<Vec<Element>> {
-        let uri = format!("{}/chapter?limit=100&offset={}&manga={}", self.api, 100 * page, manga.id);
+        let uri = format!(
+            "{}/chapter?limit=100&offset={}&manga={}",
+            self.api,
+            100 * page,
+            manga.id
+        );
         let data = fetch_json(&Client::new(), &uri, Some(&self.request_options)).await?;
 
-        let chapters = data["data"].as_array().unwrap().iter().filter_map(|result| {
-            let attributes = &result["attributes"];
-            let mut title = String::new();
+        let chapters = data["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|result| {
+                let attributes = &result["attributes"];
+                let mut title = String::new();
 
-            if let Some(volume) = attributes["volume"].as_str() {
-                title.push_str(&format!("Vol.{}", self.pad_num(volume, 2)));
-            }
-            if let Some(chapter) = attributes["chapter"].as_str() {
-                title.push_str(&format!(" Ch.{}", self.pad_num(chapter, 4)));
-            }
-            if let Some(title_attr) = attributes["title"].as_str() {
-                if !title.is_empty() {
-                    title.push_str(" - ");
+                if let Some(volume) = attributes["volume"].as_str() {
+                    title.push_str(&format!("Vol.{}", self.pad_num(volume, 2)));
                 }
-                title.push_str(title_attr);
-            }
-            if let Some(language) = attributes["translatedLanguage"].as_str() {
-                title.push_str(&format!(" ({})", language));
-            }
+                if let Some(chapter) = attributes["chapter"].as_str() {
+                    title.push_str(&format!(" Ch.{}", self.pad_num(chapter, 4)));
+                }
+                if let Some(title_attr) = attributes["title"].as_str() {
+                    if !title.is_empty() {
+                        title.push_str(" - ");
+                    }
+                    title.push_str(title_attr);
+                }
+                if let Some(language) = attributes["translatedLanguage"].as_str() {
+                    title.push_str(&format!(" ({})", language));
+                }
 
-            let groups = result["relationships"].as_array().unwrap().iter().filter_map(|r| {
-                if r["type"].as_str().unwrap() == "scanlation_group" {
-                    Some(r["id"].as_str().unwrap().to_string())
+                let groups = result["relationships"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .filter_map(|r| {
+                        if r["type"].as_str().unwrap() == "scanlation_group" {
+                            Some(r["id"].as_str().unwrap().to_string())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>();
+
+                if groups.is_empty() {
+                    Some(Element {
+                        id: result["id"].to_string(),
+                        title: title.trim().into(),
+                    })
                 } else {
                     None
                 }
-            }).collect::<Vec<_>>();
-
-            if groups.is_empty() {
-                Some(Element {
-                    id: result["id"].to_string(),
-                    title: title.trim().to_string(),
-                })
-            } else {
-                None
-            }
-        }).collect();
+            })
+            .collect();
 
         Ok(chapters)
     }
 
     fn pad_num(&self, number: &str, places: usize) -> String {
-        let range: Vec<String> = number.split('-').map(|chapter| {
-            let chapter = chapter.trim();
-            let digits = chapter.split('.').next().unwrap().len();
-            format!("{}{}", "0".repeat(places.saturating_sub(digits)), chapter)
-        }).collect();
+        let range: Vec<String> = number
+            .split('-')
+            .map(|chapter| {
+                let chapter = chapter.trim();
+                let digits = chapter.split('.').next().unwrap().len();
+                format!("{}{}", "0".repeat(places.saturating_sub(digits)), chapter)
+            })
+            .collect();
 
         range.join("-")
     }

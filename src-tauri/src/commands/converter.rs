@@ -18,6 +18,7 @@ lazy_static! {
 // -- RESET --
 
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn reset(state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
     let mut state = state.lock().await;
     state.reset();
@@ -27,6 +28,7 @@ pub async fn reset(state: State<'_, Mutex<AppStateConverter>>) -> EResult<Comman
 // -- SETTER --
 
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn set_source(source: String, state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
     let mut state = state.lock().await;
     state.source = PathBuf::from(source);
@@ -41,6 +43,7 @@ pub async fn set_source(source: String, state: State<'_, Mutex<AppStateConverter
 }
 
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn set_volume_sizes(sizes: Vec<usize>, state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
     let mut state = state.lock().await;
     state.volume_sizes = sizes;
@@ -48,6 +51,7 @@ pub async fn set_volume_sizes(sizes: Vec<usize>, state: State<'_, Mutex<AppState
 }
 
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn set_bundle_flag(flag: BundleFlag, state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
     let mut state = state.lock().await;
     state.bundle_flag = flag;
@@ -55,6 +59,7 @@ pub async fn set_bundle_flag(flag: BundleFlag, state: State<'_, Mutex<AppStateCo
 }
 
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn set_data(data: Vec<Vec<PathBuf>>, state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
     let mut state = state.lock().await;
     state.data = data;
@@ -64,6 +69,7 @@ pub async fn set_data(data: Vec<Vec<PathBuf>>, state: State<'_, Mutex<AppStateCo
 // -- GETTER --
 
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn get_data(state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandGetData> {
     let state = state.lock().await;
     Ok(CommandGetData {
@@ -75,6 +81,7 @@ pub async fn get_data(state: State<'_, Mutex<AppStateConverter>>) -> EResult<Com
 // -- PROCESSES --
 
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn analyze(state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandAnalyze> {
     let state = state.lock().await;
 
@@ -207,6 +214,7 @@ pub async fn analyze(state: State<'_, Mutex<AppStateConverter>>) -> EResult<Comm
 }
 
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn bundle(
     sensibility: Option<usize>,
     state: State<'_, Mutex<AppStateConverter>>,
@@ -328,6 +336,7 @@ struct SharedData {
 }
 
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn convert(
     create_directory: bool,
     target: String,

@@ -1,5 +1,5 @@
-mod mangadex;
 mod kissmanga;
+mod mangadex;
 
 use crate::prelude::*;
 use async_trait::async_trait;
@@ -7,15 +7,16 @@ use reqwest::Client;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use specta::Type;
 use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, Type)]
 pub struct Element {
     id: String,
     title: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, Type)]
 pub struct AgentMeta {
     name: String,
     url: String,
@@ -32,7 +33,12 @@ pub fn initialize_agents() -> Vec<Box<dyn Agent + 'static>> {
     ]
 }
 
-pub async fn fetch_html(client: &Client, url: &str, query: &str, options: Option<&HashMap<String, String>>) -> EResult<Vec<String>> {
+pub async fn fetch_html(
+    client: &Client,
+    url: &str,
+    query: &str,
+    options: Option<&HashMap<String, String>>,
+) -> EResult<Vec<String>> {
     let mut request = client.get(url);
 
     if let Some(options) = options {
@@ -48,7 +54,11 @@ pub async fn fetch_html(client: &Client, url: &str, query: &str, options: Option
     Ok(elements)
 }
 
-pub async fn fetch_json(client: &Client, url: &str, options: Option<&HashMap<String, String>>) -> EResult<HashMap<String, Value>> {
+pub async fn fetch_json(
+    client: &Client,
+    url: &str,
+    options: Option<&HashMap<String, String>>,
+) -> EResult<HashMap<String, Value>> {
     let mut request = client.get(url);
 
     if let Some(options) = options {
@@ -57,17 +67,19 @@ pub async fn fetch_json(client: &Client, url: &str, options: Option<&HashMap<Str
         }
     }
 
-    let response = request.send().await?.json::<HashMap<String, Value>>().await?;
+    let response = request
+        .send()
+        .await?
+        .json::<HashMap<String, Value>>()
+        .await?;
     Ok(response)
 }
-
 
 #[async_trait]
 pub trait Agent: Send + Sync {
     fn new(client: Client) -> Self
     where
-        Self: Sized
-    ;
+        Self: Sized;
 
     fn representation(&self) -> AgentMeta;
 

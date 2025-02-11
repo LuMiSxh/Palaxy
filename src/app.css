@@ -1,9 +1,53 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import 'tailwindcss';
+@import './themes.css';
 
-@layer components {
-	.label-experimental {
-		@apply chip label-text preset-tonal-warning px-1 py-0;
+@custom-variant dark (&:where(.dark, .dark *));
+
+@plugin "@tailwindcss/typography";
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/container-queries";
+
+@plugin "daisyui" {
+	themes: false;
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+	*,
+	::after,
+	::before,
+	::backdrop,
+	::file-selector-button {
+		border-color: var(--color-gray-200, currentColor);
 	}
+
+	.glass-surface {
+		@apply dark:bg-base-200/20 bg-base-200/10 rounded-box border-base-300 border px-2 py-2 shadow-md;
+		@apply transition-transform;
+
+		backdrop-filter: blur(3px);
+
+		&:hover {
+			backdrop-filter: blur(4px);
+		}
+
+		.invis {
+			background-color: transparent !important;
+		}
+	}
+
+	.label-experimental {
+		@apply badge badge-warning px-1 py-0;
+	}
+
+    .label-stable {
+        @apply badge badge-success px-1 py-0;
+    }
 }

@@ -1,10 +1,5 @@
 <script lang="ts">
-	import {
-		IconSearch,
-		IconSettings,
-		IconTransform,
-		IconUsers
-	} from '@tabler/icons-svelte';
+	import { IconSearch, IconSettings, IconTransform, IconUsers } from '@tabler/icons-svelte';
 
 	import { goto } from '$app/navigation';
 	import { ffIsEnabled } from '$lib/utils';
@@ -24,27 +19,23 @@
 	// });
 </script>
 
-<div class="grid h-full w-full select-none grid-cols-2 grid-rows-2 gap-10 p-3">
+<div class="grid h-full w-full grid-cols-2 grid-rows-2 gap-10 p-3 select-none">
 	<div
 		role="button"
 		onkeydown={() => null}
 		tabindex="0"
 		onclick={() => goto('/convert')}
-		class="relative flex h-full w-full preset-tonal flex-col overflow-hidden rounded-xl p-3 shadow-lg transition-transform hover:scale-105 active:scale-95"
+		class="glass-surface relative flex h-full w-full cursor-pointer flex-col overflow-hidden transition-transform hover:scale-[102%] active:scale-[98%]"
 		style="grid-column: 1; grid-row: 1;"
 	>
-		<div class="absolute inset-0 z-10">
-			<div
-				class="absolute right-0 top-0 h-2/3 w-2/3 bg-gradient-to-bl from-primary-500/80 to-transparent blur-2xl"
-			></div>
-		</div>
-		<div class="z-20 ml-3 mt-3">
-			<h1 class="text-2xl font-bold">Convert</h1>
-			<p class="mr-3 mt-6">
+		<div class="z-20 mt-3 ml-3">
+			<h1 class="text-2xl font-bold select-none">Convert</h1>
+			<p class="mt-6 mr-3 select-none">
+				<span class="label-stable">Stable</span><br />
 				Convert your manga images into a digital format that can be read on your favorite devices.
 			</p>
 		</div>
-		<IconTransform size="60" class="absolute right-3 top-3" />
+		<IconTransform size="60" class="absolute top-3 right-3" />
 	</div>
 	{#if ffIsEnabled($appData, FeatureFlag.SEARCH_MANGA)}
 		<div
@@ -52,22 +43,17 @@
 			onkeydown={() => null}
 			tabindex="0"
 			onclick={() => goto('/search')}
-			class="relative flex h-full w-full preset-tonal flex-col overflow-hidden rounded-xl p-3 shadow-lg transition-transform hover:scale-105 active:scale-95"
+			class="glass-surface relative flex h-full w-full cursor-pointer flex-col overflow-hidden transition-transform hover:scale-[102%] active:scale-[98%]"
 			style="grid-column: 1; grid-row: 2;"
 		>
-			<div class="absolute inset-0 z-10">
-				<div
-					class="absolute right-0 top-0 h-2/3 w-2/3 bg-gradient-to-bl from-tertiary-500/80 to-transparent blur-2xl"
-				></div>
-			</div>
-			<div class="z-20 ml-3 mt-3">
-				<h1 class="text-2xl font-bold">Search</h1>
-				<p class="mr-3 mt-6">
+			<div class="z-20 mt-3 ml-3">
+				<h1 class="text-2xl font-bold select-none">Search</h1>
+				<p class="mt-6 mr-3 select-none">
 					<span class="label-experimental">Experimental</span><br />
 					Search for your favorite manga series and chapters from various sources.
 				</p>
 			</div>
-			<IconSearch size="60" class="absolute right-3 top-3" />
+			<IconSearch size="60" class="absolute top-3 right-3" />
 		</div>
 	{/if}
 	{#if ffIsEnabled($appData, FeatureFlag.BROWSE_AGENTS)}
@@ -76,22 +62,17 @@
 			onkeydown={() => null}
 			tabindex="0"
 			onclick={() => goto('/agents')}
-			class="relative flex h-full w-full preset-tonal flex-col overflow-hidden rounded-xl p-3 shadow-lg transition-transform hover:scale-105 active:scale-95"
+			class="glass-surface relative flex h-full w-full cursor-pointer flex-col overflow-hidden transition-transform hover:scale-[102%] active:scale-[98%]"
 			style="grid-column: 2; grid-row: 2;"
 		>
-			<div class="absolute inset-0 z-10">
-				<div
-					class="absolute right-0 top-0 h-2/3 w-2/3 bg-gradient-to-bl from-secondary-400/80 to-transparent blur-2xl"
-				></div>
-			</div>
-			<div class="z-20 ml-3 mt-3">
-				<h1 class="text-2xl font-bold">Agents</h1>
-				<p class="mr-3 mt-6">
+			<div class="z-20 mt-3 ml-3">
+				<h1 class="text-2xl font-bold select-none">Agents</h1>
+				<p class="mt-6 mr-3 select-none">
 					<span class="label-experimental">Experimental</span><br />
 					Manage your agents and their settings for better search results.
 				</p>
 			</div>
-			<IconUsers size="60" class="absolute right-3 top-3" />
+			<IconUsers size="60" class="absolute top-3 right-3" />
 		</div>
 	{/if}
 	<div
@@ -99,18 +80,15 @@
 		onkeydown={() => null}
 		tabindex="0"
 		onclick={() => goto('/settings')}
-		class="relative flex h-full w-full preset-tonal flex-col overflow-hidden rounded-xl p-3 shadow-lg transition-transform hover:scale-105 active:scale-95"
+		class="glass-surface relative flex h-full w-full cursor-pointer flex-col overflow-hidden transition-transform hover:scale-[102%] active:scale-[98%]"
 		style="grid-column: 2; grid-row: 1;"
 	>
-		<div class="absolute inset-0 z-10">
-			<div
-				class="absolute right-0 top-0 h-2/3 w-2/3 bg-gradient-to-bl from-slate-600/80 to-transparent blur-2xl"
-			></div>
+		<div class="z-20 mt-3 ml-3">
+			<h1 class="text-2xl font-bold select-none">Settings</h1>
+			<p class="mt-6 mr-3 select-none">
+				Change Palaxy's settings to better suit your needs and preferences.
+			</p>
 		</div>
-		<div class="z-20 ml-3 mt-3">
-			<h1 class="text-2xl font-bold">Settings</h1>
-			<p class="mr-3 mt-6">Change Palaxy's settings to better suit your needs and preferences.</p>
-		</div>
-		<IconSettings size="60" class="absolute right-3 top-3" />
+		<IconSettings size="60" class="absolute top-3 right-3" />
 	</div>
 </div>

@@ -18,7 +18,7 @@ tauri-build = { version = "2.0.2", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "2.0.6", features = ["protocol-asset", "macos-private-api"] }
-thiserror = "1.0.66"
+thiserror = "2.0.11"
 regex = "1.11.1"
 image = "0.25.4"
 lazy_static = { version = "1.5.0", features = [] }
@@ -30,7 +30,7 @@ eyre = "0.6.12"
 printpdf = { version = "0.7.0", features = ["image", "embedded_images"] }
 tauri-plugin-dialog = "2.0.3"
 reqwest = "0.12.7"
-scraper = "0.21.0"
+scraper = "0.22.0"
 async-trait = "0.1.85"
 specta-typescript = "0.0.9"
 tauri-specta = { version = "=2.0.0-rc.21", features = ["derive", "typescript"] }

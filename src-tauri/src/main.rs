@@ -13,6 +13,10 @@ mod collector;
 mod commands;
 mod generator;
 mod prelude;
+mod types;
+#[macro_use]
+mod macros;
+mod transformer;
 
 fn main() {
     let builder = SpectaBuilder::<tauri::Wry>::new()

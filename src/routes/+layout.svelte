@@ -15,7 +15,7 @@
 		'/convert': 'Convert',
 		'/search': 'Search',
 		'/agents': 'Agents',
-		'/settings': 'Settings',
+		'/settings': 'Settings'
 	};
 
 	let currentPath = $derived(pathMap[page.route.id === null ? '/' : page.route.id]);
@@ -51,6 +51,8 @@
 		// Set dark / light mode
 		setTheme($appData.theme);
 	}
+
+	// TODO: Redraw the images so they are not cut off
 </script>
 
 <ToastProvider>
@@ -58,7 +60,7 @@
 		<AppBar base="items-center py-2 px-3">
 			{#snippet lead()}
 				<a href="/" class="">
-					<img src="/favicon.png" alt="Logo" class="aspect-square h-[2.75rem] select-none" />
+					<img src="/icon.png" alt="Logo" class="aspect-square h-[2.75rem] select-none" />
 				</a>
 			{/snippet}
 			{#snippet trail()}
@@ -82,8 +84,12 @@
 				</div>
 			{/snippet}
 		</AppBar>
-		<main class="h-full w-full flex-grow overflow-auto px-3 py-2">
-			{@render children()}
+		<main class="h-full w-full flex-grow overflow-auto px-3 py-2 relative">
+			<img src="/chars/alya.png" alt="" class="max-h-full -z-50 absolute top-0 left-0 drop-shadow-sm" />
+			<img src="/chars/masachika.png" alt="" class="max-h-full -z-50 absolute top-0 right-0 drop-shadow-sm" />
+			<div class="h-full">
+				{@render children()}
+			</div>
 		</main>
 	</div>
 </ToastProvider>

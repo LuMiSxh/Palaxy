@@ -21,7 +21,7 @@ export interface AppData {
 	theme: Theme;
 	language: SupportedLanguages;
 	featureFlags: Array<FeatureFlag>;
-	autoFill: {
+	autoPop: {
 		enabled: boolean;
 		// other properties
 		converter: {
@@ -36,7 +36,7 @@ export const defaultAppData: AppData = {
 	theme: Theme.SYSTEM,
 	language: SupportedLanguages.ENGLISH,
 	featureFlags: [],
-	autoFill: {
+	autoPop: {
 		enabled: false,
 		converter: {
 			conversionType: null,

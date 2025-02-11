@@ -26,63 +26,47 @@
 	}
 </script>
 
+{#snippet label(name: string, value?: string, error?: Error)}
+	<label class="label w-1/2 backdrop-blur-sm px-2 py-2 rounded-lg dark:bg-surface-900/20 bg-surface-100/05">
+		<label for="name" class="label-text">{name}</label>
+		<input
+			id="name"
+			readonly
+			class={"input " + (error === undefined? "preset-outlined-primary-500 dark:preset-tonal" : "preset-filled-error-500")}
+			value={error ?? (value ?? "None")} />
+	</label>
+{/snippet}
+
 <div class="grid h-full w-full select-none grid-cols-3 grid-rows-3 gap-10">
 	<div class="flex h-full w-full items-center justify-center" style="grid-column: 1; grid-row: 1;">
 		{#await getName()}
-			<label class="label w-1/2">
-				<label for="name" class="label-text">Name</label>
-				<input id="name" readonly class="input preset-outlined-primary-500 dark:preset-tonal" value={'Loading...'} />
-			</label>
+			{@render label('Name', 'Loading...')}
 		{:then name}
-			<label class="label w-1/2">
-				<label for="name" class="label-text">Name</label>
-				<input id="name" readonly class="input preset-outlined-primary-500 dark:preset-tonal" value={name} />
-			</label>
+			{@render label('Name', name)}
 		{:catch error}
-			<label class="label w-1/2">
-				<label for="name" class="label-text">Name</label>
-				<input id="name" readonly class="input preset-filled-error-500" value={error.message} />
-			</label>
+			{@render label('Name', undefined, error)}
 		{/await}
 	</div>
 	<div class="flex h-full w-full items-center justify-center" style="grid-column: 1; grid-row: 2;">
 		{#await getVersion()}
-			<label class="label w-1/2">
-				<label for="aV" class="label-text">App Version</label>
-				<input id="aV" readonly class="input preset-outlined-primary-700 dark:preset-tonal" value={'Loading...'} />
-			</label>
+			{@render label('App Version', 'Loading...')}
 		{:then aVersion}
-			<label class="label w-1/2">
-				<label for="aV" class="label-text">App Version</label>
-				<input id="aV" readonly class="input preset-outlined-primary-700 dark:preset-tonal" value={aVersion} />
-			</label>
+			{@render label('App Version', aVersion)}
 		{:catch error}
-			<label class="label w-1/2">
-				<label for="aV" class="label-text">App Version</label>
-				<input id="aV" readonly class="input preset-filled-error-500" value={error.message} />
-			</label>
+			{@render label('App Version', undefined, error)}
 		{/await}
 	</div>
 	<div class="flex h-full w-full items-center justify-center" style="grid-column: 1; grid-row: 3;">
 		{#await getTauriVersion()}
-			<label class="label w-1/2">
-				<label for="tV" class="label-text">Tauri Version</label>
-				<input id="tV" readonly class="input preset-outlined-primary-900 dark:preset-tonal" value={'Loading...'} />
-			</label>
+			{@render label('Tauri Version', 'Loading...')}
 		{:then tVersion}
-			<label class="label w-1/2">
-				<label for="tV" class="label-text">Tauri Version</label>
-				<input id="tV" readonly class="input preset-outlined-primary-900 dark:preset-tonal" value={tVersion} />
-			</label>
+			{@render label('Tauri Version', tVersion)}
 		{:catch error}
-			<label class="label w-1/2">
-				<label for="tV" class="label-text">Tauri Version</label>
-				<input id="tV" readonly class="input preset-filled-error-500" value={error.message} />
-			</label>
+			{@render label('Tauri Version', undefined, error)}
 		{/await}
 	</div>
 	<div class="flex h-full w-full items-center justify-center" style="grid-column: 2; grid-row: 1;">
-		<label class="label">
+		<label class="label backdrop-blur-sm px-2 py-2 rounded-lg">
 			<label for="theme" class="label-text">Theme</label>
 			<select
 				id="theme"
@@ -96,7 +80,7 @@
 		</label>
 	</div>
 	<div class="flex h-full w-full items-center justify-center" style="grid-column: 2; grid-row: 2;">
-		<label class="label">
+		<label class="label backdrop-blur-sm px-2 py-2 rounded-lg">
 			<label for="feature" class="label-text">Experimental Features</label>
 			<input
 				id="feature"
@@ -110,9 +94,9 @@
 			class="flex h-full w-full items-center justify-center"
 			style="grid-column: 2; grid-row: 3;"
 		>
-			<label class="label">
+			<label class="label backdrop-blur-sm px-2 py-2 rounded-lg">
 				<label for="lang" class="label-text"
-					>Language <span class="label-experimental">Experimental</span></label
+				>Language <span class="label-experimental">Experimental</span></label
 				>
 				<select
 					id="lang"

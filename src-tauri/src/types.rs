@@ -1,9 +1,13 @@
+use crate::prelude::EResult;
+use async_trait::async_trait;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use specta::Type;
-
+use std::path::PathBuf;
+use std::time::Duration;
 // --- Enums ---
 
-#[derive(Serialize, Deserialize, Clone, Copy, Default, Type)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Default, Type)]
 pub enum BundleFlag {
     #[serde(rename = "NAME")]
     Name,
@@ -38,7 +42,6 @@ pub enum Direction {
 pub enum StatusFlag {
     Experimental,
     Deprecated,
-    Broken,
     #[default]
     Stable,
 }
@@ -47,23 +50,39 @@ pub enum StatusFlag {
 pub enum TagType {
     Language(String),
     Status(StatusFlag),
-    Genre(String),
     Other(String),
 }
 
 // --- Structs ---
 #[derive(Serialize, Deserialize, Debug, Default, Type)]
 pub struct Element {
-    id: String,
-    title: String,
+    pub id: String,
+    pub title: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Type)]
 pub struct AgentMeta {
-    name: String,
-    url: String,
-    icon: Option<String>,
-    tags: Vec<TagType>,
+    pub name: String,
+    pub url: String,
+    pub icon: Option<String>,
+    pub tags: Vec<TagType>,
+}
+
+pub type Url = String;
+
+#[async_trait]
+pub trait Agent: Send + Sync {
+    fn new(client: Client) -> Self
+    where
+        Self: Sized;
+
+    fn representation(&self) -> AgentMeta;
+
+    async fn get_mangas(&self) -> EResult<Vec<Element>>;
+
+    async fn get_chapters(&self, manga: Element) -> EResult<Vec<Element>>;
+
+    async fn get_pages(&self, chapter: Element) -> EResult<Vec<Url>>;
 }
 
 // --- Responses ---
@@ -72,10 +91,20 @@ pub struct AgentMeta {
 pub struct BaseResponse<T = ()> {
     pub duration: u64,
     pub comment: Option<String>,
-    pub data: Option<T>,
+    pub payload: Option<T>,
 }
 
-pub type CommGetData = BaseResponse<Vec<Vec<String>>>; // <- was: CommandGetData
+impl BaseResponse<()> {
+    pub fn default_duration(duration: u64) -> Self {
+        Self {
+            duration,
+            comment: None,
+            payload: None,
+        }
+    }
+}
+
+pub type CommGetData = BaseResponse<Vec<Vec<PathBuf>>>; // <- was: CommandGetData
 
 #[derive(Serialize, Deserialize, Default, Type)]
 pub struct BundleResponse {

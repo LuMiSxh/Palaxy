@@ -1,5 +1,6 @@
-use crate::agents::{fetch_html, Agent, AgentMeta, Element, Url};
+use crate::agents::fetch_html;
 use crate::prelude::*;
+use crate::types::{Agent, AgentMeta, Element, StatusFlag, TagType, Url};
 use async_trait::async_trait;
 use reqwest::Client;
 use std::collections::HashMap;
@@ -29,7 +30,11 @@ impl Agent for KissManga {
             name: "KissManga".into(),
             url: self.url.clone(),
             icon: None,
-            tags: vec!["English".into(), "Webtoon".into(), "Experimental".into()],
+            tags: vec![
+                TagType::Language("English".into()),
+                TagType::Status(StatusFlag::Experimental),
+                TagType::Other("Webtoon".into()),
+            ],
         }
     }
 

@@ -16,21 +16,20 @@ mod prelude;
 mod types;
 #[macro_use]
 mod macros;
-mod transformer;
 
 fn main() {
     let builder = SpectaBuilder::<tauri::Wry>::new()
         // Then register them (separated by a comma)
         .commands(collect_commands![
-            converter::set_source,
-            converter::set_bundle_flag,
-            converter::set_data,
-            converter::set_volume_sizes,
-            converter::get_data,
-            converter::reset,
-            converter::analyze,
-            converter::bundle,
-            converter::convert,
+            converter::conv_set_source,
+            converter::conv_set_bundle_flag,
+            converter::conv_set_data,
+            converter::conv_set_volume_sizes,
+            converter::conv_get_data,
+            converter::conv_reset,
+            converter::conv_analyze,
+            converter::conv_bundle,
+            converter::conv_convert,
             //
             agent::get_agent_list,
         ]);
@@ -41,14 +40,14 @@ fn main() {
 
     // #[cfg(debug_assertions)] // <- Only export on non-release builds
     builder
-        .export(ts, "../src/bindings.ts")
+        .export(ts, "../src/types/bindings.ts")
         .expect("Failed to export typescript bindings");
 
     Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
-            app.manage(Mutex::new(prelude::AppStateConverter::default()));
-            app.manage(Mutex::new(prelude::AppStateAgents {
+            app.manage(Mutex::new(prelude::ConvState::default()));
+            app.manage(Mutex::new(prelude::AgentState {
                 agents: initialize_agents(),
             }));
             Ok(())

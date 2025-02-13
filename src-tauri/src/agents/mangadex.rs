@@ -1,5 +1,6 @@
-use crate::agents::{fetch_json, Agent, AgentMeta, Element, Url};
+use crate::agents::fetch_json;
 use crate::prelude::*;
+use crate::types::{Agent, AgentMeta, Element, StatusFlag, TagType, Url};
 use async_trait::async_trait;
 use reqwest::Client;
 use std::collections::HashMap;
@@ -34,10 +35,9 @@ impl Agent for MangaDex {
             url: "https://mangadex.org".into(),
             icon: Some("https://mangadex.org/favicon.ico".into()),
             tags: vec![
-                "Multilingual".into(),
-                "Scanlation".into(),
-                "Updates".into(),
-                "Experimental".into(),
+                TagType::Language("Multilingual".into()),
+                TagType::Status(StatusFlag::Experimental),
+                TagType::Other("Scanlation groups".into()),
             ],
         }
     }

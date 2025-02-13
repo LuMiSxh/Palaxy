@@ -2,29 +2,12 @@ mod kissmanga;
 mod mangadex;
 
 use crate::prelude::*;
-use async_trait::async_trait;
 use reqwest::Client;
 use scraper::{Html, Selector};
-use serde::{Deserialize, Serialize};
+use serde::{Serialize};
 use serde_json::Value;
-use specta::Type;
 use std::collections::HashMap;
-
-#[derive(Serialize, Deserialize, Debug, Default, Type)]
-pub struct Element {
-    id: String,
-    title: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, Type)]
-pub struct AgentMeta {
-    name: String,
-    url: String,
-    icon: Option<String>,
-    tags: Vec<String>,
-}
-
-pub type Url = String;
+use crate::types::{Agent, AgentMeta, Element};
 
 pub fn initialize_agents() -> Vec<Box<dyn Agent + 'static>> {
     vec![
@@ -73,19 +56,4 @@ pub async fn fetch_json(
         .json::<HashMap<String, Value>>()
         .await?;
     Ok(response)
-}
-
-#[async_trait]
-pub trait Agent: Send + Sync {
-    fn new(client: Client) -> Self
-    where
-        Self: Sized;
-
-    fn representation(&self) -> AgentMeta;
-
-    async fn get_mangas(&self) -> EResult<Vec<Element>>;
-
-    async fn get_chapters(&self, manga: Element) -> EResult<Vec<Element>>;
-
-    async fn get_pages(&self, chapter: Element) -> EResult<Vec<Url>>;
 }

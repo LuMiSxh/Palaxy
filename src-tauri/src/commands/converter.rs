@@ -1,6 +1,10 @@
 use crate::collector::Collector;
 use crate::generator::{cbz, epub, pdf};
 use crate::prelude::*;
+use crate::types::{
+    AnalyzeResponse, BaseResponse, BundleFlag, BundleResponse, CommAnalyzeMeta, CommBundle,
+    CommGetData, Direction, FileFormat,
+};
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use regex::Regex;
@@ -19,62 +23,93 @@ lazy_static! {
 
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn reset(state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
+pub async fn conv_reset(state: State<'_, Mutex<ConvState>>) -> EResult<BaseResponse> {
+    let start = std::time::Instant::now();
+
     let mut state = state.lock().await;
     state.reset();
-    Ok(CommandDefault::default())
+
+    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
 }
 
 // -- SETTER --
 
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn set_source(source: String, state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
+pub async fn conv_set_source(
+    source: String,
+    state: State<'_, Mutex<ConvState>>,
+) -> EResult<BaseResponse> {
+    let start = std::time::Instant::now();
+
     let mut state = state.lock().await;
     state.source = PathBuf::from(source);
 
-    state.name = state.source
+    state.name = state
+        .source
         .file_name()
         .and_then(|name| name.to_str())
         .map(|name| name.to_string())
         .unwrap_or_else(|| "Palaxy-Converted".to_string());
 
-    Ok(CommandDefault::default())
+    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
 }
 
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn set_volume_sizes(sizes: Vec<usize>, state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
+pub async fn conv_set_volume_sizes(
+    sizes: Vec<usize>,
+    state: State<'_, Mutex<ConvState>>,
+) -> EResult<BaseResponse> {
+    let start = std::time::Instant::now();
+
     let mut state = state.lock().await;
     state.volume_sizes = sizes;
-    Ok(CommandDefault::default())
+
+    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
 }
 
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn set_bundle_flag(flag: BundleFlag, state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
+pub async fn conv_set_bundle_flag(
+    flag: BundleFlag,
+    state: State<'_, Mutex<ConvState>>,
+) -> EResult<BaseResponse> {
+    let start = std::time::Instant::now();
+
     let mut state = state.lock().await;
     state.bundle_flag = flag;
-    Ok(CommandDefault::default())
+
+    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
 }
 
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn set_data(data: Vec<Vec<PathBuf>>, state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandDefault> {
+pub async fn conv_set_data(
+    data: Vec<Vec<PathBuf>>,
+    state: State<'_, Mutex<ConvState>>,
+) -> EResult<BaseResponse> {
+    let start = std::time::Instant::now();
+
     let mut state = state.lock().await;
     state.data = data;
-    Ok(CommandDefault::default())
+
+    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
 }
 
 // -- GETTER --
 
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn get_data(state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandGetData> {
+pub async fn conv_get_data(state: State<'_, Mutex<ConvState>>) -> EResult<CommGetData> {
+    let start = std::time::Instant::now();
+
     let state = state.lock().await;
-    Ok(CommandGetData {
-        message: None,
-        data: state.data.clone(),
+
+    Ok(CommGetData {
+        duration: start.elapsed().as_secs(),
+        comment: None,
+        payload: Some(state.data.clone()),
     })
 }
 
@@ -82,7 +117,9 @@ pub async fn get_data(state: State<'_, Mutex<AppStateConverter>>) -> EResult<Com
 
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn analyze(state: State<'_, Mutex<AppStateConverter>>) -> EResult<CommandAnalyze> {
+pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAnalyzeMeta> {
+    let start = std::time::Instant::now();
+
     let state = state.lock().await;
 
     fn has_perms(path: &PathBuf) -> bool {
@@ -94,7 +131,7 @@ pub async fn analyze(state: State<'_, Mutex<AppStateConverter>>) -> EResult<Comm
     let mut negative = Vec::new();
     let mut positive = Vec::new();
     let mut suggest = Vec::new();
-    let mut flag = BundleFlag::IMAGE;
+    let mut flag = BundleFlag::Image;
     let mut collector = Collector::new(&state.source);
 
     let chapters = collector.collect_chapters(None).await?;
@@ -114,12 +151,15 @@ pub async fn analyze(state: State<'_, Mutex<AppStateConverter>>) -> EResult<Comm
                 .to_string(),
         );
 
-        return Ok(CommandAnalyze {
-            message: None,
-            negative,
-            positive,
-            suggest,
-            flag,
+        return Ok(CommAnalyzeMeta {
+            duration: start.elapsed().as_secs(),
+            comment: None,
+            payload: Some(AnalyzeResponse {
+                negative,
+                positive,
+                suggest,
+                flag,
+            }),
         });
     }
 
@@ -129,12 +169,15 @@ pub async fn analyze(state: State<'_, Mutex<AppStateConverter>>) -> EResult<Comm
                 .to_string(),
         );
 
-        return Ok(CommandAnalyze {
-            message: None,
-            negative,
-            positive,
-            suggest,
-            flag,
+        return Ok(CommAnalyzeMeta {
+            duration: start.elapsed().as_secs(),
+            comment: None,
+            payload: Some(AnalyzeResponse {
+                negative,
+                positive,
+                suggest,
+                flag,
+            }),
         });
     }
 
@@ -182,7 +225,7 @@ pub async fn analyze(state: State<'_, Mutex<AppStateConverter>>) -> EResult<Comm
 
     if dir_lacks_numeric.is_empty() && dir_lacks_naming.is_empty() {
         positive.push("Directories correctly named and numbered. Automatic bundling will proceed with the fastest algorithm.".to_string());
-        flag = BundleFlag::NAME;
+        flag = BundleFlag::Name;
     } else {
         positive.push("Automatic bundling will use fallback mechanisms, potentially slowing the process and increasing error risk.".to_string());
     }
@@ -204,28 +247,32 @@ pub async fn analyze(state: State<'_, Mutex<AppStateConverter>>) -> EResult<Comm
         ));
     });
 
-    Ok(CommandAnalyze {
-        message: None,
-        negative,
-        positive,
-        suggest,
-        flag,
+    Ok(CommAnalyzeMeta {
+        duration: start.elapsed().as_secs(),
+        comment: None,
+        payload: Some(AnalyzeResponse {
+            negative,
+            positive,
+            suggest,
+            flag,
+        }),
     })
 }
 
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn bundle(
+pub async fn conv_bundle(
     sensibility: Option<usize>,
-    state: State<'_, Mutex<AppStateConverter>>,
-) -> EResult<CommandBundle> {
-    let now = std::time::Instant::now();
+    state: State<'_, Mutex<ConvState>>,
+) -> EResult<CommBundle> {
+    let start = std::time::Instant::now();
+
     let mut state = state.lock().await;
     let mut collector = Collector::new(&state.source);
 
     // Collect all pages and sort based on bundle_flag
     let mut chapters: Vec<PathBuf> = collector
-        .collect_chapters(if state.bundle_flag == BundleFlag::IMAGE {
+        .collect_chapters(if state.bundle_flag == BundleFlag::Image {
             Some(&Collector::sort_name_by_number)
         } else {
             None
@@ -243,11 +290,11 @@ pub async fn bundle(
     match state.bundle_flag {
         // For manual bundling, the user will have to manually input the remaining information.
         // This will be done in the frontend.
-        BundleFlag::MANUAL => {}
+        BundleFlag::Manual => {}
         // For automatic bundling by name,
         // the program will use the naming convention
         // to determine the volumes and chapters.
-        BundleFlag::NAME => {
+        BundleFlag::Name => {
             let mut tmp = Vec::new();
             let mut extra = false;
 
@@ -291,7 +338,7 @@ pub async fn bundle(
         }
         // The image version uses the grayscale detection algorithm to determine the start of each volume.
         // This is done by checking the first image of each chapter.
-        BundleFlag::IMAGE => {
+        BundleFlag::Image => {
             let volume_start_chapters = collector
                 .determine_volume_start_chapters(
                     pages.clone(),
@@ -309,22 +356,22 @@ pub async fn bundle(
     state.volume_sizes = chapter_sizes.clone();
     state.data = pages;
 
-    Ok(CommandBundle {
-        message: Some(format!(
-            "Bundling completed in {:.2?} seconds.",
-            now.elapsed().as_secs_f64()
-        )),
-        total_chapters,
-        total_volumes: if total_volumes > 0 {
-            Some(total_volumes)
-        } else {
-            None
-        },
-        chapter_sizes: if !chapter_sizes.is_empty() {
-            Some(chapter_sizes)
-        } else {
-            None
-        },
+    Ok(CommBundle {
+        duration: start.elapsed().as_secs(),
+        comment: None,
+        payload: Some(BundleResponse {
+            total_chapters,
+            total_volumes: if total_volumes > 0 {
+                Some(total_volumes)
+            } else {
+                None
+            },
+            chapter_sizes: if !chapter_sizes.is_empty() {
+                Some(chapter_sizes)
+            } else {
+                None
+            },
+        }),
     })
 }
 
@@ -337,14 +384,15 @@ struct SharedData {
 
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn convert(
+pub async fn conv_convert(
     create_directory: bool,
     target: String,
     file_format: FileFormat,
     direction: Direction,
-    state: State<'_, Mutex<AppStateConverter>>,
-) -> EResult<CommandDefault> {
-    let now = std::time::Instant::now();
+    state: State<'_, Mutex<ConvState>>,
+) -> EResult<BaseResponse> {
+    let start = std::time::Instant::now();
+
     let state = state.lock().await;
 
     // Get all the state data needed
@@ -368,9 +416,9 @@ pub async fn convert(
             }
         }
     }?
-        .to_str()
-        .unwrap()
-        .to_string();
+    .to_str()
+    .unwrap()
+    .to_string();
 
     let data = Arc::new(SharedData {
         name: state.name.clone(),
@@ -389,7 +437,7 @@ pub async fn convert(
 
             // Spawn a new thread for each volume but make sure to use the correct spawning method
             match file_format {
-                FileFormat::CBZ => spawn_blocking(move || {
+                FileFormat::Cbz => spawn_blocking(move || {
                     let j: usize = data.chapters_per_volume[0..i].par_iter().sum();
 
                     let volume_name = format!("{} | {}", data.name, i + 1);
@@ -407,7 +455,7 @@ pub async fn convert(
 
                     Ok(())
                 }),
-                FileFormat::EPUB => spawn(async move {
+                FileFormat::Epub => spawn(async move {
                     let j: usize = data.chapters_per_volume[0..i].par_iter().sum();
 
                     let volume_name = format!("{} | {}", data.name, i + 1);
@@ -420,7 +468,7 @@ pub async fn convert(
                         .set_metadata("author", "Manga Bundler")?
                         .set_metadata(
                             "direction",
-                            if direction == Direction::LTR {
+                            if direction == Direction::Ltr {
                                 "ltr"
                             } else {
                                 "rtl"
@@ -436,7 +484,7 @@ pub async fn convert(
 
                     Ok(())
                 }),
-                FileFormat::PDF => spawn_blocking(move || {
+                FileFormat::Pdf => spawn_blocking(move || {
                     let j: usize = data.chapters_per_volume[0..i].par_iter().sum();
 
                     let volume_name = format!("{} | {}", data.name, i + 1);
@@ -465,12 +513,5 @@ pub async fn convert(
         }
     }
 
-    let elapsed = now.elapsed();
-
-    Ok(CommandDefault {
-        message: Some(format!(
-            "Conversion completed in {:.2?} seconds.",
-            elapsed.as_secs_f64()
-        )),
-    })
+    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
 }

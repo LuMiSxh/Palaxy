@@ -16,7 +16,6 @@ class ConverterState {
 
 export default new ConverterState();
 
-
 class ConverterStepState {
 	index: number = $state(0);
 	disablePrev: boolean = $state(true);

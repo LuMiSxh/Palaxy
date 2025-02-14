@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { commands } from '$types';
+	import { t } from 'svelte-i18n-lingui';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import converter, { stepState } from '$states/converter.svelte';
 	import { wrapper } from '$lib/utils';
@@ -32,12 +33,11 @@
 					return;
 				}
 
-
 				// When there are multiple files toast it
 				if (event.payload.paths.length > 1) {
 					addToast(
 						`Multiple paths dropped, only the first path will be used: <code>${event.payload.paths[0]}</code>`,
-						"warning",
+						'warning',
 						3600
 					);
 				}
@@ -62,22 +62,24 @@
 	$effect(() => {
 		stepState.disableNext = converter.source === null;
 	});
-
 </script>
 
-<button id="dropzone" class="btn btn-soft min-w-1/2 min-h-1/2 flex flex-col justify-center items-center"
-				onclick={select}>
-	<span class="flex justify-center items-center">
-		<IconFileDownload class="text-primary"/>
-		<span>Click to select a folder or drag it in</span>
+<button
+	id="dropzone"
+	class="btn btn-soft flex min-h-1/2 min-w-1/2 flex-col items-center justify-center"
+	onclick={select}
+>
+	<span class="flex items-center justify-center">
+		<IconFileDownload class="text-primary" />
+		<span>{$t`Click to select a folder or drag it in`}</span>
 	</span>
 	<span class="divider"></span>
-	<span class="flex flex-col justify-center items-center">
-		<span class="font-bold">Selected path:</span>
+	<span class="flex flex-col items-center justify-center">
+		<span class="font-bold">{$t`Selected path`}:</span>
 		{#if converter.source}
 			<code class="text-primary">{converter.source}</code>
 		{:else}
-			<span class="text-error">None selected</span>
+			<span class="text-error">{$t`None selected`}</span>
 		{/if}
 	</span>
 </button>

@@ -1,7 +1,8 @@
-import { type AppData, FeatureFlag, Theme } from '$types/appdata';
+import { type AppData, FeatureFlag, SupportedLanguages, Theme } from '$types/appdata';
 import { browser } from '$app/environment';
 import type { Error, Result } from '$types';
 import { addToast } from '$stores/toast';
+import { gt, locale } from 'svelte-i18n-lingui';
 
 const LIGHT = 'alya';
 const DARK = 'alya-dark';
@@ -15,15 +16,15 @@ export function setTheme(theme: Theme) {
 	if (!browser) return;
 
 	switch (theme) {
-		case Theme.LIGHT:
+		case Theme.Light:
 			document.documentElement.classList.remove('dark');
 			document.documentElement.setAttribute('data-theme', LIGHT);
 			break;
-		case Theme.DARK:
+		case Theme.Dark:
 			document.documentElement.classList.add('dark');
 			document.documentElement.setAttribute('data-theme', DARK);
 			break;
-		case Theme.SYSTEM:
+		case Theme.System:
 			if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
 				document.documentElement.classList.add('dark');
 				document.documentElement.setAttribute('data-theme', DARK);
@@ -68,15 +69,34 @@ export function ffIsEnabled(appData: AppData, flag: FeatureFlag): boolean {
  */
 export async function wrapper<T>(input: Promise<Result<T, Error>>): Promise<T | null> {
 	const output = await input;
-	if (output.status === 'ok')
-		return output.data;
+	if (output.status === 'ok') return output.data;
 
 	addToast(
-		`${output.error.type}: ${Object.hasOwn(output.error, 'data') ? (output.error as {
-			data: string
-		}).data : 'An error occurred'}`,
-		"error",
+		`${output.error.type}: ${
+			Object.hasOwn(output.error, 'data')
+				? (
+						output.error as {
+							data: string;
+						}
+					).data
+				: gt`An error occurred`
+		}`,
+		'error',
 		3600
 	);
 	return null;
+}
+
+/**
+ * Sets the locale for the application.
+ *
+ * This function dynamically imports the locale messages for the specified language
+ * and sets the locale using the `svelte-i18n-lingui` library.
+ *
+ * @param {SupportedLanguages} lang - The language to set the locale to.
+ * @returns {Promise<void>} - A promise that resolves when the locale is set.
+ */
+export async function setLocale(lang: SupportedLanguages): Promise<void> {
+	const { messages } = await import(`../locales/${lang}.ts`);
+	locale.set(lang, messages);
 }

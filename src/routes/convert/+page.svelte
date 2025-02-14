@@ -10,6 +10,7 @@
 	} from '@tabler/icons-svelte';
 	import { Step1, Step2, Step3, Step4, Step5, Step6, Step7 } from '$components/convert';
 	import { stepState } from '$states/converter.svelte';
+	import { t } from 'svelte-i18n-lingui';
 
 	const classActive = 'step-secondary';
 
@@ -20,49 +21,49 @@
 	let steps = $derived.by(() => {
 		return [
 			{
-				title: 'Choose Base Directory',
+				title: $t`Choose Base Directory`,
 				icon: IconFolder,
 				cmp: Step1,
 				cls: cls(0),
 				hidden: false
 			},
 			{
-				title: 'Analysis',
+				title: $t`Analysis`,
 				icon: IconLineScan,
 				cmp: Step2,
 				cls: cls(1),
 				hidden: false
 			},
 			{
-				title: 'Choose Bundling Method',
+				title: $t`Choose Bundling Method`,
 				icon: IconFileZip,
 				cmp: Step3,
 				cls: cls(2),
 				hidden: false
 			},
 			{
-				title: 'Manual Bundling',
+				title: $t`Manual Bundling`,
 				Icon: IconHandStop,
 				cmp: Step4,
 				cls: cls(3),
 				hidden: true
 			},
 			{
-				title: 'Filter Pages',
+				title: $t`Filter Pages`,
 				icon: IconFilter,
 				cmp: Step5,
 				cls: cls(4),
 				hidden: false
 			},
 			{
-				title: 'Choose Conversion Options',
+				title: $t`Choose Conversion Options`,
 				icon: IconAdjustments,
 				cmp: Step6,
 				cls: cls(5),
 				hidden: false
 			},
 			{
-				title: 'Review',
+				title: $t`Review`,
 				icon: IconPencil,
 				cmp: Step7,
 				cls: cls(6),
@@ -75,26 +76,34 @@
 </script>
 
 <div class="flex h-full w-full">
-	<ul class="glass-surface steps steps-vertical h-full mr-2">
+	<ul class="glass-surface steps steps-vertical mr-2 h-full">
 		{#each steps as step}
 			{#if !step.hidden}
 				<li class="step {step.cls}">
 					<span class="step-icon"><step.icon /></span>
-					<span class="w-full h-full flex justify-center items-center">{step.title}</span>
+					<span class="flex h-full w-full items-center justify-center">{step.title}</span>
 				</li>
 			{/if}
 		{/each}
 	</ul>
-	<section class="w-full h-full glass-surface ml-2">
-		<div class="w-full h-[90%] flex flex-col justify-center items-center">
+	<section class="glass-surface ml-2 h-full w-full">
+		<div class="flex h-[90%] w-full flex-col items-center justify-center">
 			{@render activeComponent()}
 		</div>
-		<div class="w-full h-[10%] flex justify-between items-center">
-			<button class="btn btn-soft btn-error" onclick={() => stepState.index--} disabled={stepState.disablePrev}>
-				Previous
+		<div class="flex h-[10%] w-full items-center justify-between">
+			<button
+				class="btn btn-soft btn-error"
+				onclick={() => stepState.index--}
+				disabled={stepState.disablePrev}
+			>
+				{$t`Previous`}
 			</button>
-			<button class="btn btn-soft btn-success" onclick={() => stepState.index++} disabled={stepState.disableNext}>
-				Next
+			<button
+				class="btn btn-soft btn-success"
+				onclick={() => stepState.index++}
+				disabled={stepState.disableNext}
+			>
+				{$t`Next`}
 			</button>
 		</div>
 	</section>

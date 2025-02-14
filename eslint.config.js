@@ -30,5 +30,13 @@ export default ts.config(
 				parser: ts.parser
 			}
 		}
+	},
+	{
+		ignores: ['build/', '.svelte-kit/', 'dist/', 'venv/', 'src/locales/', 'src/types/bindings.ts']
+	},
+	{
+		rules: {
+			'@typescript-eslint/no-explicit-any': 'off'
+		}
 	}
 );

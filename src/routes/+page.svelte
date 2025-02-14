@@ -1,22 +1,10 @@
 <script lang="ts">
 	import { IconSearch, IconSettings, IconTransform, IconUsers } from '@tabler/icons-svelte';
-
+	import { t } from 'svelte-i18n-lingui';
 	import { goto } from '$app/navigation';
 	import { ffIsEnabled } from '$lib/utils';
 	import { appData } from '$stores/appdata';
 	import { FeatureFlag } from '$types/appdata';
-
-	// import { getContext } from 'svelte';
-	// import { type ToastContext } from '@skeletonlabs/skeleton-svelte';
-	//
-	// export const toast: ToastContext = getContext('toast');
-	//
-	//
-	// toast.create({
-	// 	title: 'Error',
-	// 	description: 'Uh oh, something went wrong.',
-	// 	type: 'error'
-	// });
 </script>
 
 <div class="grid h-full w-full grid-cols-2 grid-rows-2 gap-10 p-3 select-none">
@@ -29,10 +17,10 @@
 		style="grid-column: 1; grid-row: 1;"
 	>
 		<div class="z-20 mt-3 ml-3">
-			<h1 class="text-2xl font-bold select-none">Convert</h1>
+			<h1 class="text-2xl font-bold select-none">{$t`Convert`}</h1>
 			<p class="mt-6 mr-3 select-none">
-				<span class="label-stable">Stable</span><br />
-				Convert your manga images into a digital format that can be read on your favorite devices.
+				<span class="label-stable">{$t`Stable`}</span><br />
+				{$t`Convert your manga images into a digital format that can be read on your favorite devices.`}
 			</p>
 		</div>
 		<IconTransform size="60" class="absolute top-3 right-3" />
@@ -47,10 +35,10 @@
 			style="grid-column: 1; grid-row: 2;"
 		>
 			<div class="z-20 mt-3 ml-3">
-				<h1 class="text-2xl font-bold select-none">Search</h1>
+				<h1 class="text-2xl font-bold select-none">{$t`Search`}</h1>
 				<p class="mt-6 mr-3 select-none">
-					<span class="label-experimental">Experimental</span><br />
-					Search for your favorite manga series and chapters from various sources.
+					<span class="label-experimental">{$t`Experimental`}</span><br />
+					{$t`Search for your favorite manga series and chapters from various sources.`}
 				</p>
 			</div>
 			<IconSearch size="60" class="absolute top-3 right-3" />
@@ -66,10 +54,10 @@
 			style="grid-column: 2; grid-row: 2;"
 		>
 			<div class="z-20 mt-3 ml-3">
-				<h1 class="text-2xl font-bold select-none">Agents</h1>
+				<h1 class="text-2xl font-bold select-none">{$t`Agents`}</h1>
 				<p class="mt-6 mr-3 select-none">
-					<span class="label-experimental">Experimental</span><br />
-					Manage your agents and their settings for better search results.
+					<span class="label-experimental">{$t`Experimental`}</span><br />
+					{$t`Manage your agents and their settings for better search results.`}
 				</p>
 			</div>
 			<IconUsers size="60" class="absolute top-3 right-3" />
@@ -84,9 +72,9 @@
 		style="grid-column: 2; grid-row: 1;"
 	>
 		<div class="z-20 mt-3 ml-3">
-			<h1 class="text-2xl font-bold select-none">Settings</h1>
+			<h1 class="text-2xl font-bold select-none">{$t`Settings`}</h1>
 			<p class="mt-6 mr-3 select-none">
-				Change Palaxy's settings to better suit your needs and preferences.
+				{$t`Change Palaxy's settings to better suit your needs and preferences.`}
 			</p>
 		</div>
 		<IconSettings size="60" class="absolute top-3 right-3" />

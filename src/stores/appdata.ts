@@ -18,5 +18,7 @@ appData.subscribe((value) => {
 		if (browser) localStorage.setItem(appDataKey, JSON.stringify(value));
 
 		setTheme(value.theme);
+		// FIXME: Uncomment as soon as lingui extract is fixed
+		// setLocale(value.language).then();
 	}
 });

@@ -3,6 +3,7 @@
 	import { FeatureFlag, SupportedLanguages, Theme } from '$types/appdata';
 	import { convertToTitleCase, ffIsEnabled } from '$lib/utils';
 	import { appData } from '$stores/appdata.js';
+	import { t } from 'svelte-i18n-lingui';
 
 	const themeEntries = Object.entries(Theme).filter(([key]) => isNaN(Number(key)));
 	const langEntries = Object.entries(SupportedLanguages).filter(([key]) => isNaN(Number(key)));
@@ -43,38 +44,38 @@
 <div class="grid h-full grid-cols-3 grid-rows-3 gap-10 select-none">
 	<div class="flex h-full w-full items-center justify-center" style="grid-column: 1; grid-row: 1;">
 		{#await getName()}
-			{@render label('Name', 'Loading...')}
+			{@render label($t`Name`, $t`Loading...`)}
 		{:then name}
-			{@render label('Name', name)}
+			{@render label($t`Name`, name)}
 		{:catch error}
-			{@render label('Name', undefined, error)}
+			{@render label($t`Name`, undefined, error)}
 		{/await}
 	</div>
 	<div class="flex h-full w-full items-center justify-center" style="grid-column: 1; grid-row: 2;">
 		{#await getVersion()}
-			{@render label('App Version', 'Loading...')}
+			{@render label($t`App Version`, $t`Loading...`)}
 		{:then aVersion}
-			{@render label('App Version', aVersion)}
+			{@render label($t`App Version`, aVersion)}
 		{:catch error}
-			{@render label('App Version', undefined, error)}
+			{@render label($t`App Version`, undefined, error)}
 		{/await}
 	</div>
 	<div class="flex h-full w-full items-center justify-center" style="grid-column: 1; grid-row: 3;">
 		{#await getTauriVersion()}
-			{@render label('Tauri Version', 'Loading...')}
+			{@render label($t`Tauri Version`, $t`Loading...`)}
 		{:then tVersion}
-			{@render label('Tauri Version', tVersion)}
+			{@render label($t`Tauri Version`, tVersion)}
 		{:catch error}
-			{@render label('Tauri Version', undefined, error)}
+			{@render label($t`Tauri Version`, undefined, error)}
 		{/await}
 	</div>
 	<div class="flex h-full w-full items-center justify-center" style="grid-column: 2; grid-row: 1;">
 		<div class="glass-surface w-full">
 			<fieldset class="fieldset">
-				<legend class="fieldset-legend">Theme</legend>
+				<legend class="fieldset-legend">{$t`Theme`}</legend>
 				<select id="theme" class="select select-secondary invis w-full" bind:value={$appData.theme}>
 					{#each themeEntries as [k, v]}
-						<option class="capitalize" value={v}>{convertToTitleCase(k)}</option>
+						<option class="capitalize" value={v}>{$t`${convertToTitleCase(k)}`}</option>
 					{/each}
 				</select>
 			</fieldset>
@@ -83,7 +84,7 @@
 	<div class="flex h-full w-full items-center justify-center" style="grid-column: 2; grid-row: 2;">
 		<div class="glass-surface w-full">
 			<fieldset class="fieldset">
-				<legend class="fieldset-legend">Features</legend>
+				<legend class="fieldset-legend">{$t`Features`}</legend>
 				<input id="feature" class="input input-secondary invis" bind:value={featureInput} />
 			</fieldset>
 		</div>
@@ -96,8 +97,8 @@
 			<div class="glass-surface w-full">
 				<fieldset class="fieldset">
 					<legend class="fieldset-legend">
-						Language
-						<span class="label-experimental">Experimental</span>
+						{$t`Language`}
+						<span class="label-experimental">{$t`Experimental`}</span>
 					</legend>
 					<select
 						id="lang"

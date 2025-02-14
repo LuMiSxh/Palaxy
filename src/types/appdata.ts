@@ -1,15 +1,25 @@
 import type { FileFormat } from './converter';
+import { msg } from 'svelte-i18n-lingui';
 
 export enum Theme {
-	LIGHT = 1,
-	DARK = 2,
-	SYSTEM = -1
+	Light = 1,
+	Dark = 2,
+	System = -1
 }
 
+// Translations for the theme
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _ = [msg`Light`, msg`Dark`, msg`System`];
+
 export enum SupportedLanguages {
-	ENGLISH = 1,
-	GERMAN = 2
+	English = 'en',
+	German = 'de',
+	Japanese = 'ja'
 }
+
+// Translations for the languages
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const __ = [msg`English`, msg`German`, msg`Japanese`];
 
 export enum FeatureFlag {
 	CHANGE_LANGUAGE = 11,
@@ -33,8 +43,8 @@ export interface AppData {
 }
 
 export const defaultAppData: AppData = {
-	theme: Theme.SYSTEM,
-	language: SupportedLanguages.ENGLISH,
+	theme: Theme.System,
+	language: SupportedLanguages.English,
 	featureFlags: [],
 	autoPop: {
 		enabled: false,

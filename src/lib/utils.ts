@@ -71,16 +71,19 @@ export async function wrapper<T>(input: Promise<Result<T, Error>>): Promise<T | 
 	const output = await input;
 	if (output.status === 'ok') return output.data;
 
+	console.error(output);
+
+	let message = gt`An error occurred`;
+
+	// noinspection SuspiciousTypeOfGuard
+	if (typeof output.error === 'string') {
+		message = output.error;
+	} else if (Object.hasOwn(output.error, 'data')) {
+		message = (output.error as { data: string }).data;
+	}
+
 	addToast(
-		`${output.error.type}: ${
-			Object.hasOwn(output.error, 'data')
-				? (
-						output.error as {
-							data: string;
-						}
-					).data
-				: gt`An error occurred`
-		}`,
+		`${output.error.type ? output.error.type + ': ' : ''}${message}`,
 		'error',
 		3600
 	);

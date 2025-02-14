@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { stepState } from '$states/converter.svelte';
+	import convState, { stepState } from '$states/converter.svelte';
 	import { IconCircleMinus, IconCirclePlus, IconExclamationCircle } from '@tabler/icons-svelte';
 	import { commands } from '$types';
 	import { wrapper } from '$lib/utils';
@@ -16,30 +16,36 @@
 
 		const result = await wrapper(commands.convAnalyze());
 		if (result !== null && result.payload !== null) {
+			convState.bundleRecommendation = result.payload.flag;
 			positives = result.payload.positive;
 			negatives = result.payload.negative;
 			suggestions = result.payload.suggest;
+
+			// When there are no negatives, enable the next button
+			if (negatives.length === 0) {
+				stepState.disableNext = false;
+			}
 		}
 	});
 </script>
 
-{#snippet item(message: string, icon: any)}
-	<li class="list row">
-		{@render icon()}
-		<span class="list-col-grow">
+{#snippet item(message: string, Icon: any, bg: string, txt: string)}
+	<li class="list-row items-center rounded {bg}">
+		<Icon class={txt}/>
+		<span class="list-col-grow text-md {txt}">
 			{message}
 		</span>
 	</li>
 {/snippet}
 
 <ul class="list">
-	{#each negatives as negative}
-		{@render item(negative, IconCircleMinus)}
+	{#each negatives as negative, i (i)}
+		{@render item(negative, IconCircleMinus, "bg-error/70", "text-error-content")}
 	{/each}
-	{#each positives as positive}
-		{@render item(positive, IconCirclePlus)}
+	{#each positives as positive, i (i)}
+		{@render item(positive, IconCirclePlus, "bg-success/70", "text-success-content")}
 	{/each}
-	{#each suggestions as suggestion}
-		{@render item(suggestion, IconExclamationCircle)}
+	{#each suggestions as suggestion, i (i)}
+		{@render item(suggestion, IconExclamationCircle, "bg-info/70", "text-info-content")}
 	{/each}
 </ul>

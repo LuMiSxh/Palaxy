@@ -11,8 +11,11 @@
 	import { Step1, Step2, Step3, Step4, Step5, Step6, Step7 } from '$components/convert';
 	import { stepState } from '$states/converter.svelte';
 	import { t } from 'svelte-i18n-lingui';
+	import { onMount } from 'svelte';
 
 	const classActive = 'step-secondary';
+
+	onMount(stepState.reset);
 
 	function cls(i: number): string {
 		return stepState.index >= i ? classActive : '';
@@ -93,14 +96,14 @@
 		<div class="flex h-[10%] w-full items-center justify-between">
 			<button
 				class="btn btn-soft btn-error"
-				onclick={() => stepState.index--}
+				onclick={() => {stepState.index-=stepState.indexDecrement; stepState.indexDecrement = 1}}
 				disabled={stepState.disablePrev}
 			>
 				{$t`Previous`}
 			</button>
 			<button
 				class="btn btn-soft btn-success"
-				onclick={() => stepState.index++}
+				onclick={() => {stepState.index+=stepState.indexIncrement; stepState.indexIncrement = 1}}
 				disabled={stepState.disableNext}
 			>
 				{$t`Next`}

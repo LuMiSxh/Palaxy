@@ -1,7 +1,6 @@
 <script lang="ts">
 	import {
 		IconAdjustments,
-		IconFileZip,
 		IconFilter,
 		IconFolder,
 		IconHandStop,
@@ -11,11 +10,11 @@
 	import { Step1, Step2, Step3, Step4, Step5, Step6, Step7 } from '$components/convert';
 	import { stepState } from '$states/converter.svelte';
 	import { t } from 'svelte-i18n-lingui';
-	import { onMount } from 'svelte';
 
 	const classActive = 'step-secondary';
 
-	onMount(stepState.reset);
+	// Reset the state of the stepState
+	stepState.reset();
 
 	function cls(i: number): string {
 		return stepState.index >= i ? classActive : '';
@@ -38,8 +37,8 @@
 				hidden: false
 			},
 			{
-				title: $t`Choose Bundling Method`,
-				icon: IconFileZip,
+				title: $t`Set Metadata`,
+				icon: IconAdjustments,
 				cmp: Step3,
 				cls: cls(2),
 				hidden: false

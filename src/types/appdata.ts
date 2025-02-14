@@ -1,8 +1,8 @@
 /**
  * Represents possible file formats for conversion.
  */
-import type { FileFormat } from './converter';
 import { msg } from 'svelte-i18n-lingui';
+import type { FileFormat } from '$types/bindings';
 
 /**
  * Enumerates the themes available for the application UI.
@@ -114,7 +114,7 @@ export interface AppData {
 			targetLocation: string | null;
 
 			/**
-			 * Whether or not a new folder is created during conversion.
+			 * Whether a new folder should be created during conversion.
 			 */
 			createNewFolder: boolean | null;
 		};

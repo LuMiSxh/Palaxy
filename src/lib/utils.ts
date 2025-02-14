@@ -2,7 +2,6 @@ import { type AppData, FeatureFlag, Theme } from '$types/appdata';
 import { browser } from '$app/environment';
 import type { Error, Result } from '$types';
 import { addToast } from '$stores/toast';
-import { ToastType } from '$types/toast';
 
 const LIGHT = 'alya';
 const DARK = 'alya-dark';
@@ -76,7 +75,7 @@ export async function wrapper<T>(input: Promise<Result<T, Error>>): Promise<T | 
 		`${output.error.type}: ${Object.hasOwn(output.error, 'data') ? (output.error as {
 			data: string
 		}).data : 'An error occurred'}`,
-		ToastType.ERROR,
+		"error",
 		3600
 	);
 	return null;

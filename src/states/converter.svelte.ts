@@ -1,6 +1,6 @@
 import type { BundleFlag } from '$types';
 
-class ConverterSvelte {
+class ConverterState {
 	source: string | null = $state(null);
 	bundle: BundleFlag | null = $state(null);
 	bundleRecommendation: BundleFlag = $state('MANUAL');
@@ -14,4 +14,19 @@ class ConverterSvelte {
 	}
 }
 
-export default new ConverterSvelte();
+export default new ConverterState();
+
+
+class ConverterStepState {
+	index: number = $state(0);
+	disablePrev: boolean = $state(true);
+	disableNext: boolean = $state(true);
+
+	reset(): void {
+		this.index = 0;
+		this.disablePrev = true;
+		this.disableNext = true;
+	}
+}
+
+export const stepState = new ConverterStepState();

@@ -9,13 +9,12 @@
 		IconPencil
 	} from '@tabler/icons-svelte';
 	import { Step1, Step2, Step3, Step4, Step5, Step6, Step7 } from '$components/convert';
-
-	let index = $state(0);
+	import { stepState } from '$states/converter.svelte';
 
 	const classActive = 'step-secondary';
 
 	function cls(i: number): string {
-		return index >= i ? classActive : '';
+		return stepState.index >= i ? classActive : '';
 	}
 
 	let steps = $derived.by(() => {
@@ -72,7 +71,7 @@
 		];
 	});
 
-	let activeComponent = $derived(steps[index].cmp);
+	let activeComponent = $derived(steps[stepState.index].cmp);
 </script>
 
 <div class="flex h-full w-full">
@@ -87,12 +86,16 @@
 		{/each}
 	</ul>
 	<section class="w-full h-full glass-surface ml-2">
-		<div class="w-full h-[90%]">
+		<div class="w-full h-[90%] flex flex-col justify-center items-center">
 			{@render activeComponent()}
 		</div>
 		<div class="w-full h-[10%] flex justify-between items-center">
-			<button class="btn btn-soft btn-error" onclick={() => index--} disabled={index === 0}>Previous</button>
-			<button class="btn btn-soft btn-success" onclick={() => index++} disabled={index === steps.length - 1}>Next</button>
+			<button class="btn btn-soft btn-error" onclick={() => stepState.index--} disabled={stepState.disablePrev}>
+				Previous
+			</button>
+			<button class="btn btn-soft btn-success" onclick={() => stepState.index++} disabled={stepState.disableNext}>
+				Next
+			</button>
 		</div>
 	</section>
 </div>

@@ -21,12 +21,9 @@ fn main() {
     let builder = SpectaBuilder::<tauri::Wry>::new()
         // Then register them (separated by a comma)
         .commands(collect_commands![
-            converter::conv_set_source,
-            converter::conv_set_bundle_flag,
-            converter::conv_set_data,
-            converter::conv_set_volume_sizes,
-            converter::conv_get_data,
-            converter::conv_reset,
+            converter::conv_state_set,
+            converter::conv_state_get,
+            converter::conv_state_reset,
             converter::conv_analyze,
             converter::conv_bundle,
             converter::conv_convert,

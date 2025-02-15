@@ -2,7 +2,7 @@ use printpdf::image_crate;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::path::PathBuf;
-use crate::types::{Agent, BundleFlag};
+use crate::types::{Agent, BundleFlag, Direction, FileFormat};
 
 // Error types
 #[derive(Debug, thiserror::Error, Type)]
@@ -84,21 +84,22 @@ impl serde::Serialize for Error {
 pub type EResult<T> = Result<T, Error>;
 
 // App states
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default, Type)]
 pub struct ConvState {
     pub name: String,
     pub source: PathBuf,
+    pub target: PathBuf,
     pub bundle_flag: BundleFlag,
+    pub direction: Direction,
+    pub format: FileFormat,
+    pub create_directory: bool,
     pub volume_sizes: Vec<usize>,
     pub data: Vec<Vec<PathBuf>>,
 }
 
 impl ConvState {
     pub fn reset(&mut self) {
-        self.source = PathBuf::default();
-        self.bundle_flag = BundleFlag::default();
-        self.volume_sizes = Vec::default();
-        self.data = Vec::default();
+        *self = ConvState::default();
     }
 }
 

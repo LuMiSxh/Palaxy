@@ -6,10 +6,22 @@ import type { BundleFlag } from '$types';
  */
 class ConverterState {
 	/**
+	 * Name under which the converted content will be saved.
+	 * @type {string}
+	 */
+	name: string | null = $state(null);
+
+	/**
 	 * Original source or content to be converted.
 	 * @type {string \| null}
 	 */
 	source: string | null = $state(null);
+
+	/**
+	 * Target path for the converted content.
+	 * @type {string \| null}
+	 */
+	target: string | null = $state(null);
 
 	/**
 	 * The selected bundle flag.
@@ -28,16 +40,24 @@ class ConverterState {
 	 * @type {number[]}
 	 */
 	chapterSizes: number[] = $state([]);
+	/**
+	 * The number of images that were excluded from the conversion.
+	 * @type {number}
+	 */
+	excludedImages: number = $state(0);
 
 	/**
 	 * Resets the converter state to default values.
 	 * @returns {void}
 	 */
 	reset(): void {
+		this.name = '';
 		this.source = null;
+		this.target = null;
 		this.bundle = null;
 		this.bundleRecommendation = 'MANUAL';
 		this.chapterSizes = [];
+		this.excludedImages = 0;
 	}
 }
 

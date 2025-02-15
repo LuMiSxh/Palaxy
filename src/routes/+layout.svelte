@@ -152,4 +152,8 @@
 	:root::view-transition-new(disabled) {
 		animation-duration: 0s !important;
 	}
+
+	:global(button) {
+		user-select: none !important;
+	}
 </style>

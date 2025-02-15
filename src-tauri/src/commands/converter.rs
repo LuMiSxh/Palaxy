@@ -2,8 +2,8 @@ use crate::collector::Collector;
 use crate::generator::{cbz, epub, pdf};
 use crate::prelude::*;
 use crate::types::{
-    AnalyzeResponse, BaseResponse, BundleFlag, BundleResponse, CommAnalyzeMeta, CommBundle,
-    CommGetData, Direction, FileFormat,
+    AnalyzeResponse, BaseResponse, BundleFlag, BundleResponse, CommAnalyzeMeta, CommBundle
+    , ConvStateKey, Direction, FileFormat,
 };
 use lazy_static::lazy_static;
 use rayon::prelude::*;
@@ -19,98 +19,58 @@ lazy_static! {
     static ref REGEX_ANALYZE: Regex = Regex::new(r"\d+-\d+(\.\d+)?").unwrap();
 }
 
-// -- RESET --
+// ConvState
 
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn conv_reset(state: State<'_, Mutex<ConvState>>) -> EResult<BaseResponse> {
+pub async fn conv_state_set(
+    input: ConvStateKey,
+    state: State<'_, Mutex<ConvState>>,
+) -> EResult<BaseResponse> {
+    let start = std::time::Instant::now();
+
+    let mut state = state.lock().await;
+
+    // Set the state based on the input
+    match input {
+        ConvStateKey::Name(value) => state.name = value,
+        ConvStateKey::Source(value) => state.source = value,
+        ConvStateKey::BundleFlag(value) => state.bundle_flag = value,
+        ConvStateKey::Direction(value) => state.direction = value,
+        ConvStateKey::Format(value) => state.format = value,
+        ConvStateKey::CreateDirectory(value) => state.create_directory = value,
+        ConvStateKey::VolumeSizes(value) => state.volume_sizes = value,
+        ConvStateKey::Data(value) => state.data = value,
+    }
+
+    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
+}
+
+#[tauri::command(async)]
+#[specta::specta]
+pub async fn conv_state_get(
+    state: State<'_, Mutex<ConvState>>,
+) -> EResult<BaseResponse<ConvState>> {
+    let start = std::time::Instant::now();
+
+    let state = state.lock().await;
+
+    Ok(BaseResponse {
+        duration: start.elapsed().as_secs(),
+        comment: None,
+        payload: Some(state.clone()),
+    })
+}
+
+#[tauri::command(async)]
+#[specta::specta]
+pub async fn conv_state_reset(state: State<'_, Mutex<ConvState>>) -> EResult<BaseResponse> {
     let start = std::time::Instant::now();
 
     let mut state = state.lock().await;
     state.reset();
 
     Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
-}
-
-// -- SETTER --
-
-#[tauri::command(async)]
-#[specta::specta]
-pub async fn conv_set_source(
-    source: String,
-    state: State<'_, Mutex<ConvState>>,
-) -> EResult<BaseResponse> {
-    let start = std::time::Instant::now();
-
-    let mut state = state.lock().await;
-    state.source = PathBuf::from(source);
-
-    state.name = state
-        .source
-        .file_name()
-        .and_then(|name| name.to_str())
-        .map(|name| name.to_string())
-        .unwrap_or_else(|| "Palaxy-Converted".to_string());
-
-    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
-}
-
-#[tauri::command(async)]
-#[specta::specta]
-pub async fn conv_set_volume_sizes(
-    sizes: Vec<usize>,
-    state: State<'_, Mutex<ConvState>>,
-) -> EResult<BaseResponse> {
-    let start = std::time::Instant::now();
-
-    let mut state = state.lock().await;
-    state.volume_sizes = sizes;
-
-    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
-}
-
-#[tauri::command(async)]
-#[specta::specta]
-pub async fn conv_set_bundle_flag(
-    flag: BundleFlag,
-    state: State<'_, Mutex<ConvState>>,
-) -> EResult<BaseResponse> {
-    let start = std::time::Instant::now();
-
-    let mut state = state.lock().await;
-    state.bundle_flag = flag;
-
-    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
-}
-
-#[tauri::command(async)]
-#[specta::specta]
-pub async fn conv_set_data(
-    data: Vec<Vec<PathBuf>>,
-    state: State<'_, Mutex<ConvState>>,
-) -> EResult<BaseResponse> {
-    let start = std::time::Instant::now();
-
-    let mut state = state.lock().await;
-    state.data = data;
-
-    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
-}
-
-// -- GETTER --
-
-#[tauri::command(async)]
-#[specta::specta]
-pub async fn conv_get_data(state: State<'_, Mutex<ConvState>>) -> EResult<CommGetData> {
-    let start = std::time::Instant::now();
-
-    let state = state.lock().await;
-
-    Ok(CommGetData {
-        duration: start.elapsed().as_secs(),
-        comment: None,
-        payload: Some(state.data.clone()),
-    })
 }
 
 // -- PROCESSES --

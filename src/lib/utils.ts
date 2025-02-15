@@ -82,11 +82,7 @@ export async function wrapper<T>(input: Promise<Result<T, Error>>): Promise<T | 
 		message = (output.error as { data: string }).data;
 	}
 
-	addToast(
-		`${output.error.type ? output.error.type + ': ' : ''}${message}`,
-		'error',
-		3600
-	);
+	addToast(`${output.error.type ? output.error.type + ': ' : ''}${message}`, 'error', 3600);
 	return null;
 }
 

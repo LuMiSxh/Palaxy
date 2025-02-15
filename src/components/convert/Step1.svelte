@@ -3,7 +3,8 @@
 	import { commands } from '$types';
 	import { t } from 'svelte-i18n-lingui';
 	import { open } from '@tauri-apps/plugin-dialog';
-	import converter, { stepState } from '$states/converter.svelte';
+	import converter from '$states/converter.svelte';
+	import convState, { stepState } from '$states/converter.svelte';
 	import { wrapper } from '$lib/utils';
 	import { getCurrentWebview } from '@tauri-apps/api/webview';
 	import { addToast } from '$stores/toast';
@@ -11,7 +12,7 @@
 
 	onMount(async () => {
 		// Reset
-		await wrapper(commands.convReset());
+		await wrapper(commands.convStateReset());
 		converter.reset();
 		stepState.reset();
 
@@ -43,7 +44,7 @@
 				}
 
 				converter.source = event.payload.paths[0];
-				await wrapper(commands.convSetSource(event.payload.paths[0]));
+				await wrapper(commands.convStateSet({ Source: convState.source ?? '' }));
 			}
 		});
 	});
@@ -55,7 +56,7 @@
 		});
 
 		if (converter.source !== null) {
-			await wrapper(commands.convSetSource(converter.source));
+			await wrapper(commands.convStateSet({ Source: convState.source ?? '' }));
 		}
 	}
 
@@ -64,22 +65,20 @@
 	});
 </script>
 
-<button
-	id="dropzone"
-	class="btn btn-soft flex min-h-1/2 min-w-1/2 flex-col items-center justify-center"
-	onclick={select}
->
-	<span class="flex items-center justify-center">
-		<IconFileDownload class="text-primary" />
-		<span>{$t`Click to select a folder or drag it in`}</span>
-	</span>
-	<span class="divider"></span>
-	<span class="flex flex-col items-center justify-center">
-		<span class="font-bold">{$t`Selected path`}:</span>
-		{#if converter.source}
-			<code class="text-primary">{converter.source}</code>
+<fieldset class="fieldset">
+	<legend class="fieldset-legend">{$t`Source Location`}</legend>
+	<button
+		id="dropzone"
+		class="btn btn-soft flex items-center justify-center p-2 select-none"
+		onclick={select}
+	>
+		{#if !converter.source}
+			<IconFileDownload class="text-primary" />
+			<span>{$t`Click to select or drag it onto it`}</span>
+		{:else if converter.source}
+			<code class="text-primary">{converter.source.split('/').pop()}</code>
 		{:else}
 			<span class="text-error">{$t`None selected`}</span>
 		{/if}
-	</span>
-</button>
+	</button>
+</fieldset>

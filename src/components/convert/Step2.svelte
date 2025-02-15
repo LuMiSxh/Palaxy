@@ -31,7 +31,7 @@
 
 {#snippet item(message: string, Icon: any, bg: string, txt: string)}
 	<li class="list-row items-center rounded {bg}">
-		<Icon class={txt}/>
+		<Icon class={txt} />
 		<span class="list-col-grow text-md {txt}">
 			{message}
 		</span>
@@ -40,12 +40,12 @@
 
 <ul class="list">
 	{#each negatives as negative, i (i)}
-		{@render item(negative, IconCircleMinus, "bg-error/70", "text-error-content")}
+		{@render item(negative, IconCircleMinus, 'bg-error/70', 'text-error-content')}
 	{/each}
 	{#each positives as positive, i (i)}
-		{@render item(positive, IconCirclePlus, "bg-success/70", "text-success-content")}
+		{@render item(positive, IconCirclePlus, 'bg-success/70', 'text-success-content')}
 	{/each}
 	{#each suggestions as suggestion, i (i)}
-		{@render item(suggestion, IconExclamationCircle, "bg-info/70", "text-info-content")}
+		{@render item(suggestion, IconExclamationCircle, 'bg-info/70', 'text-info-content')}
 	{/each}
 </ul>

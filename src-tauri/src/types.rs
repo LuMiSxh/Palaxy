@@ -4,10 +4,9 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::path::PathBuf;
-use std::time::Duration;
 // --- Enums ---
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Default, Type)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Default, Type)]
 pub enum BundleFlag {
     #[serde(rename = "NAME")]
     Name,
@@ -18,7 +17,7 @@ pub enum BundleFlag {
     Manual,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Default, Type)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Default, Type)]
 pub enum FileFormat {
     #[serde(rename = "PDF")]
     Pdf,
@@ -29,7 +28,7 @@ pub enum FileFormat {
     Cbz,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Default, Type)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Default, Type)]
 pub enum Direction {
     #[default]
     #[serde(rename = "Left to Right")]
@@ -51,6 +50,18 @@ pub enum TagType {
     Language(String),
     Status(StatusFlag),
     Other(String),
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Type)]
+pub enum ConvStateKey {
+    Name(String),
+    Source(PathBuf),
+    BundleFlag(BundleFlag),
+    Direction(Direction),
+    Format(FileFormat),
+    CreateDirectory(bool),
+    VolumeSizes(Vec<usize>),
+    Data(Vec<Vec<PathBuf>>),
 }
 
 // --- Structs ---
@@ -104,8 +115,6 @@ impl BaseResponse<()> {
     }
 }
 
-pub type CommGetData = BaseResponse<Vec<Vec<PathBuf>>>; // <- was: CommandGetData
-
 #[derive(Serialize, Deserialize, Default, Type)]
 pub struct BundleResponse {
     pub total_chapters: usize,
@@ -124,5 +133,3 @@ pub struct AnalyzeResponse {
 pub type CommAnalyzeMeta = BaseResponse<AnalyzeResponse>; // <- was: CommandAnalyze
 
 pub type CommListAgents = BaseResponse<Vec<AgentMeta>>; // <- was: CommandListAgents
-
-pub type CommAnalyzeCPV = BaseResponse<Vec<usize>>; // <- was: AnalyzeResult

@@ -34,7 +34,7 @@
 			<input
 				type="text"
 				readonly
-				class={'input invis ' + (error === undefined ? 'input-primary' : 'input-error')}
+				class={'input invis curs ' + (error === undefined ? 'input-secondary' : 'input-error')}
 				value={error ?? value ?? 'None'}
 			/>
 		</fieldset>
@@ -73,7 +73,7 @@
 		<div class="glass-surface w-full">
 			<fieldset class="fieldset">
 				<legend class="fieldset-legend">{$t`Theme`}</legend>
-				<select id="theme" class="select select-secondary invis w-full" bind:value={$appData.theme}>
+				<select id="theme" class="select select-primary invis w-full" bind:value={$appData.theme}>
 					{#each themeEntries as [k, v]}
 						<option class="capitalize" value={v}>{$t`${convertToTitleCase(k)}`}</option>
 					{/each}
@@ -85,7 +85,7 @@
 		<div class="glass-surface w-full">
 			<fieldset class="fieldset">
 				<legend class="fieldset-legend">{$t`Features`}</legend>
-				<input id="feature" class="input input-secondary invis" bind:value={featureInput} />
+				<input id="feature" class="input input-primary invis" bind:value={featureInput} />
 			</fieldset>
 		</div>
 	</div>
@@ -102,7 +102,7 @@
 					</legend>
 					<select
 						id="lang"
-						class="select select-secondary invis w-full"
+						class="select select-primary invis w-full"
 						bind:value={$appData.language}
 					>
 						{#each langEntries as [k, v]}
@@ -115,3 +115,9 @@
 	{/if}
 	<!-- TODO: Add autofill for converter (create folder, target path, conversion type (Modal?) -->
 </div>
+
+<style>
+	.curs {
+		cursor: default !important;
+	}
+</style>

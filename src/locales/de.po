@@ -13,23 +13,251 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: src/routes/settings/+page.svelte:94
+msgid "{0}"
+msgstr ""
+
+#: src/routes/+page.svelte:57
+#: src/routes/+layout.svelte:19
+msgid "Agents"
+msgstr ""
+
+#: src/lib/utils.ts:76
 msgid "An error occurred"
 msgstr ""
 
+#: src/routes/convert/+page.svelte:34
+msgid "Analysis"
+msgstr ""
+
+#: src/routes/convert/+page.svelte:35
+msgid "Analyze the source material for potential conversion issues and improvements."
+msgstr ""
+
+#: src/routes/settings/+page.svelte:72
+#: src/routes/settings/+page.svelte:74
+#: src/routes/settings/+page.svelte:76
+msgid "App Version"
+msgstr ""
+
+#: src/components/convert/Step3.svelte:78
+msgid "Automatic"
+msgstr ""
+
+#: src/components/convert/Step3.svelte:73
+msgid "Bundle Type"
+msgstr ""
+
+#: src/routes/convert/+page.svelte:50
+msgid "Bundling"
+msgstr ""
+
+#: src/components/convert/Step3.svelte:87
+msgid "CBZ"
+msgstr ""
+
+#: src/routes/+page.svelte:77
+msgid "Change Palaxy's settings to better suit your needs and preferences."
+msgstr ""
+
+#: src/routes/convert/+page.svelte:26
+msgid "Choose Source Material Directory"
+msgstr ""
+
+#: src/components/convert/Step3.svelte:110
+#: src/components/convert/Step1.svelte:77
+msgid "Click to select or drag it onto it"
+msgstr ""
+
+#: src/routes/+page.svelte:20
+#: src/routes/+layout.svelte:17
 msgid "Convert"
 msgstr ""
 
-#~ msgid "Home"
-#~ msgstr ""
+#: src/routes/+page.svelte:23
+msgid "Convert your manga images into a digital format that can be read on your favorite devices."
+msgstr ""
 
+#: src/components/convert/Step3.svelte:119
+msgid "Create folder"
+msgstr ""
+
+#: src/types/appdata.ts:29
+msgid "Dark"
+msgstr ""
+
+#: src/types/appdata.ts:53
+msgid "English"
+msgstr ""
+
+#: src/components/convert/Step3.svelte:86
+msgid "EPUB"
+msgstr ""
+
+#: src/routes/+page.svelte:40
+#: src/routes/+page.svelte:59
+#: src/routes/settings/+page.svelte:117
+msgid "Experimental"
+msgstr ""
+
+#: src/routes/settings/+page.svelte:103
+msgid "Features"
+msgstr ""
+
+#: src/components/convert/Step3.svelte:69
+msgid "File Name(s)"
+msgstr ""
+
+#: src/components/convert/Step3.svelte:83
+msgid "File Type"
+msgstr ""
+
+#: src/routes/convert/+page.svelte:58
+msgid "Filter Images"
+msgstr ""
+
+#: src/routes/convert/+page.svelte:59
+msgid "Filter out images that are ads / unwanted for the conversion."
+msgstr ""
+
+#: src/types/appdata.ts:53
+msgid "German"
+msgstr ""
+
+#: src/routes/+layout.svelte:16
+msgid "Home"
+msgstr ""
+
+#: src/components/convert/Step3.svelte:76
+msgid "Image"
+msgstr ""
+
+#: src/types/appdata.ts:53
+msgid "Japanese"
+msgstr ""
+
+#: src/routes/settings/+page.svelte:116
+msgid "Language"
+msgstr ""
+
+#: src/components/convert/Step3.svelte:97
+msgid "Left to Right"
+msgstr ""
+
+#: src/types/appdata.ts:29
 msgid "Light"
 msgstr ""
 
+#: src/routes/settings/+page.svelte:63
+#: src/routes/settings/+page.svelte:72
+#: src/routes/settings/+page.svelte:81
+msgid "Loading..."
+msgstr ""
+
+#: src/routes/+page.svelte:60
+msgid "Manage your agents and their settings for better search results."
+msgstr ""
+
+#: src/components/convert/Step3.svelte:75
+msgid "Manual"
+msgstr ""
+
+#: src/routes/settings/+page.svelte:63
+#: src/routes/settings/+page.svelte:65
+#: src/routes/settings/+page.svelte:67
 msgid "Name"
 msgstr ""
 
+#: src/routes/convert/+page.svelte:128
+msgid "Next"
+msgstr ""
+
+#: src/components/convert/Step3.svelte:114
+#: src/components/convert/Step1.svelte:81
+msgid "None selected"
+msgstr ""
+
+#: src/routes/+layout.svelte:79
+#: src/routes/+layout.svelte:86
 msgid "Palaxy"
 msgstr ""
 
+#: src/components/convert/Step3.svelte:85
+msgid "PDF"
+msgstr ""
+
+#: src/routes/convert/+page.svelte:118
 msgid "Previous"
+msgstr ""
+
+#: src/components/convert/Step3.svelte:91
+msgid "Reading Direction"
+msgstr ""
+
+#: src/routes/convert/+page.svelte:66
+msgid "Review"
+msgstr ""
+
+#: src/routes/convert/+page.svelte:67
+msgid "Review the settings and the material before conversion."
+msgstr ""
+
+#: src/components/convert/Step3.svelte:98
+msgid "Right to Left"
+msgstr ""
+
+#: src/routes/+page.svelte:38
+#: src/routes/+layout.svelte:18
+msgid "Search"
+msgstr ""
+
+#: src/routes/+page.svelte:41
+msgid "Search for your favorite manga series and chapters from various sources."
+msgstr ""
+
+#: src/routes/convert/+page.svelte:27
+msgid "Select the directory where the source material is located."
+msgstr ""
+
+#: src/routes/convert/+page.svelte:42
+msgid "Set Metadata"
+msgstr ""
+
+#: src/routes/convert/+page.svelte:43
+msgid "Set the metadata for the to be converted material."
+msgstr ""
+
+#: src/routes/convert/+page.svelte:51
+msgid "Set the volume sizes for the conversion."
+msgstr ""
+
+#: src/routes/+page.svelte:75
+#: src/routes/+layout.svelte:20
+msgid "Settings"
+msgstr ""
+
+#: src/components/convert/Step1.svelte:69
+msgid "Source Location"
+msgstr ""
+
+#: src/routes/+page.svelte:22
+msgid "Stable"
+msgstr ""
+
+#: src/types/appdata.ts:29
+msgid "System"
+msgstr ""
+
+#: src/components/convert/Step3.svelte:102
+msgid "Target Location"
+msgstr ""
+
+#: src/routes/settings/+page.svelte:81
+#: src/routes/settings/+page.svelte:83
+#: src/routes/settings/+page.svelte:85
+msgid "Tauri Version"
+msgstr ""
+
+#: src/routes/settings/+page.svelte:91
+msgid "Theme"
 msgstr ""

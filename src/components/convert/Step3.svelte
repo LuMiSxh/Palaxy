@@ -91,7 +91,7 @@
 		<legend class="fieldset-legend">{$t`Reading Direction`}</legend>
 		<select
 			class="select select-secondary"
-			disabled={fileFormat !== 'PDF'}
+			disabled={fileFormat !== 'EPUB'}
 			bind:value={readingDirection}
 		>
 			{@render option(readingDirection, 'Left to Right', $t`Left to Right`)}

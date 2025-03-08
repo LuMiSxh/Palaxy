@@ -60,7 +60,7 @@
 
 <Toast />
 
-<div class="flex h-screen max-h-screen w-full flex-col overflow-hidden">
+<div class="flex h-screen max-h-screen w-full flex-col overflow-y-hidden">
 	<div class="navbar bg-base-100 shadow-sm select-none" style="view-transition-name: disabled;">
 		<a href="/">
 			<img src="/icon.png" alt="Logo" class="!mr-0 aspect-square size-[2.75rem] select-none" />

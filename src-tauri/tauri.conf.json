@@ -50,10 +50,11 @@
         "fullscreen": false,
         "hiddenTitle": true,
         "resizable": true,
-        "title": "Kana Dock",
+        "title": "Palaxy",
         "transparent": false,
         "minWidth": 1168,
-        "minHeight": 552
+        "minHeight": 552,
+        "dragDropEnabled": true
       }
     ],
     "macOSPrivateApi": true,
@@ -62,15 +63,20 @@
       "capabilities": [
         {
           "identifier": "app",
-            "description": "Capability for the core app",
-            "windows": [
-              "*"
-            ],
-            "permissions": [
-              "core:app:allow-tauri-version",
-              "core:app:allow-version",
-              "core:app:allow-name"
-            ]
+          "description": "Capability for the core app",
+          "windows": [
+            "*"
+          ],
+          "permissions": [
+            "core:window:default",
+            "core:webview:default",
+            "core:resources:default",
+            "core:path:default",
+            "core:menu:default",
+            "core:image:default",
+            "core:event:default",
+            "core:app:default"
+          ]
         },
         {
           "identifier": "dialog",

@@ -1,176 +1,142 @@
 <script lang="ts">
-	import { getName, getTauriVersion, getVersion } from "@tauri-apps/api/app"
-	import { appData } from "$lib/stores"
-	import {
-		ListBox,
-		ListBoxItem,
-		popup,
-		type PopupSettings,
-		SlideToggle,
-	} from "@skeletonlabs/skeleton"
-	import { Theme } from "$lib/types"
-	import { open } from "@tauri-apps/plugin-dialog"
-	import { version } from "$app/environment"
-	import { onMount } from "svelte"
+	import { getName, getTauriVersion, getVersion } from '@tauri-apps/api/app';
+	import { FeatureFlag, SupportedLanguages, Theme } from '$types/appdata';
+	import { convertToTitleCase, ffIsEnabled } from '$lib/utils';
+	import { appData } from '$stores/appdata.js';
+	import { t } from 'svelte-i18n-lingui';
+	import { onMount } from 'svelte';
 
-	// Popups
-	const popupTheme: PopupSettings = {
-		event: "click",
-		target: "popupTheme",
-		placement: "bottom",
-	}
-	const popupDefaultTargetPath: PopupSettings = {
-		event: "click",
-		target: "popupDefaultTargetPath",
-		placement: "bottom",
-	}
-	const popupShowHelp: PopupSettings = {
-		event: "click",
-		target: "popupShowHelp",
-		placement: "bottom",
+	const themeEntries = Object.entries(Theme).filter(([key]) => isNaN(Number(key)));
+	const langEntries = Object.entries(SupportedLanguages).filter(([key]) => isNaN(Number(key)));
+
+	let featureInput = $state(unParseInput($appData.featureFlags));
+
+	$effect(() => {
+		if (featureInput === '') return;
+		$appData.featureFlags = parseInput(featureInput);
+	});
+
+	function parseInput(input: string): FeatureFlag[] {
+		return input
+			.split(' ')
+			.map(Number)
+			.filter((n) => !isNaN(n)) as FeatureFlag[];
 	}
 
-	onMount(async () => {
-		console.log(await getTauriVersion())
-	})
-
-	// file logic
-	async function selectTargetDirectory() {
-		$appData.paths.converted = (await open({
-			directory: true,
-			multiple: false,
-		})) as string | null
+	function unParseInput(flags: FeatureFlag[]): string {
+		return flags.map(String).join(' ');
 	}
+
+	let container: HTMLDivElement | null = $state(null);
+
+	onMount(() => {
+		if (container === null) return;
+		container.addEventListener('wheel', (e) => {
+			if (e.deltaY === 0 || container === null) return;
+			e.preventDefault();
+			console.log(e.deltaY);
+			container.scrollLeft += e.deltaY;
+			console.log(container.scrollLeft);
+		});
+	});
+
 </script>
 
-<div class="grid h-full w-full grid-cols-2 grid-rows-1 gap-2 p-2">
-	<div class="table-container flex h-full w-full flex-col items-center justify-center p-2">
-		<!-- Native Table Element -->
-		<table class="table table-hover">
-			<tbody>
-				<tr>
-					<td class="font-bold text-primary-500"> Name</td>
-					<td>
-						<code>
-							{#await getName()}
-								<div class="placeholder w-3/4 animate-pulse" />
-							{:then name}
-								{name}
-							{:catch error}
-								{error.message}
-							{/await}
-						</code>
-					</td>
-				</tr>
-				<tr>
-					<td class="font-bold text-primary-500"> App Version</td>
-					<td>
-						<code>
-							{#await getVersion()}
-								<div class="placeholder w-3/4 animate-pulse" />
-							{:then name}
-								{name}
-							{:catch error}
-								{error.message}
-							{/await}
-						</code>
-					</td>
-				</tr>
-				<tr>
-					<td class="font-bold text-primary-500"> Tauri Version</td>
-					<td>
-						<code>
-							{#await getTauriVersion()}
-								<div class="placeholder w-3/4 animate-pulse" />
-							{:then name}
-								{name}
-							{:catch error}
-								{error.message}
-							{/await}
-						</code>
-					</td>
-				</tr>
-				<tr>
-					<td class="font-bold text-primary-500"> Svelte Version Hash</td>
-					<td>
-						<code>
-							{version}
-						</code>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+{#snippet label(name: string, value?: string, error?: Error)}
+	<div class="glass-surface w-full">
+		<fieldset class="fieldset">
+			<legend class="fieldset-legend">{name}</legend>
+			<input
+				type="text"
+				readonly
+				class={'input invis curs ' + (error === undefined ? 'input-secondary' : 'input-error')}
+				value={error ?? value ?? 'None'}
+			/>
+		</fieldset>
 	</div>
-	<div class="table-container flex h-full w-full flex-col items-center justify-center p-2">
-		<!-- Native Table Element -->
-		<table class="table table-interactive">
-			<tbody>
-				<tr use:popup={popupTheme}>
-					<td class="font-bold text-primary-500"> Theme</td>
-					<td>
-						<code>
-							{$appData.theme}
-						</code>
-					</td>
-				</tr>
-				<tr use:popup={popupDefaultTargetPath}>
-					<td class="font-bold text-primary-500"> Default Target Path</td>
-					<td>
-						<code>
-							{$appData.paths.converted
-								? $appData.paths.converted.substring(
-										$appData.paths.converted.lastIndexOf("/") + 1,
-									)
-								: "Not Set"}
-						</code>
-					</td>
-				</tr>
-				<tr use:popup={popupShowHelp}>
-					<td class="font-bold text-primary-500"> Show help</td>
-					<td>
-						<code>
-							{$appData.popups.help ? "Yes" : "No"}
-						</code>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+{/snippet}
+
+<div class=" h-full w-full overflow-x-scroll" bind:this={container}>
+	<div class="grid h-full grid-cols-9 grid-rows-3 gap-10 select-none" style="width: 200vw;">
+		<div class="flex h-full w-full items-center justify-center" style="grid-column: 1; grid-row: 1;">
+			{#await getName()}
+				{@render label($t`Name`, $t`Loading...`)}
+			{:then name}
+				{@render label($t`Name`, name)}
+			{:catch error}
+				{@render label($t`Name`, undefined, error)}
+			{/await}
+		</div>
+		<div class="flex h-full w-full items-center justify-center" style="grid-column: 1; grid-row: 2;">
+			{#await getVersion()}
+				{@render label($t`App Version`, $t`Loading...`)}
+			{:then aVersion}
+				{@render label($t`App Version`, aVersion)}
+			{:catch error}
+				{@render label($t`App Version`, undefined, error)}
+			{/await}
+		</div>
+		<div class="flex h-full w-full items-center justify-center" style="grid-column: 1; grid-row: 3;">
+			{#await getTauriVersion()}
+				{@render label($t`Tauri Version`, $t`Loading...`)}
+			{:then tVersion}
+				{@render label($t`Tauri Version`, tVersion)}
+			{:catch error}
+				{@render label($t`Tauri Version`, undefined, error)}
+			{/await}
+		</div>
+		<div class="flex h-full w-full items-center justify-center" style="grid-column: 2; grid-row: 1;">
+			<div class="glass-surface w-full">
+				<fieldset class="fieldset">
+					<legend class="fieldset-legend">{$t`Theme`}</legend>
+					<select id="theme" class="select select-primary invis w-full" bind:value={$appData.theme}>
+						{#each themeEntries as [k, v]}
+							<option class="capitalize" value={v}>{$t`${convertToTitleCase(k)}`}</option>
+						{/each}
+					</select>
+				</fieldset>
+			</div>
+		</div>
+		<div class="flex h-full w-full items-center justify-center" style="grid-column: 2; grid-row: 2;">
+			<div class="glass-surface w-full">
+				<fieldset class="fieldset">
+					<legend class="fieldset-legend">{$t`Features`}</legend>
+					<input id="feature" class="input input-primary invis" bind:value={featureInput} />
+				</fieldset>
+			</div>
+		</div>
+		{#if ffIsEnabled($appData, FeatureFlag.CHANGE_LANGUAGE)}
+			<div
+				class="flex h-full w-full items-center justify-center"
+				style="grid-column: 2; grid-row: 3;"
+			>
+				<div class="glass-surface w-full">
+					<fieldset class="fieldset">
+						<legend class="fieldset-legend">
+							{$t`Language`}
+							<span class="label-experimental">{$t`Experimental`}</span>
+						</legend>
+						<select
+							id="lang"
+							class="select select-primary invis w-full"
+							bind:value={$appData.language}
+						>
+							{#each langEntries as [k, v]}
+								<option class="capitalize" value={v}>{convertToTitleCase(k)}</option>
+							{/each}
+						</select>
+					</fieldset>
+				</div>
+			</div>
+		{/if}
+		<!-- TODO: Add autofill for converter (create folder, target path, conversion type (Modal?) -->
+		<div class="row-span-3 divider divider-horizontal">
+		</div>
 	</div>
-</div>
-<!-- popups -->
-<div class="card variant-soft-tertiary w-36 p-4 shadow-2xl" data-popup="popupTheme">
-	<ListBox class="variant-soft-surface">
-		<ListBoxItem bind:group={$appData.theme} name="medium" value={Theme.SYSTEM}
-			>System
-		</ListBoxItem>
-		<ListBoxItem bind:group={$appData.theme} name="medium" value={Theme.DARK}>Dark</ListBoxItem>
-		<ListBoxItem bind:group={$appData.theme} name="medium" value={Theme.LIGHT}
-			>Light
-		</ListBoxItem>
-	</ListBox>
-	<div class="variant-soft-tertiary arrow" />
 </div>
 
-<div class="card variant-soft-tertiary w-36 p-4 shadow-2xl" data-popup="popupDefaultTargetPath">
-	<div class="grid grid-cols-1 grid-rows-2 gap-2">
-		<button class="variant-filled-primary btn" on:click={selectTargetDirectory}> Select</button>
-		<button
-			class="variant-filled-secondary btn"
-			on:click={() => ($appData.paths.converted = null)}
-		>
-			Remove
-		</button>
-	</div>
-	<div class="variant-soft-tertiary arrow" />
-</div>
-
-<div class="card variant-soft-tertiary w-36 p-4 shadow-2xl" data-popup="popupShowHelp">
-	<div class="flex items-center justify-center">
-		<SlideToggle
-			name="Show Popup"
-			bind:checked={$appData.popups.help}
-			active="bg-primary-500"
-		/>
-	</div>
-	<div class="variant-soft-tertiary arrow" />
-</div>
+<style>
+    .curs {
+        cursor: default !important;
+    }
+</style>

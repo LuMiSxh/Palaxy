@@ -1,114 +1,159 @@
 <script lang="ts">
-	import "../app.postcss"
-	import {
-		AppBar,
-		AppShell,
-		getToastStore,
-		initializeStores,
-		setModeCurrent,
-		storePopup,
-		TabAnchor,
-		TabGroup,
-		Toast,
-	} from "@skeletonlabs/skeleton"
+	import '../app.css';
+	import { page } from '$app/state';
+	import { t } from 'svelte-i18n-lingui';
+	import { onNavigate } from '$app/navigation';
+	import { appData, appDataKey } from '$stores/appdata.js';
+	import { defaultAppData, Theme } from '$types/appdata';
+	import { setTheme } from '$lib/utils';
+	import { browser } from '$app/environment';
+	import { fade } from 'svelte/transition';
+	import Toast from '$components/Toast.svelte';
 
-	import { page } from "$app/stores"
-	// Floating UI for Popups
-	import { arrow, autoUpdate, computePosition, flip, offset, shift } from "@floating-ui/dom"
-	// ---
-	import { appDataDefault, appDataKey } from "$lib/constants"
-	import { appData, toast } from "$lib/stores"
-	import { Theme } from "$lib/types"
-	import { generateToast, setTheme } from "$lib/functions"
-	import { IconSettingsFilled, IconTransformFilled } from "@tabler/icons-svelte"
+	let { children } = $props();
 
-	// Popup
-	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow })
+	let pathMap: Record<string, string> = $state({
+		'/': $t`Home`,
+		'/convert': $t`Convert`,
+		'/search': $t`Search`,
+		'/agents': $t`Agents`,
+		'/settings': $t`Settings`
+	});
 
-	// Toast
-	initializeStores()
-	const toastStore = getToastStore()
+	let currentPath = $derived(pathMap[page.route.id === null ? '/' : page.route.id]);
 
-	toast.subscribe(t => {
-		if (!t) return
+	// Wait for the view transition to complete
+	onNavigate((navigation) => {
+		if (!document.startViewTransition) return;
 
-		const toastSettings = generateToast(t)
-		toastStore.trigger(toastSettings)
-		toast.set(undefined)
-	})
+		return new Promise((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
 
-	if (window && document) {
+	if (browser) {
 		// Load AppData
-		const appDataValue = localStorage.getItem(appDataKey)
+		const appDataValue = localStorage.getItem(appDataKey);
 		if (appDataValue) {
-			appData.set(JSON.parse(appDataValue))
+			appData.set(JSON.parse(appDataValue));
 		} else {
-			appData.set(appDataDefault)
+			appData.set(defaultAppData);
 		}
 
-		// Set dark / light mode
-	}
+		window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+			const newColorScheme = event.matches;
 
-	// Theme
-	setTheme($appData.theme)
-
-	if (window) {
-		window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", event => {
-			const newColorScheme = event.matches
-
-			if ($appData.theme === Theme.SYSTEM) {
-				setModeCurrent(!newColorScheme)
+			if ($appData.theme === Theme.System) {
+				setTheme(newColorScheme ? Theme.Dark : Theme.Light);
 			}
-		})
+		});
+
+		// Set dark / light mode
+		setTheme($appData.theme);
 	}
 
-	const paths = [
-		{
-			path: "/",
-			icon: IconTransformFilled,
-		},
-		{
-			path: "/settings",
-			icon: IconSettingsFilled,
-		},
-	]
+	// TODO: Redraw the images so they are not cut off
 </script>
 
 <Toast />
-<AppShell class="!h-screen !max-h-screen">
-	<AppBar slot="header" class="bg-surface-50 py-2 shadow-2xl dark:bg-surface-500">
-		<a href="/" slot="lead">
-			<img src="/favicon.png" class="aspect-square h-[3.5rem] select-none" alt="Logo" />
+
+<div class="flex h-screen max-h-screen w-full flex-col overflow-y-hidden">
+	<div class="navbar bg-base-100 shadow-sm select-none" style="view-transition-name: disabled;">
+		<a href="/">
+			<img src="/icon.png" alt="Logo" class="!mr-0 aspect-square size-[2.75rem] select-none" />
 		</a>
-		<h1
-			class="select-none bg-gradient-to-br from-primary-500 to-secondary-500 box-decoration-clone bg-clip-text pb-0.5 text-5xl text-transparent dark:from-tertiary-500 dark:via-primary-500"
-		>
-			Palaxy
-		</h1>
-		<TabGroup
-			slot="trail"
-			justify="justify-center"
-			active="variant-ghost-primary"
-			hover="hover:variant-soft-primary"
-			flex="flex-1 lg:flex-none"
-			rounded="rounded-md"
-			border=""
-			class="w-full"
-		>
-			{#each paths as path}
-				<TabAnchor
-					class="group mx-1 flex items-center justify-center text-center"
-					href={path.path}
-					selected={$page.url.pathname === path.path}
+		<div class="flex-1"></div>
+		<div class="relative flex-none">
+			{#key currentPath}
+				<div
+					class="absolute top-0 right-0 flex h-full items-center justify-center whitespace-nowrap"
+					transition:fade={{ duration: 120 }}
 				>
-					<svelte:component
-						this={path.icon}
-						size="28"
-						class="group-hover:text-black group-hover:dark:text-white"
-					/>
-				</TabAnchor>
-			{/each}
-		</TabGroup>
-	</AppBar>
-	<slot />
-</AppShell>
+					{#if currentPath === 'Home'}
+						<h6
+							class="from-primary to-secondary bg-linear-to-r via-50% bg-clip-text text-3xl font-medium text-transparent drop-shadow-lg dark:drop-shadow-none"
+						>
+							{$t`Palaxy`}
+						</h6>
+					{:else}
+						<h6 class="text-3xl font-medium">
+							<span
+								class="from-primary to-secondary bg-linear-to-r via-50% bg-clip-text text-transparent drop-shadow-lg dark:drop-shadow-none"
+							>
+								{$t`Palaxy`}
+							</span>
+							| {currentPath}
+						</h6>
+					{/if}
+				</div>
+			{/key}
+		</div>
+	</div>
+
+	<main class="relative h-full w-full grow overflow-auto px-3 py-2">
+		<img
+			src="/chars/alya.png"
+			alt=""
+			class="absolute bottom-0 left-0 -z-50 max-h-full drop-shadow-xs"
+		/>
+		<img
+			src="/chars/masachika.png"
+			alt=""
+			class="absolute right-0 bottom-0 -z-50 max-h-full drop-shadow-xs"
+		/>
+		<div class="h-full">
+			{@render children()}
+		</div>
+	</main>
+</div>
+
+<style>
+	@keyframes fade-in {
+		from {
+			opacity: 0;
+		}
+	}
+
+	@keyframes fade-out {
+		to {
+			opacity: 0;
+		}
+	}
+
+	@keyframes slide-from-right {
+		from {
+			transform: translateX(25vw);
+		}
+	}
+
+	@keyframes slide-to-left {
+		to {
+			transform: translateX(-25vw);
+		}
+	}
+
+	:root::view-transition-old(root) {
+		animation:
+			90ms cubic-bezier(0.4, 0, 1, 1) both fade-out,
+			300ms cubic-bezier(0.4, 0, 0.2, 1) both slide-to-left;
+	}
+
+	:root::view-transition-new(root) {
+		animation:
+			210ms cubic-bezier(0, 0, 0.2, 1) 90ms both fade-in,
+			300ms cubic-bezier(0.4, 0, 0.2, 1) both slide-from-right;
+	}
+
+	:root::view-transition-group(disabled),
+	:root::view-transition-old(disabled),
+	:root::view-transition-new(disabled) {
+		animation-duration: 0s !important;
+	}
+
+	:global(button) {
+		user-select: none !important;
+	}
+</style>

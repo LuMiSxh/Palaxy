@@ -1,5 +1,5 @@
 import { type AppData, defaultAppData } from '$types/appdata';
-import { setTheme } from '$lib/utils';
+import { setLocale, setTheme } from '$lib/utils';
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 
@@ -33,7 +33,6 @@ appData.subscribe((value) => {
 		if (browser) localStorage.setItem(appDataKey, JSON.stringify(value));
 
 		setTheme(value.theme);
-		// FIXME: Uncomment as soon as lingui extract is fixed
-		// setLocale(value.language).then();
+		setLocale(value.language).then();
 	}
 });

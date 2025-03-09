@@ -100,7 +100,7 @@ class KeyboardManager {
 		const wrappedCallback = (event: KeyboardEvent) => {
 			if (!this.enabled) return;
 
-			if (excludedKeys.includes(event.key.toLowerCase() as SingleKey)) {
+			if (excludedKeys.includes(event.code.toLowerCase() as SingleKey)) {
 				return; // Skip excluded keys
 			}
 
@@ -277,8 +277,8 @@ class KeyboardManager {
 		].filter(Boolean);
 
 		const keyCombo = normalizeKeyCombo(modifiers.length > 0
-			? `${modifiers.join('+')}+${event.key}`
-			: event.key);
+			? `${modifiers.join('+')}+${event.code}`
+			: event.code);
 
 		// Check if we have handlers for this combination
 		const handlers = this.handlers.get(keyCombo) || [];

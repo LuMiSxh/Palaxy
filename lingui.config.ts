@@ -1,7 +1,7 @@
 import { jstsExtractor, svelteExtractor } from 'svelte-i18n-lingui/extractor';
 
 export default {
-	locales: ['en', 'de'],
+	locales: ['en', 'de', "ja"],
 	sourceLocale: 'en',
 	catalogs: [
 		{

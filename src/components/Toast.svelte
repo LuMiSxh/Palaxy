@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { toasts } from '$stores/toast';
+	import toaster from '$states/toast.svelte';
 	import { IconX } from '@tabler/icons-svelte';
+	import { slide  } from 'svelte/transition';
 
 	function getAlertType(type: 'info' | 'success' | 'warning' | 'error') {
 		switch (type) {
@@ -33,16 +34,16 @@
 	}
 </script>
 
-<div class="toast toast-end toast-top z-50">
-	{#each $toasts as toast}
-		<div class="alert {getAlertType(toast.type)} flex justify-between">
-			<div>
+<div class="fixed flex flex-col gap-2 right-4 top-4 z-50">
+	{#each toaster.toasts as toast}
+		<div class="alert {getAlertType(toast.type)} flex justify-between items-center" transition:slide>
+			<span class="mr-2">
 				<!--eslint-disable-next-line svelte/no-at-html-tags-->
 				{@html toast.message}
-			</div>
+			</span>
 			<button
 				class="btn btn-soft btn-xs {getBtnType(toast.type)}"
-				onclick={() => toasts.update((t) => t.filter((t) => t.id !== toast.id))}
+				onclick={() => toaster.removeToast(toast.id)}
 			>
 				<IconX />
 			</button>

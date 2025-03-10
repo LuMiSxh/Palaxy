@@ -31,16 +31,24 @@
 
 		if (event.key === 'ArrowRight' && cancelButton && document.activeElement === cancelButton) {
 			confirmButton?.focus();
+			confirmButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 		}
 
 		if (event.key === 'ArrowLeft' && confirmButton && document.activeElement === confirmButton) {
 			cancelButton?.focus();
+			cancelButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 		}
 
-		// When no button is focused, focus the confirm button if presen else the cancel button
+		// When no button is focused, focus the confirm button if present else the cancel button
 		if (!document.activeElement) {
-			if (confirmButton) confirmButton.focus();
-			else if (cancelButton) cancelButton.focus();
+			if (confirmButton) {
+				confirmButton.focus();
+				confirmButton.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+			} else if (cancelButton) {
+				cancelButton.focus();
+				cancelButton.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+			}
 		}
 	}
 
@@ -84,7 +92,7 @@
 	onkeydown={() => {}}
 >
 	<div
-		class="bg-background dark:bg-background-dark w-full max-w-md rounded-lg shadow-lg"
+		class="bg-background dark:bg-background-dark w-full max-w-[50vw] rounded-lg shadow-lg z-50 max-h-[80vh] overflow-y-auto"
 		transition:scale={{ duration: 200, start: 0.95 }}
 	>
 		<div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">

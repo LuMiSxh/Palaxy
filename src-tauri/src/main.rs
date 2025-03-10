@@ -41,6 +41,7 @@ fn main() {
         .expect("Failed to export typescript bindings");
 
     Builder::default()
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             app.manage(Mutex::new(prelude::ConvState::default()));

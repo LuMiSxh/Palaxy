@@ -362,6 +362,60 @@
     .divider-horizontal {
         @apply w-px h-full bg-background-tertiary dark:bg-background-dark-tertiary mx-4;
     }
+
+    /* System info table styles */
+    .table {
+    }
+
+    .table tbody {
+        @apply divide-y divide-background-tertiary dark:divide-background-dark-tertiary;
+    }
+
+    .table tr td:first-child {
+        @apply py-3 px-4 font-medium bg-background-secondary dark:bg-background-dark-secondary;
+    }
+
+    .table tr td:last-child {
+        @apply py-3 px-4 bg-background-tertiary/50 dark:bg-background-dark-tertiary/50;
+    }
+
+    .table tr:first-child td:first-child {
+        @apply rounded-tl-md;
+    }
+
+    .table tr:first-child td:last-child {
+        @apply rounded-tr-md;
+    }
+
+    .table tr:last-child td:first-child {
+        @apply rounded-bl-md;
+    }
+
+    .table tr:last-child td:last-child {
+        @apply rounded-br-md;
+    }
+
+    /* Keyboard key styles */
+    .kbd {
+        @apply inline-flex items-center justify-center
+        bg-background-secondary dark:bg-background-dark-tertiary
+        border border-background-tertiary dark:border-background-dark-secondary
+        text-content dark:text-content-dark
+        rounded px-1.5 py-0.5 min-w-[1.5rem] text-center
+        font-mono font-medium shadow-sm dark:shadow-dark-sm;
+    }
+
+    .kbd-sm {
+        @apply text-xs px-1 py-px min-w-[1.25rem];
+    }
+
+    .kbd-md {
+        @apply text-sm px-2 py-1 min-w-[1.75rem];
+    }
+
+    .kbd-lg {
+        @apply text-base px-2.5 py-1.5 min-w-[2rem];
+    }
 }
 
 @layer utilities {

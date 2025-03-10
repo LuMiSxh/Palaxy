@@ -4,6 +4,7 @@
 	import { IconChevronRight } from '@tabler/icons-svelte';
 	import { slide } from 'svelte/transition';
 	import type Command from '$types/command';
+	import { keyHint } from '$states/keyhint.svelte';
 
 	interface Props {
 		commands?: Command[];
@@ -83,6 +84,14 @@
 		}
 	});
 
+	function handleStack(): void {
+		if (commandStack.length === 0) {
+			keyHint.addKey("escape", "Close command palette");
+		} else {
+			keyHint.addKey("escape", "Go back");
+		}
+	}
+
 	function executeCommand(command: Command) {
 		if (command.subcommands) {
 			commandStack.push(command);
@@ -93,6 +102,7 @@
 			onCommandSelect?.(command);
 			showPalette = false;
 		}
+		handleStack()
 	}
 
 	function goBack() {
@@ -103,13 +113,25 @@
 		} else {
 			showPalette = false;
 		}
+		handleStack()
 	}
 
 	// Register keyboard shortcuts on component mount
 	onMount(() => {
+		// Get the current key hints, clear them and add new ones
+		const keyHints = keyHint.get();
+		keyHint.clear()
+		keyHint
+			.addKey("arrowdown", "Navigate down")
+			.addKey("arrowup", "Navigate up")
+			.addKey("enter", "Select command")
+			.addKey("escape", "Close command palette")
+			.addKey("space", "Close command palette");
+
+		// Focus the input
 		if (inp) inp.focus();
 		// Use smartRegister to handle all keyboard shortcuts
-		return keyboard.smartRegister(
+		const unregister = keyboard.smartRegister(
 			[
 				// Regular key handlers
 				['arrowdown', (event) => {
@@ -141,6 +163,7 @@
 					event.preventDefault();
 					// Reset all states
 					commandStack = [];
+					handleStack()
 					selectedIndex = 0;
 					value = '';
 					showPalette = false;
@@ -155,6 +178,12 @@
 				]
 			]
 		);
+
+		return () => {
+			unregister();
+			// Restore the key hints
+			keyHint.set(keyHints);
+		}
 	});
 </script>
 

@@ -310,3 +310,6 @@ class KeyboardManager {
 
 // Create and export a singleton instance
 export const keyboard = new KeyboardManager();
+
+// Export the types
+export type { KeyCombination };

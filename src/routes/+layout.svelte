@@ -10,10 +10,22 @@
 	import { onMount } from 'svelte';
 	import { keyboard } from '$lib/keyboard';
 	import CommandPalette from '$components/CommandPalette.svelte';
-	import { IconHome, IconLanguage, IconSearch, IconSettings, IconTransform, IconUsers } from '@tabler/icons-svelte';
+	import {
+		IconHome,
+		IconLanguage,
+		IconSearch,
+		IconSettings,
+		IconSettingsQuestion,
+		IconTransform,
+		IconUsers
+	} from '@tabler/icons-svelte';
 	import { addToast } from '$states/toast.svelte';
 	import Dialog from '$components/Dialog.svelte';
 	import { openDialog } from '$states/dialog.svelte';
+	import SystemInfo from '$components/dialogs/SystemInfo.svelte';
+	import { dev } from '$app/environment';
+	import KeyHint from '$components/KeyHint.svelte';
+	import { keyHint } from '$states/keyhint.svelte';
 
 	let { children } = $props();
 
@@ -34,6 +46,9 @@
 			keyboard.unregister(unregisterKeyboard);
 		};
 	});
+
+	// Set KeyHint
+	keyHint.addKey("space", $t`Show Command Palette`);
 
 	let commands = $derived([
 		{
@@ -134,13 +149,26 @@
 					]
 				},
 				{
+					name: $t`System Info`,
+					description: $t`Show the system information of the application`,
+					icon: IconSettingsQuestion,
+					action: () => {
+						openDialog({
+							title: $t`Information`,
+							content: SystemInfo,
+							onConfirm: () => {
+							}
+						});
+					}
+				},
+				{
 					name: $t`Reset`,
-					description: $t`Reset the settings of the application`,
+					description: $t`Reset the state of the application`,
 					icon: IconSettings,
 					action: () => {
 						openDialog({
 							title: $t`Confirmation`,
-							content: $t`Are you sure you want to reset the settings of the application?`,
+							content: $t`Are you sure you want to reset the state of the application?`,
 							onConfirm: () => {
 								appData.set(defaultAppData);
 								addToast($t`Reset successfull`, 'success');
@@ -190,7 +218,13 @@
 		{@render children()}
 	</div>
 	<!-- --- -->
-	<div class="h-8 z-50 flex flex-col bg-background-secondary dark:bg-background-dark-secondary">
-		Bottom
+	<div class="h-8 z-50 px-2 flex justify-center items-center bg-background-secondary dark:bg-background-dark-secondary">
+		<KeyHint/>
 	</div>
 </div>
+
+{#if dev}
+	<div class="absolute top-5 right-5 badge badge-error text-lg! opacity-70" style="z-index: 9999;">
+		Development Build
+	</div>
+{/if}

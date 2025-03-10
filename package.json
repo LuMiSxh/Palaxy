@@ -46,6 +46,7 @@
     "@tabler/icons-svelte": "^3.30.0",
     "@tauri-apps/api": "^2.2.0",
     "@tauri-apps/plugin-dialog": "^2.2.0",
+    "@tauri-apps/plugin-os": "~2.2.1",
     "svelte-i18n-lingui": "^0.2.2"
   }
 }

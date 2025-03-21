@@ -5,7 +5,7 @@
 	import { appData, appDataKey } from '$stores/appdata.js';
 	import { defaultAppData, SupportedLanguages, Theme } from '$types/appdata';
 	import { setTheme } from '$lib/utils';
-	import { browser } from '$app/environment';
+	import { browser, dev } from '$app/environment';
 	import Toast from '$components/Toast.svelte';
 	import { onMount } from 'svelte';
 	import { keyboard } from '$lib/keyboard';
@@ -23,7 +23,6 @@
 	import Dialog from '$components/Dialog.svelte';
 	import { openDialog } from '$states/dialog.svelte';
 	import SystemInfo from '$components/dialogs/SystemInfo.svelte';
-	import { dev } from '$app/environment';
 	import KeyHint from '$components/KeyHint.svelte';
 	import { keyHint } from '$states/keyhint.svelte';
 
@@ -48,12 +47,12 @@
 	});
 
 	// Set KeyHint
-	keyHint.addKey("space", $t`Show Command Palette`);
+	keyHint.addKey('space', $t`Show Command Palette`);
 
 	let commands = $derived([
 		{
 			name: $t`Home`,
-			description: $t`Go back to the home page`,
+			description: $t`Go to the home page`,
 			icon: IconHome,
 			action: () => goto('/')
 		},
@@ -162,6 +161,24 @@
 					}
 				},
 				{
+					name: $t`Show KeyHints`,
+					description: $t`Show the key hints of the application and their actions in the current context`,
+					icon: IconSettingsQuestion,
+					action: () => {
+						$appData.showKeyHints = !$appData.showKeyHints;
+						addToast($appData.showKeyHints ? $t`KeyHints are now shown` : $t`KeyHints are now hidden`);
+					}
+				},
+				{
+					name: $t`Mouse Support`,
+					description: $t`Enable or disable a button to show the command palette`,
+					icon: IconSettingsQuestion,
+					action: () => {
+						$appData.mouseSupport = !$appData.mouseSupport;
+						addToast($appData.mouseSupport ? $t`Mouse Support is now enabled` : $t`Mouse Support is now disabled`);
+					}
+				},
+				{
 					name: $t`Reset`,
 					description: $t`Reset the state of the application`,
 					icon: IconSettings,
@@ -218,13 +235,31 @@
 		{@render children()}
 	</div>
 	<!-- --- -->
-	<div class="h-8 z-50 px-2 flex justify-center items-center bg-background-secondary dark:bg-background-dark-secondary">
-		<KeyHint/>
-	</div>
+	{#if $appData.showKeyHints || $appData.mouseSupport}
+		<div
+			class="h-8 z-50 px-2 flex justify-center items-center bg-background-secondary dark:bg-background-dark-secondary">
+			{#if $appData.showKeyHints}
+				<KeyHint />
+			{/if}
+			{#if $appData.mouseSupport}
+				<button
+					class="btn h-full !p-0"
+					onclick={() => showPalette = !showPalette}>
+					<img
+						src="/icon.png"
+						class="max-w-full max-h-full"
+						alt="Command Palette"
+					/>
+				</button>
+			{/if}
+		</div>
+	{/if}
 </div>
 
 {#if dev}
-	<div class="absolute top-5 right-5 badge badge-error text-lg! opacity-70" style="z-index: 9999;">
+	<div
+		class="absolute {($appData.showKeyHints || $appData.mouseSupport)? 'bottom-10' : 'bottom-5'} right-5 badge badge-error text-lg! opacity-70 pointer-events-none select-none"
+		style="z-index: 9999;">
 		Development Build
 	</div>
 {/if}

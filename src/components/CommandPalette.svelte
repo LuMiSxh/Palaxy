@@ -187,9 +187,9 @@
 	});
 </script>
 
-<div class="fixed left-0 top-0 h-screen w-screen bg-background-dark/90 flex items-center justify-center z-40"
+<div class="fixed left-0 top-0 h-screen w-screen bg-background-dark/90 flex items-center justify-center z-30"
 		 onclick={() => showPalette = false} role="button" tabindex="0" onkeydown={() => null}>
-	<div class="command-palette card flex flex-col">
+	<div class="command-palette card flex flex-col z-50">
 		<input
 			type="text"
 			bind:value={value}
@@ -227,22 +227,22 @@
 						transition:slide={{duration: 350, delay: i * 20}}
 					>
 						{#if item.icon}
-							<item.icon size="22" class="mr-3" />
+							<item.icon size="22" class="mr-3 {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}" />
 						{/if}
 						<span>
-								<span class="font-medium">{item.name}</span>
+								<span class="font-medium {i === selectedIndex ? 'text-white' : 'text-content-tertiary'}">{item.name}</span>
 							{#if item.description}
 									<div
-										class="text-sm {i === selectedIndex ? 'text-gray-200' : 'text-gray-500'}">{item.description}</div>
+										class="text-sm {i === selectedIndex ? 'text-white' : 'text-content-tertiary'}">{item.description}</div>
 								{/if}
 							</span>
 						{#if item.subcommands}
-							<IconChevronRight size="20" class="ml-auto" />
+							<IconChevronRight size="20" class="ml-auto {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}" />
 						{/if}
 					</button>
 				{/each}
 			{:else}
-				<div class="p-2 text-center text-gray-500">No commands found</div>
+				<div class="p-2 text-center text-white">No commands found</div>
 			{/if}
 		</ul>
 	</div>
@@ -252,7 +252,8 @@
     .command-palette {
         width: 50vw;
         padding: 12px;
-        height: 70vh;
+        min-height: 200px;
+        max-height: 90vh;
     }
 
     ul {

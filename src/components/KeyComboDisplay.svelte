@@ -6,9 +6,9 @@
 
 	let { keyCombination }: { keyCombination: KeyCombination } = $props();
 
-	let osName = $state("default");
+	let osName = $state('default');
 
-	onMount(() => osName = type())
+	onMount(() => osName = type());
 
 	let keySymbols: Record<string, Record<string, string>> = $derived({
 		darwin: {
@@ -56,7 +56,7 @@
 		return keyCombination.toLowerCase().split('+').map(key => {
 			const trimmedKey = key.trim();
 			return symbolMap[trimmedKey] || trimmedKey.toUpperCase();
-		});
+		}).join(' ');
 	});
 </script>
 

@@ -5,7 +5,7 @@
 	let activeDialog = $derived.by(() => dialogManager.dialogs.length > 0 ? dialogManager.dialogs[dialogManager.dialogs.length - 1] : null);
 </script>
 
-<div class="fixed inset-0 z-50">
+<div class="fixed inset-0 z-50 w-[1px] h-[1px]">
   {#if activeDialog}
     <DialogContent dialog={activeDialog} />
   {/if}

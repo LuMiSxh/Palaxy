@@ -7,7 +7,7 @@
 	import convState, { stepState } from '$states/converter.svelte';
 	import { wrapper } from '$lib/utils';
 	import { getCurrentWebview } from '@tauri-apps/api/webview';
-	import { addToast } from '$stores/toast';
+	import { addToast } from '$states/toast.svelte';
 	import { IconFileDownload } from '@tabler/icons-svelte';
 
 	onMount(async () => {

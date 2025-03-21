@@ -52,8 +52,8 @@
         "resizable": true,
         "title": "Palaxy",
         "transparent": false,
-        "minWidth": 1168,
-        "minHeight": 552,
+        "minWidth": 1080,
+        "minHeight": 608,
         "dragDropEnabled": true
       }
     ],

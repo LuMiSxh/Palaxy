@@ -92,6 +92,16 @@ export interface AppData {
 	featureFlags: Array<FeatureFlag>;
 
 	/**
+	 * Specifies whether key hints should be shown.
+	 */
+	showKeyHints: boolean;
+
+	/**
+	 * Specifies whether mouse support should be enabled.
+	 */
+	mouseSupport: boolean;
+
+	/**
 	 * Configuration for autoPop features.
 	 */
 	autoPop: {
@@ -128,6 +138,8 @@ export const defaultAppData: AppData = {
 	theme: Theme.System,
 	language: SupportedLanguages.English,
 	featureFlags: [],
+	showKeyHints: true,
+	mouseSupport: false,
 	autoPop: {
 		enabled: false,
 		converter: {

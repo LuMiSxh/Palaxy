@@ -1,7 +1,7 @@
 import { type AppData, FeatureFlag, SupportedLanguages, Theme } from '$types/appdata';
 import { browser } from '$app/environment';
 import type { Error, Result } from '$types';
-import { addToast } from '$stores/toast';
+import { addToast } from '$states/toast.svelte';
 import { gt, locale } from 'svelte-i18n-lingui';
 
 const LIGHT = 'alya';

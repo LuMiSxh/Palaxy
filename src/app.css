@@ -19,33 +19,36 @@
     --color-content-dark-secondary: rgb(204 204 204);
     --color-content-dark-tertiary: rgb(153 153 153);
 
-    --color-primary: rgb(93 92 214);
-    --color-primary-hover: rgb(74 73 192);
-    --color-primary-active: rgb(62 62 170);
-    --color-primary-light: rgb(232 231 255);
-    --color-primary-dark-light: rgb(45 45 80);
+    /* Primary: Soft Blue */
+    --color-primary: rgb(112, 155, 218);      /* #709BDA */
+    --color-primary-hover: rgb(100, 139, 196);
+    --color-primary-active: rgb(89, 124, 174);
+    --color-primary-light: rgb(229, 238, 252);
+    --color-primary-dark-light: rgb(38, 51, 73);
 
-    --color-secondary: rgb(230 126 34);
-    --color-secondary-hover: rgb(211 84 0);
-    --color-secondary-active: rgb(160 64 0);
-    --color-secondary-light: rgb(255 238 221);
-    --color-secondary-dark-light: rgb(61 41 20);
+    /* Secondary: Cream */
+    --color-secondary: rgb(242, 230, 194);    /* #F2E6C2 */
+    --color-secondary-hover: rgb(218, 207, 175);
+    --color-secondary-active: rgb(193, 184, 155);
+    --color-secondary-light: rgb(250, 248, 240);
+    --color-secondary-dark-light: rgb(60, 58, 50);
 
-    --color-success: rgb(46 204 113);
-    --color-success-light: rgb(202, 246, 222);
-    --color-success-dark-light: rgb(26 59 42);
+    /* Accent colors */
+    --color-success: rgb(75, 175, 125);       /* Subdued green */
+    --color-success-light: rgb(218, 239, 228);
+    --color-success-dark-light: rgb(30, 54, 40);
 
-    --color-warning: rgb(243 156 18);
-    --color-warning-light: rgb(246, 227, 182);
-    --color-warning-dark-light: rgb(61 41 20);
+    --color-warning: rgb(221, 170, 85);       /* Subdued yellow/gold */
+    --color-warning-light: rgb(246, 236, 210);
+    --color-warning-dark-light: rgb(56, 47, 30);
 
-    --color-error: rgb(231 76 60);
-    --color-error-light: rgb(245, 177, 177);
-    --color-error-dark-light: rgb(58 23 24);
+    --color-error: rgb(205, 92, 92);          /* Subdued red */
+    --color-error-light: rgb(245, 220, 220);
+    --color-error-dark-light: rgb(56, 35, 35);
 
-    --color-info: rgb(52 152 219);
-    --color-info-light: rgb(170, 219, 248);
-    --color-info-dark-light: rgb(26 59 74);
+    --color-info: rgb(90, 150, 200);          /* Subdued blue */
+    --color-info-light: rgb(220, 235, 245);
+    --color-info-dark-light: rgb(30, 45, 60);
 
     --radius-sm: 0.25rem;
     --radius: 0.375rem;
@@ -415,6 +418,98 @@
 
     .kbd-lg {
         @apply text-base px-2.5 py-1.5 min-w-[2rem];
+    }
+
+    /* Progress bars */
+    .progress {
+        @apply appearance-none w-full overflow-hidden bg-background-tertiary;
+    }
+
+    .dark .progress {
+        @apply bg-background-dark-tertiary;
+    }
+
+    .progress::-webkit-progress-bar {
+        @apply bg-background-tertiary;
+    }
+
+    .dark .progress::-webkit-progress-bar {
+        @apply bg-background-dark-tertiary;
+    }
+
+    .progress::-webkit-progress-value,
+    .progress::-moz-progress-bar {
+        @apply transition-all duration-300;
+    }
+
+    /* Progress variants */
+    .progress-primary::-webkit-progress-value,
+    .progress-primary::-moz-progress-bar {
+        @apply bg-primary;
+    }
+
+    .progress-secondary::-webkit-progress-value,
+    .progress-secondary::-moz-progress-bar {
+        @apply bg-secondary;
+    }
+
+    .progress-success::-webkit-progress-value,
+    .progress-success::-moz-progress-bar {
+        @apply bg-success;
+    }
+
+    .progress-error::-webkit-progress-value,
+    .progress-error::-moz-progress-bar {
+        @apply bg-error;
+    }
+
+    .progress-warning::-webkit-progress-value,
+    .progress-warning::-moz-progress-bar {
+        @apply bg-warning;
+    }
+
+    .progress-info::-webkit-progress-value,
+    .progress-info::-moz-progress-bar {
+        @apply bg-info;
+    }
+
+    /* Size variants */
+    .progress-xs {
+        height: 0.25rem;
+    }
+
+    .progress-sm {
+        height: 0.375rem;
+    }
+
+    .progress-md {
+        height: 0.625rem;
+    }
+
+    .progress-lg {
+        height: 0.875rem;
+    }
+
+    /* Indeterminate progress animation */
+    .progress-indeterminate::-webkit-progress-value {
+        @apply animate-[progress-loading_2s_infinite_ease];
+        background-size: 200% 200%;
+        background-position: left -30% top 0;
+    }
+
+    .progress-indeterminate::-moz-progress-bar {
+        @apply animate-[progress-loading_2s_infinite_ease];
+        background-size: 200% 200%;
+        background-position: left -30% top 0;
+    }
+
+    @keyframes progress-loading {
+        0% {
+            background-position: 200% 0;
+        }
+        100% {
+            background-position: -200% 0;
+        }
     }
 }
 

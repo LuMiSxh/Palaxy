@@ -27,9 +27,34 @@ class KeyHint {
 		return this;
 	}
 
+	/**
+	 * Removes a key combination and its hint.
+	 * @param key The key combination
+	 * @returns This instance
+	 */
 	removeKey(key: KeyCombination): this {
 		this.keys = this.keys.filter(k => k[0] !== key);
 		return this;
+	}
+
+	/**
+	 * Adds multiple key combinations with their hints. Returns a function to remove the added key combinations.
+	 @param keyhints An array of key combinations and their hints
+	 * @returns A function to remove the added key combinations
+	 */
+	smartAdd(keyhints: Parameters<typeof this.addKey>[]): () => void {
+		// Get all current key hints
+		const currentKeys = this.keys;
+
+		// Add the new key hints
+		keyhints.forEach(([key, hint]) => this.addKey(key, hint));
+
+		// Return a function to remove the added key hints and restore the previous ones
+		return () => {
+			keyhints.forEach(([key]) => this.removeKey(key));
+
+			this.keys = currentKeys;
+		};
 	}
 
 	clear(): void {

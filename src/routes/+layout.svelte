@@ -9,13 +9,18 @@
 	import Toast from '$components/Toast.svelte';
 	import { onMount } from 'svelte';
 	import { keyboard } from '$lib/keyboard';
-	import CommandPalette from '$components/CommandPalette.svelte';
+	import ActionHub from '$components/ActionHub.svelte';
 	import {
+		IconAutomation,
+		IconBrightness, IconBrightness2, IconBrightnessFilled,
+		IconBrush,
 		IconHome,
-		IconLanguage,
+		IconKeyboard,
+		IconLanguage, IconLanguageHiragana,
+		IconMouse,
 		IconSearch,
-		IconSettings,
-		IconSettingsQuestion,
+		IconSettings, IconSettingsCode,
+		IconSettingsQuestion, IconShadow,
 		IconTransform,
 		IconUsers
 	} from '@tabler/icons-svelte';
@@ -47,7 +52,7 @@
 	});
 
 	// Set KeyHint
-	keyHint.addKey('space', $t`Show Command Palette`);
+	keyHint.addKey('space', $t`ActionHub`);
 
 	let commands = $derived([
 		{
@@ -82,12 +87,12 @@
 				{
 					name: $t`Theme`,
 					description: $t`Change the theme of the application`,
-					icon: IconSettings,
+					icon: IconBrush,
 					subcommands: [
 						{
 							name: $t`Light`,
 							description: $t`Change the theme to light`,
-							icon: IconSettings,
+							icon: IconBrightnessFilled,
 							action: () => {
 								setTheme(Theme.Light);
 								addToast($t`Theme changed to light`);
@@ -96,7 +101,7 @@
 						{
 							name: $t`Dark`,
 							description: $t`Change the theme to dark`,
-							icon: IconSettings,
+							icon: IconShadow,
 							action: () => {
 								setTheme(Theme.Dark);
 								addToast($t`Theme changed to dark`);
@@ -105,7 +110,7 @@
 						{
 							name: $t`System`,
 							description: $t`Change the theme to system`,
-							icon: IconSettings,
+							icon: IconAutomation,
 							action: () => {
 								setTheme(Theme.System);
 								addToast($t`Theme changed to system`);
@@ -139,7 +144,7 @@
 						{
 							name: $t`Japanese`,
 							description: $t`Change the language to Japanese`,
-							icon: IconLanguage,
+							icon: IconLanguageHiragana,
 							action: () => {
 								$appData.language = SupportedLanguages.Japanese;
 								addToast($t`Language changed to Japanese`);
@@ -163,7 +168,7 @@
 				{
 					name: $t`Show KeyHints`,
 					description: $t`Show the key hints of the application and their actions in the current context`,
-					icon: IconSettingsQuestion,
+					icon: IconKeyboard,
 					action: () => {
 						$appData.showKeyHints = !$appData.showKeyHints;
 						addToast($appData.showKeyHints ? $t`KeyHints are now shown` : $t`KeyHints are now hidden`);
@@ -171,8 +176,8 @@
 				},
 				{
 					name: $t`Mouse Support`,
-					description: $t`Enable or disable a button to show the command palette`,
-					icon: IconSettingsQuestion,
+					description: $t`Enable or disable a button to show the ActionHub`,
+					icon: IconMouse,
 					action: () => {
 						$appData.mouseSupport = !$appData.mouseSupport;
 						addToast($appData.mouseSupport ? $t`Mouse Support is now enabled` : $t`Mouse Support is now disabled`);
@@ -181,7 +186,7 @@
 				{
 					name: $t`Reset`,
 					description: $t`Reset the state of the application`,
-					icon: IconSettings,
+					icon: IconSettingsCode,
 					action: () => {
 						openDialog({
 							title: $t`Confirmation`,
@@ -226,12 +231,12 @@
 <Dialog />
 
 {#if showPalette}
-	<CommandPalette {commands} bind:showPalette={showPalette} />
+	<ActionHub {commands} bind:showPalette={showPalette} />
 {/if}
 
 <div class="h-screen w-screen flex flex-col bg-background dark:bg-background-dark overflow-hidden">
 	<!-- --- -->
-	<div class="flex-1 overflow-y-hidden">
+	<div class="flex-1 overflow-y-hidden overflow-x-hidden">
 		{@render children()}
 	</div>
 	<!-- --- -->
@@ -248,7 +253,7 @@
 					<img
 						src="/icon.png"
 						class="max-w-full max-h-full"
-						alt="Command Palette"
+						alt="ActionHub"
 					/>
 				</button>
 			{/if}

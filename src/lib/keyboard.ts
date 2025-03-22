@@ -1,6 +1,6 @@
 type KeyHandler = {
 	id: string;
-	callback: (event: KeyboardEvent) => void;
+	callback: (event: KeyboardEvent) => void | boolean;
 	scope?: string;
 };
 
@@ -283,9 +283,12 @@ class KeyboardManager {
 		// Check if we have handlers for this combination
 		const handlers = this.handlers.get(keyCombo) || [];
 
-		// Call all matching handlers
-		for (const handler of handlers) {
-			handler.callback(event);
+		// Call all matching handlers in the order newest to oldest
+		for (let i = handlers.length - 1; i >= 0; i--) {
+			// If there is a result, and if it is true, don't call the other handlers
+			if (handlers[i].callback(event) === true) {
+				break;
+			}
 		}
 	}
 

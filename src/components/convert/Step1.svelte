@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { commands } from '$types';
 	import { t } from 'svelte-i18n-lingui';
 	import { open } from '@tauri-apps/plugin-dialog';
@@ -9,6 +9,12 @@
 	import { getCurrentWebview } from '@tauri-apps/api/webview';
 	import { addToast } from '$states/toast.svelte';
 	import { IconFileDownload } from '@tabler/icons-svelte';
+	import { keyHint } from '$states/keyhint.svelte';
+	import { keyboard } from '$lib/keyboard';
+
+	let btn: HTMLButtonElement | null = $state(null);
+	let unregisterKeyboard: () => void;
+	let unregisterKeyHint: () => void;
 
 	onMount(async () => {
 		// Reset
@@ -16,6 +22,7 @@
 		converter.reset();
 		stepState.reset();
 
+		// Drag and drop
 		const webview = getCurrentWebview();
 		await webview.onDragDropEvent(async (event) => {
 			if (event.payload.type === 'drop') {
@@ -36,8 +43,9 @@
 
 				// When there are multiple files toast it
 				if (event.payload.paths.length > 1) {
+					const msg = $t`Multiple paths dropped, only the first path will be used:`;
 					addToast(
-						`Multiple paths dropped, only the first path will be used: <code>${event.payload.paths[0]}</code>`,
+						`${msg} <code>${event.payload.paths[0]}</code>`,
 						'warning',
 						3600
 					);
@@ -47,9 +55,27 @@
 				await wrapper(commands.convStateSet({ Source: convState.source ?? '' }));
 			}
 		});
+
+		// Set Keyboard etc.
+		btn?.focus();
+		unregisterKeyboard = keyboard.smartRegister([
+			['enter', select]
+		]);
+
+		unregisterKeyHint = keyHint.smartAdd([
+			['enter', $t`Invoke`]
+		]);
 	});
 
-	async function select() {
+	onDestroy(() => {
+		if (unregisterKeyboard) unregisterKeyboard();
+		if (unregisterKeyHint) unregisterKeyHint();
+	});
+
+	async function select(evt: KeyboardEvent | undefined = undefined) {
+		evt?.stopPropagation();
+		evt?.preventDefault();
+
 		converter.source = await open({
 			directory: true,
 			multiple: false
@@ -69,14 +95,15 @@
 	<legend class="fieldset-legend">{$t`Source Location`}</legend>
 	<button
 		id="dropzone"
-		class="btn btn-soft flex items-center justify-center p-2 select-none"
+		class="btn btn-primary flex items-center justify-center p-2 select-none"
 		onclick={select}
+		bind:this={btn}
 	>
 		{#if !converter.source}
 			<IconFileDownload class="text-primary" />
-			<span>{$t`Click to select or drag it onto it`}</span>
+			<span>{$t`Click to select or drag a folder in`}</span>
 		{:else if converter.source}
-			<code class="text-primary">{converter.source.split('/').pop()}</code>
+			<code class="text-white">{converter.source.split('/').pop()}</code>
 		{:else}
 			<span class="text-error">{$t`None selected`}</span>
 		{/if}

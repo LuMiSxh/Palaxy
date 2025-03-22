@@ -511,6 +511,95 @@
             background-position: -200% 0;
         }
     }
+
+    /* Fieldset and Legend styles */
+    .fieldset {
+        @apply min-w-0 p-4 rounded-lg
+        border border-background-tertiary dark:border-background-dark-tertiary
+        bg-background dark:bg-background-dark-secondary;
+    }
+
+    .fieldset-legend {
+        @apply px-2 text-sm font-medium
+        text-content-secondary dark:text-content-dark-secondary;
+    }
+
+    /* Toggle Switch */
+    .toggle {
+        @apply relative inline-flex items-center cursor-pointer select-none;
+    }
+
+    .toggle-input {
+        @apply sr-only; /* Hide actual input visually but keep it accessible */
+    }
+
+    .toggle-track {
+        @apply w-10 h-5 bg-background-tertiary dark:bg-background-dark-tertiary
+        rounded-full transition-colors duration-200 ease-in-out
+        border border-background-tertiary dark:border-background-dark-tertiary;
+    }
+
+    .toggle-input:checked + .toggle-track {
+        @apply bg-primary border-primary;
+    }
+
+    .toggle-thumb {
+        @apply absolute left-0.5 top-0.5 w-4 h-4
+        bg-background dark:bg-content-dark
+        rounded-full shadow-sm dark:shadow-dark-sm
+        transform transition-transform duration-200 ease-in-out;
+    }
+
+    .toggle-input:checked + .toggle-track .toggle-thumb {
+        @apply transform translate-x-5;
+    }
+
+    /* Focus styles */
+    .toggle-input:focus-visible + .toggle-track {
+        @apply outline-none ring-2 ring-primary ring-offset-2 dark:ring-offset-background-dark;
+    }
+
+    /* Disabled state */
+    .toggle-input:disabled + .toggle-track {
+        @apply opacity-50 cursor-not-allowed;
+    }
+
+    /* Size variants */
+    .toggle-sm .toggle-track {
+        @apply w-8 h-4;
+    }
+
+    .toggle-sm .toggle-thumb {
+        @apply w-3 h-3;
+    }
+
+    .toggle-sm .toggle-input:checked + .toggle-track .toggle-thumb {
+        @apply translate-x-4;
+    }
+
+    .toggle-lg .toggle-track {
+        @apply w-12 h-6;
+    }
+
+    .toggle-lg .toggle-thumb {
+        @apply w-5 h-5;
+    }
+
+    .toggle-lg .toggle-input:checked + .toggle-track .toggle-thumb {
+        @apply translate-x-6;
+    }
+
+    .toggle-xl .toggle-track {
+        @apply w-14 h-7;
+    }
+
+    .toggle-xl .toggle-thumb {
+        @apply w-6 h-6;
+    }
+
+    .toggle-xl .toggle-input:checked + .toggle-track .toggle-thumb {
+        @apply translate-x-7;
+    }
 }
 
 @layer utilities {

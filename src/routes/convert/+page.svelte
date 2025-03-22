@@ -108,13 +108,13 @@
 		if (stepState.disablePrev) {
 			keyHint.removeKey('shift+arrowleft');
 		} else {
-			keyHint.addKey('shift+arrowleft', $t`Previous Step`);
+			keyHint.addKey('shift+arrowleft', $t`Previous`);
 		}
 
 		if (stepState.disableNext) {
 			keyHint.removeKey('shift+arrowright');
 		} else {
-			keyHint.addKey('shift+arrowright', $t`Next Step`);
+			keyHint.addKey('shift+arrowright', $t`Next`);
 		}
 	}
 
@@ -128,18 +128,8 @@
 </script>
 
 <div class="flex h-full w-full flex-col">
-	<!--	<ul class="glass-surface steps steps-vertical mr-2 h-full">-->
-	<!--		{#each steps as step}-->
-	<!--			{#if !step.hidden}-->
-	<!--				<li class="step {step.cls}">-->
-	<!--					<span class="step-icon"><step.icon /></span>-->
-	<!--					<span class="flex h-full w-full items-center justify-center">{step.title}</span>-->
-	<!--				</li>-->
-	<!--			{/if}-->
-	<!--		{/each}-->
-	<!--	</ul>-->
 	<section class="glass-surface flex h-full w-full flex-col relative">
-		<div class="mb-2 w-full">
+		<div class="mb-2 ml-2 w-full">
 			<h1
 				class="dark:text-transparent text-primary bg-clip-text bg-gradient-to-r from-primary via-secondary via-60% to-secondary text-3xl mb-2">
 				{currentStep.title}
@@ -158,52 +148,56 @@
 			{@render activeComponent()}
 		</div>
 		{#if $appData.mouseSupport}
-			<div class="absolute bottom-5 right-5 flex gap-2">
-				<button
-					class="btn btn-soft btn-error select-none"
-					onclick={() => {
+			<button
+				class="absolute bottom-5 left-5  btn btn-soft btn-error select-none"
+				onclick={() => {
 					stepState.index -= stepState.indexDecrement;
 					stepState.indexDecrement = 1;
 				}}
-					disabled={stepState.disablePrev}
-				>
-					{$t`Previous`}
-				</button>
-				<button
-					class="btn btn-soft btn-success select-none"
-					onclick={() => {
+				disabled={stepState.disablePrev}
+			>
+				{$t`Previous`}
+			</button>
+			<button
+				class="absolute bottom-5 right-5  btn btn-soft btn-success select-none"
+				onclick={() => {
 					stepState.index += stepState.indexIncrement;
 					stepState.indexIncrement = 1;
 				}}
-					disabled={stepState.disableNext}
-				>
-					{$t`Next`}
-				</button>
-			</div>
+				disabled={stepState.disableNext}
+			>
+				{$t`Next`}
+			</button>
 		{/if}
 	</section>
 </div>
 
 <style>
-	@keyframes blink {
-		0% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.5;
-		}
-		100% {
-			opacity: 1;
-		}
-	}
+    @keyframes blink {
+        0% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.8;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
 
-	#step-progress::-webkit-progress-value {
-		background: linear-gradient(to left, var(--color-primary), var(--color-secondary));
-		animation: blink 1.5s infinite;
-	}
+    #step-progress {
+        transition: value 0.5s ease;
+    }
 
-	#step-progress::-moz-progress-bar {
-		background: linear-gradient(to left, var(--color-primary), var(--color-secondary));
-		animation: blink 1.5s infinite;
-	}
+    #step-progress::-webkit-progress-value {
+        background: linear-gradient(to left, var(--color-primary), var(--color-secondary));
+        animation: blink 1.5s infinite;
+        transition: width 0.5s ease-in-out;
+    }
+
+    #step-progress::-moz-progress-bar {
+        background: linear-gradient(to left, var(--color-primary), var(--color-secondary));
+        animation: blink 1.5s infinite;
+        transition: width 0.5s ease-in-out;
+    }
 </style>

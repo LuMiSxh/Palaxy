@@ -74,7 +74,7 @@ async getAgentList() : Promise<Result<BaseResponse<AgentMeta[]>, Error>> {
 /** user-defined types **/
 
 export type AgentMeta = { name: string; url: string; icon: string | null; tags: TagType[] }
-export type AnalyzeResponse = { negative: string[]; positive: string[]; suggest: string[]; flag: BundleFlag }
+export type AnalyzeResponse = { negative: string[]; positive: string[]; warning: string[]; flag: BundleFlag }
 export type BaseResponse<T> = { duration: number; comment: string | null; payload: T | null }
 export type BundleFlag = "NAME" | "IMAGE" | "MANUAL"
 export type BundleResponse = { total_chapters: number; total_volumes: number | null; chapter_sizes: number[] | null }

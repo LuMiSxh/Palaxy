@@ -5,6 +5,7 @@
 	import { slide } from 'svelte/transition';
 	import type Command from '$types/command';
 	import { keyHint } from '$states/keyhint.svelte';
+	import { t } from 'svelte-i18n-lingui';
 
 	interface Props {
 		commands?: Command[];
@@ -15,7 +16,7 @@
 
 	let {
 		commands = [],
-		placeholderText = 'Search commands...',
+		placeholderText = $t`Search commands...`,
 		onCommandSelect = () => {
 		},
 		showPalette = $bindable(false)
@@ -86,9 +87,9 @@
 
 	function handleStack(): void {
 		if (commandStack.length === 0) {
-			keyHint.addKey("escape", "Close command palette");
+			keyHint.addKey('escape', $t`ActionHub`);
 		} else {
-			keyHint.addKey("escape", "Go back");
+			keyHint.addKey('escape', $t`Go back`);
 		}
 	}
 
@@ -102,7 +103,7 @@
 			onCommandSelect?.(command);
 			showPalette = false;
 		}
-		handleStack()
+		handleStack();
 	}
 
 	function goBack() {
@@ -113,25 +114,25 @@
 		} else {
 			showPalette = false;
 		}
-		handleStack()
+		handleStack();
 	}
 
 	// Register keyboard shortcuts on component mount
 	onMount(() => {
 		// Get the current key hints, clear them and add new ones
-		const keyHints = keyHint.get();
-		keyHint.clear()
-		keyHint
-			.addKey("arrowdown", "Navigate down")
-			.addKey("arrowup", "Navigate up")
-			.addKey("enter", "Select command")
-			.addKey("escape", "Close command palette")
-			.addKey("space", "Close command palette");
+		const unregisterKeyHints = keyHint.smartAdd([
+			['arrowdown', $t`Navigate down`],
+			['arrowup', $t`Navigate up`],
+			['enter', $t`Select`],
+			['escape', $t`ActionHub`],
+			['space', $t`ActionHub`]
+		]);
 
 		// Focus the input
 		if (inp) inp.focus();
+
 		// Use smartRegister to handle all keyboard shortcuts
-		const unregister = keyboard.smartRegister(
+		const unregisterKeyboard = keyboard.smartRegister(
 			[
 				// Regular key handlers
 				['arrowdown', (event) => {
@@ -139,6 +140,7 @@
 					if (filteredCommands.length > 0) {
 						selectedIndex = (selectedIndex + 1) % filteredCommands.length;
 					}
+					return true;
 				}],
 
 				['arrowup', (event) => {
@@ -146,44 +148,49 @@
 					if (filteredCommands.length > 0) {
 						selectedIndex = (selectedIndex - 1 + filteredCommands.length) % filteredCommands.length;
 					}
+					return true;
 				}],
 
 				['enter', (event) => {
 					event.preventDefault();
 					event.stopPropagation();
-					if (filteredCommands.length === 0) return;
+					if (filteredCommands.length === 0) return true;
 					executeCommand(filteredCommands[selectedIndex]);
+					return true;
 				}],
 
 				['escape', () => {
 					goBack();
+					return true;
 				}],
 
 				['space', (event) => {
 					event.preventDefault();
 					// Reset all states
 					commandStack = [];
-					handleStack()
+					handleStack();
 					selectedIndex = 0;
 					value = '';
 					showPalette = false;
+					return true;
 				}]
 			],
 			[
 				// Except handlers
 				[
 					['arrowdown', 'arrowup', 'enter', 'escape', 'tab', 'shift', 'ctrl', 'alt', 'meta'],
-					() => inp?.focus(),
-					'/test'
+					() => {
+						inp?.focus();
+						return true;
+					}
 				]
 			]
 		);
 
 		return () => {
-			unregister();
-			// Restore the key hints
-			keyHint.set(keyHints);
-		}
+			unregisterKeyboard();
+			unregisterKeyHints();
+		};
 	});
 </script>
 
@@ -230,14 +237,16 @@
 							<item.icon size="22" class="mr-3 {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}" />
 						{/if}
 						<span>
-								<span class="font-medium {i === selectedIndex ? 'text-white' : 'text-content-tertiary'}">{item.name}</span>
+								<span
+									class="font-medium {i === selectedIndex ? 'text-white' : 'text-content-tertiary'}">{item.name}</span>
 							{#if item.description}
 									<div
 										class="text-sm {i === selectedIndex ? 'text-white' : 'text-content-tertiary'}">{item.description}</div>
 								{/if}
 							</span>
 						{#if item.subcommands}
-							<IconChevronRight size="20" class="ml-auto {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}" />
+							<IconChevronRight size="20"
+																class="ml-auto {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}" />
 						{/if}
 					</button>
 				{/each}

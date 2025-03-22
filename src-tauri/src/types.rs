@@ -127,7 +127,7 @@ pub type CommBundle = BaseResponse<BundleResponse>; // <- was: CommandBundle
 pub struct AnalyzeResponse {
     pub negative: Vec<String>,
     pub positive: Vec<String>,
-    pub suggest: Vec<String>,
+    pub warning: Vec<String>,
     pub flag: BundleFlag,
 }
 pub type CommAnalyzeMeta = BaseResponse<AnalyzeResponse>; // <- was: CommandAnalyze

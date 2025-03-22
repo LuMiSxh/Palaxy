@@ -6,7 +6,7 @@
 		'/holo/suisei.png'
 	];
 
-	let currentImage = images[Math.floor(Math.random() * images.length)];
+	let currentImage = $derived(images[Math.floor(Math.random() * images.length)]);
 </script>
 
 <div class="w-full h-full grid grid-cols-2 grid-rows-1 gap-2">

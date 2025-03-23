@@ -126,7 +126,7 @@ export interface AppData {
 			/**
 			 * Whether a new folder should be created during conversion.
 			 */
-			createNewFolder: boolean | null;
+			createNewFolder: boolean;
 		};
 	};
 }
@@ -145,7 +145,7 @@ export const defaultAppData: AppData = {
 		converter: {
 			conversionType: null,
 			targetLocation: null,
-			createNewFolder: null
+			createNewFolder: true
 		}
 	}
 };

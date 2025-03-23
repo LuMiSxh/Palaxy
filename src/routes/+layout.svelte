@@ -13,7 +13,7 @@
 	import {
 		IconAutomation,
 		IconBrightness, IconBrightness2, IconBrightnessFilled,
-		IconBrush,
+		IconBrush, IconHighlight,
 		IconHome,
 		IconKeyboard,
 		IconLanguage, IconLanguageHiragana,
@@ -30,6 +30,7 @@
 	import SystemInfo from '$components/dialogs/SystemInfo.svelte';
 	import KeyHint from '$components/KeyHint.svelte';
 	import { keyHint } from '$states/keyhint.svelte';
+	import AutoPopulate from '$components/dialogs/AutoPopulate.svelte';
 
 	let { children } = $props();
 
@@ -153,15 +154,13 @@
 					]
 				},
 				{
-					name: $t`System Info`,
-					description: $t`Show the system information of the application`,
-					icon: IconSettingsQuestion,
+					name: $t`Auto-Populate Fields`,
+					description: $t`Enable or disable the auto-population of fields in the application`,
+					icon: IconHighlight,
 					action: () => {
 						openDialog({
-							title: $t`Information`,
-							content: SystemInfo,
-							onConfirm: () => {
-							}
+							title: $t`Auto-Populate Settings`,
+							content: AutoPopulate,
 						});
 					}
 				},
@@ -181,6 +180,19 @@
 					action: () => {
 						$appData.mouseSupport = !$appData.mouseSupport;
 						addToast($appData.mouseSupport ? $t`Mouse Support is now enabled` : $t`Mouse Support is now disabled`);
+					}
+				},
+				{
+					name: $t`System Info`,
+					description: $t`Show the system information of the application`,
+					icon: IconSettingsQuestion,
+					action: () => {
+						openDialog({
+							title: $t`Information`,
+							content: SystemInfo,
+							onConfirm: () => {
+							}
+						});
 					}
 				},
 				{

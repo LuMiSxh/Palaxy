@@ -124,8 +124,8 @@
 			['arrowdown', $t`Navigate down`],
 			['arrowup', $t`Navigate up`],
 			['enter', $t`Select`],
-			['escape', $t`ActionHub`],
-			['space', $t`ActionHub`]
+			['escape', $t`Close`],
+			['space', $t`Close`]
 		]);
 
 		// Focus the input
@@ -193,68 +193,72 @@
 		};
 	});
 </script>
+<button
+	class="absolute inset-0 w-screen h-screen border-none bg-background/90 dark:bg-background-dark/90 z-30"
+	onclick={() => showPalette = false}
+	aria-label={$t`Close dialog`}
+	tabIndex="-1"
+></button>
 
-<div class="fixed left-0 top-0 h-screen w-screen bg-background-dark/90 flex items-center justify-center z-30"
-		 onclick={() => showPalette = false} role="button" tabindex="0" onkeydown={() => null}>
-	<div class="command-palette card flex flex-col z-50">
-		<input
-			type="text"
-			bind:value={value}
-			bind:this={inp}
-			placeholder={placeholderText}
-			class="input"
-		/>
-		<div class="divider">
+
+<div class="command-palette fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 card flex flex-col z-50">
+	<input
+		type="text"
+		bind:value={value}
+		bind:this={inp}
+		placeholder={placeholderText}
+		class="input"
+	/>
+	<div class="divider">
+	</div>
+
+	{#if commandStack.length > 0}
+		<div class="breadcrumb text-sm text-gray-500 mb-2 flex gap-2">
+			{#each commandStack as cmd, i}
+				<button class="btn btn-xs btn-primary-soft cursor-pointer"
+								onclick={(event) => {event.stopPropagation(); goBack()}}>
+					{cmd.name}
+				</button>
+				{i < commandStack.length - 1 ? ' > ' : ''}
+			{/each}
 		</div>
+	{/if}
 
-		{#if commandStack.length > 0}
-			<div class="breadcrumb text-sm text-gray-500 mb-2 flex gap-2">
-				{#each commandStack as cmd, i}
-					<button class="btn btn-xs btn-primary-soft cursor-pointer"
-									onclick={(event) => {event.stopPropagation(); goBack()}}>
-						{cmd.name}
-					</button>
-					{i < commandStack.length - 1 ? ' > ' : ''}
-				{/each}
-			</div>
-		{/if}
-
-		<ul class="mt-2 w-full flex-1 overflow-y-auto" role="listbox">
-			{#if filteredCommands.length > 0}
-				{#each filteredCommands as item, i (item.name)}
-					<button
-						role="option"
-						aria-selected={i === selectedIndex}
-						class="btn-bare w-full flex !justify-start text-left cursor-pointer {i === selectedIndex ? 'bg-primary text-white' : ''}"
-						onmouseover={() => selectedIndex = i}
-						onfocus={() => {}}
-						onclick={(event) => {event.stopPropagation(); executeCommand(item)}}
-						tabindex={i === selectedIndex ? 0 : -1}
-						bind:this={listItemRefs[i]}
-						transition:slide={{duration: 350, delay: i * 20}}
-					>
-						{#if item.icon}
-							<item.icon size="22" class="mr-3 {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}" />
-						{/if}
-						<span>
+	<ul class="mt-2 w-full flex-1 overflow-y-auto" role="listbox">
+		{#if filteredCommands.length > 0}
+			{#each filteredCommands as item, i (item.name)}
+				<button
+					role="option"
+					aria-selected={i === selectedIndex}
+					class="btn-bare w-full flex !justify-start text-left cursor-pointer {i === selectedIndex ? 'bg-primary text-white' : ''}"
+					onmouseover={() => selectedIndex = i}
+					onfocus={() => {}}
+					onclick={(event) => {event.stopPropagation(); executeCommand(item)}}
+					tabindex={i === selectedIndex ? 0 : -1}
+					bind:this={listItemRefs[i]}
+					transition:slide={{duration: 350, delay: i * 20}}
+				>
+					{#if item.icon}
+						<item.icon size="22" class="mr-3 {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}" />
+					{/if}
+					<span>
 								<span
 									class="font-medium {i === selectedIndex ? 'text-white' : 'text-content-tertiary'}">{item.name}</span>
-							{#if item.description}
+						{#if item.description}
 									<div
 										class="text-sm {i === selectedIndex ? 'text-white' : 'text-content-tertiary'}">{item.description}</div>
 								{/if}
 							</span>
-						{#if item.subcommands}
-							<IconChevronRight size="20"
-																class="ml-auto {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}" />
-						{/if}
-					</button>
-				{/each}
-			{:else}
-				<div class="p-2 text-center text-white">No commands found</div>
-			{/if}
-		</ul>
-	</div>
+					{#if item.subcommands}
+						<IconChevronRight size="20"
+															class="ml-auto {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}" />
+					{/if}
+				</button>
+			{/each}
+		{:else}
+			<div class="p-2 text-center text-white">No commands found</div>
+		{/if}
+	</ul>
 </div>
 
 <style>

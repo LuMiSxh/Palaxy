@@ -72,10 +72,42 @@ class KeyHint {
 
 export const keyHint = new KeyHint();
 
-// Export a convenience function for adding keys
-export const addKeyHint = (key: KeyCombination, hint: string): void => {
-	keyHint.addKey(key, hint);
-};
-export const removeKeyHint = (key: KeyCombination): void => {
-	keyHint.removeKey(key);
-};
+/**
+ * Adds key hints to an element when focused. And removes them when blurred.
+ * @param node
+ * @param data
+ */
+export function handleKeyHint(node: HTMLElement, data: { keys: Parameters<typeof keyHint.addKey>[], reset?: boolean }) {
+	let oldKeyHints = keyHint.get();
+
+	const addHints = () => data.keys.forEach((key) => {
+		oldKeyHints = keyHint.get();
+		keyHint.addKey(...key);
+	});
+
+	const removeHints = () => {
+		if (data.reset) {
+			keyHint.set(oldKeyHints);
+		} else {
+			data.keys.forEach(([key]) => keyHint.removeKey(key));
+		}
+	};
+
+	node.addEventListener('focus', addHints);
+	node.addEventListener('blur', removeHints);
+
+	return {
+		destroy() {
+			node.removeEventListener('focus', addHints);
+			node.removeEventListener('blur', removeHints);
+			removeHints();
+		},
+		update(newKeys: Parameters<typeof keyHint.addKey>[]) {
+			removeHints();
+			data.keys = newKeys;
+			if (document.activeElement === node) {
+				addHints();
+			}
+		}
+	};
+}

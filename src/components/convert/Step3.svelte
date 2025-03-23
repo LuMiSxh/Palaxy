@@ -7,7 +7,7 @@
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { onDestroy, onMount } from 'svelte';
 	import { wrapper } from '$lib/utils';
-	import { keyHint } from '$states/keyhint.svelte';
+	import { handleKeyHint, keyHint } from '$states/keyhint.svelte';
 
 	let name = $state(
 		convState.name === ''
@@ -29,26 +29,6 @@
 	);
 	let readingDirection: Direction = $state('Left to Right');
 	let bundleFlag: BundleFlag = $state(convState.bundleRecommendation);
-
-	function handleSelectHints(add: boolean): void {
-		if (add) {
-			keyHint.addKey('arrowup', $t`Select up`);
-			keyHint.addKey('arrowdown', $t`Select down`);
-			keyHint.addKey('enter', $t`Select`);
-		} else {
-			keyHint.removeKey('arrowup');
-			keyHint.removeKey('arrowdown');
-			keyHint.removeKey('enter');
-		}
-	}
-
-	function handleBtnHints(add: boolean): void {
-		if (add) {
-			keyHint.addKey('enter', $t`Invoke`);
-		} else {
-			keyHint.removeKey('enter');
-		}
-	}
 
 	async function select() {
 		targetLocation =
@@ -102,8 +82,7 @@
 		<fieldset class="fieldset w-full">
 			<legend class="fieldset-legend">{$t`Bundle Type`}</legend>
 			<select class="select select-primary"
-							onblur={() => handleSelectHints(false)}
-							onfocus={() => handleSelectHints(true)}
+							use:handleKeyHint={{keys: [['arrowup', $t`Select up`], ['arrowdown', $t`Select down`], ['enter', $t`Select`]], reset: true}}
 							bind:value={bundleFlag}>
 				{@render option(bundleFlag, 'MANUAL', $t`Manual`)}
 				{@render option(bundleFlag, 'IMAGE', $t`Image`)}
@@ -117,8 +96,7 @@
 		<fieldset class="fieldset w-full m-4">
 			<legend class="fieldset-legend">{$t`File Type`}</legend>
 			<select class="select select-secondary"
-							onblur={() => handleSelectHints(false)}
-							onfocus={() => handleSelectHints(true)}
+							use:handleKeyHint={{keys: [['arrowup', $t`Select up`], ['arrowdown', $t`Select down`], ['enter', $t`Select`]], reset: true}}
 							bind:value={fileFormat}>
 				{@render option(fileFormat, 'PDF', $t`PDF`)}
 				{@render option(fileFormat, 'EPUB', $t`EPUB`)}
@@ -132,8 +110,7 @@
 			<select
 				class="select select-secondary"
 				disabled={fileFormat !== 'EPUB'}
-				onblur={() => handleSelectHints(false)}
-				onfocus={() => handleSelectHints(true)}
+				use:handleKeyHint={{keys: [['arrowup', $t`Select up`], ['arrowdown', $t`Select down`], ['enter', $t`Select`]], reset: true}}
 				bind:value={readingDirection}
 			>
 				{@render option(readingDirection, 'Left to Right', $t`Left to Right`)}
@@ -147,8 +124,7 @@
 			<button
 				id="dropzone"
 				class="btn btn-primary flex items-center justify-center p-2 select-none"
-				onblur={() => handleBtnHints(false)}
-				onfocus={() => handleBtnHints(true)}
+				use:handleKeyHint={{keys: [["enter", $t`Invoke`]]}}
 				onclick={select}
 			>
 				{#if !targetLocation}
@@ -170,8 +146,7 @@
 					<input
 						type="checkbox"
 						class="toggle-input"
-						onblur={() => handleBtnHints(false)}
-						onfocus={() => handleBtnHints(true)}
+						use:handleKeyHint={{keys: [["enter", $t`Invoke`]]}}
 						bind:checked={createFolder}
 						onkeydown={(evt) => {
 						if (evt.key === 'Enter') {

@@ -72,7 +72,7 @@
 		if (unregisterKeyHint) unregisterKeyHint();
 	});
 
-	async function select(evt: KeyboardEvent | undefined = undefined) {
+	async function select(evt: KeyboardEvent | MouseEvent | undefined = undefined) {
 		evt?.stopPropagation();
 		evt?.preventDefault();
 

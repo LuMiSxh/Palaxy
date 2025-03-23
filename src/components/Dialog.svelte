@@ -7,6 +7,6 @@
 
 <div class="fixed inset-0 z-50 w-[1px] h-[1px]">
   {#if activeDialog}
-    <DialogContent dialog={activeDialog} />
+    <DialogContent dialog={activeDialog}/>
   {/if}
 </div>

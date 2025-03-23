@@ -519,6 +519,11 @@
         bg-background dark:bg-background-dark-secondary;
     }
 
+    /* Special styling for fieldsets inside dialogs */
+    [role="dialog"] .fieldset {
+        @apply bg-background-secondary dark:bg-background-dark-tertiary;
+    }
+
     .fieldset-legend {
         @apply px-2 text-sm font-medium
         text-content-secondary dark:text-content-dark-secondary;

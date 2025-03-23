@@ -64,7 +64,17 @@ export enum FeatureFlag {
 	/**
 	 * Adds browsing agents feature.
 	 */
-	BROWSE_AGENTS = 13
+	BROWSE_AGENTS = 13,
+
+	/**
+	 * Enables mouse support.
+	 */
+	MOUSE_SUPPORT = 14,
+
+	/**
+	 * Enables custom keybinding configuration.
+	 */
+	CUSTOM_KEYBINDS = 15
 }
 
 /**

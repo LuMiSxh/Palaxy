@@ -39,7 +39,7 @@
 	});
 </script>
 
-<div class="mx-auto max-w-3xl p-6">
+<div class="">
 	{#if loading}
 		<div class="flex items-center justify-center p-6">
 			<div class="animate-pulse">{$t`Loading system information...`}</div>

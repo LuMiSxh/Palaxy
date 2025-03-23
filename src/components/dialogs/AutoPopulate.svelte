@@ -69,9 +69,7 @@
 						['arrowup', $t`Select up`],
 						['arrowdown', $t`Select down`],
 						['enter', $t`Select`]
-					],
-					reset: true
-				}}
+					]}}
 				bind:value={convType}
 			>
 				<option value="PDF">{$t`PDF`}</option>

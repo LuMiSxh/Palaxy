@@ -53,10 +53,9 @@
 		const unregisterKeyboard = keyboard.smartRegister([['escape', handleEscapeKey]]);
 
 		const unregisterKeyHint = keyHint.smartAdd([
-			['enter', $t`Invoke`],
 			['escape', $t`Close`],
 			['tab', $t`Navigate between fields`]
-		]);
+		], ['enter']);  // Ignore enter key hint
 
 		return () => {
 			unregisterKeyboard();
@@ -74,16 +73,16 @@
 ></button>
 
 <div
-	class="bg-background dark:bg-background-dark card fixed top-1/2 left-1/2 z-50 max-h-[80vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto shadow-lg"
+	class="bg-background dark:bg-background-dark card fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 overflow-y-auto shadow-lg"
 	transition:scale={{ duration: 200, start: 0.95 }}
 	role="dialog"
 	aria-modal="true"
 >
-	<div class="flex items-center justify-between p-4">
+	<div class="flex items-center justify-between p-2">
 		<h2 class="text-content-primary text-lg font-semibold">{dialog.title}</h2>
 		{#if dialog.showClose !== false}
 			<button
-				class="btn btn-ghost btn-sm p-1"
+				class="btn btn-ghost btn-sm p-0.5"
 				onclick={() => dialogManager.closeDialog(dialog.id)}
 				tabIndex="-1"
 			>
@@ -94,7 +93,7 @@
 
 	<div class="divider mx-4 my-0"></div>
 
-	<div class="p-4">
+	<div class="px-2 pb-6 overflow-y-auto max-h-[70vh]">
 		{#if typeof dialog.content === 'string'}
 			<p class="text-content-tertiary">{dialog.content}</p>
 		{:else}
@@ -136,10 +135,11 @@
 </div>
 
 <style>
-	.card {
-		width: 50vw;
-		padding: 12px;
-		min-height: 200px;
-		border-radius: 8px;
-	}
+    .card {
+        min-width: 50vw;
+        min-height: 10vh;
+        max-height: 88vh;
+        padding: 12px;
+        border-radius: 8px;
+    }
 </style>

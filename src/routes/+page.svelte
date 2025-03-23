@@ -17,7 +17,7 @@
 			{$t`Manga conversion and search at your fingertips.`}
 		</p>
 	</div>
-	<div class="flex items-end justify-center">
+	<div class="flex items-end justify-end">
 		<img src={currentImage} class="max-h-full max-w-full object-contain" alt="Character" />
 	</div>
 </div>

@@ -3,5 +3,6 @@ export default interface Command {
 	description: string;
 	icon: any;
 	action?: () => void | any;
+	hidden?: boolean;
 	subcommands?: Command[];
 }

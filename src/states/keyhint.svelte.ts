@@ -3,7 +3,8 @@ import type { KeyCombination } from '$lib/keyboard';
 class KeyHint {
 	private keys: [KeyCombination, string][] = $state([]);
 
-	constructor() {}
+	constructor() {
+	}
 
 	/**
 	 * Adds a key combination with its hint. If the key combination already exists, overrides its hint.
@@ -31,16 +32,17 @@ class KeyHint {
 	 * @returns This instance
 	 */
 	removeKey(key: KeyCombination): this {
-		this.keys = this.keys.filter((k) => k[0] !== key);
+		this.keys = this.keys.filter(([k]) => k !== key);
 		return this;
 	}
 
 	/**
 	 * Adds multiple key combinations with their hints. Returns a function to remove the added key combinations.
-	 @param keyhints An array of key combinations and their hints
+	 * @param keyhints An array of key combinations and their hints
+	 * @param ignore An array of key combinations to ignore when re-applying the previous key combinations
 	 * @returns A function to remove the added key combinations
 	 */
-	smartAdd(keyhints: Parameters<typeof this.addKey>[]): () => void {
+	smartAdd(keyhints: Parameters<typeof this.addKey>[], ignore: KeyCombination[] | undefined = undefined): () => void {
 		// Get all current key hints
 		const currentKeys = this.keys;
 
@@ -49,9 +51,11 @@ class KeyHint {
 
 		// Return a function to remove the added key hints and restore the previous ones
 		return () => {
-			keyhints.forEach(([key]) => this.removeKey(key));
-
-			this.keys = currentKeys;
+			if (ignore !== undefined) {
+				this.keys = currentKeys.filter(([key]) => !ignore.includes(key));
+			} else {
+				this.keys = currentKeys;
+			}
 		};
 	}
 
@@ -100,9 +104,10 @@ export function handleKeyHint(
 
 	return {
 		destroy() {
+			console.log('destroy');
+			removeHints();
 			node.removeEventListener('focus', addHints);
 			node.removeEventListener('blur', removeHints);
-			removeHints();
 		},
 		update(newKeys: Parameters<typeof keyHint.addKey>[]) {
 			removeHints();

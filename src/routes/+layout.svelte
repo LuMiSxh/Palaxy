@@ -3,8 +3,8 @@
 	import { t } from 'svelte-i18n-lingui';
 	import { goto } from '$app/navigation';
 	import { appData, appDataKey } from '$stores/appdata.js';
-	import { defaultAppData, SupportedLanguages, Theme } from '$types/appdata';
-	import { setTheme } from '$lib/utils';
+	import { defaultAppData, FeatureFlag, SupportedLanguages, Theme } from '$types/appdata';
+	import { ffIsEnabled, setTheme } from '$lib/utils';
 	import { browser, dev } from '$app/environment';
 	import Toast from '$components/Toast.svelte';
 	import { onMount } from 'svelte';
@@ -18,6 +18,7 @@
 		IconHome,
 		IconKeyboard,
 		IconLanguage,
+		IconListDetails,
 		IconMouse,
 		IconSearch,
 		IconSettings,
@@ -34,6 +35,7 @@
 	import KeyHint from '$components/KeyHint.svelte';
 	import { keyHint } from '$states/keyhint.svelte';
 	import AutoPopulate from '$components/dialogs/AutoPopulate.svelte';
+	import Features from '$components/dialogs/Features.svelte';
 
 	let { children } = $props();
 
@@ -72,12 +74,14 @@
 			name: $t`Search`,
 			description: $t`Search for your favorite manga series and chapters from various sources`,
 			icon: IconSearch,
+			hidden: !ffIsEnabled($appData, FeatureFlag.SEARCH_MANGA),
 			action: () => goto('/search')
 		},
 		{
 			name: $t`Agents`,
 			description: $t`Manage your agents and their settings for better search results`,
 			icon: IconUsers,
+			hidden: !ffIsEnabled($appData, FeatureFlag.BROWSE_AGENTS),
 			action: () => goto('/agents')
 		},
 		{
@@ -123,6 +127,7 @@
 					name: $t`Language`,
 					description: $t`Change the language of the application`,
 					icon: IconLanguage,
+					hidden: !ffIsEnabled($appData, FeatureFlag.CHANGE_LANGUAGE),
 					subcommands: [
 						{
 							name: $t`English`,
@@ -170,6 +175,7 @@
 					name: $t`Mouse Support`,
 					description: $t`Enable or disable a button to show the ActionHub`,
 					icon: IconMouse,
+					hidden: !ffIsEnabled($appData, FeatureFlag.MOUSE_SUPPORT),
 					action: () => {
 						$appData.mouseSupport = !$appData.mouseSupport;
 						addToast(
@@ -177,6 +183,17 @@
 								? $t`Mouse Support is now enabled`
 								: $t`Mouse Support is now disabled`
 						);
+					}
+				},
+				{
+					name: $t`Features`,
+					description: $t`Enable or disable features of the application`,
+					icon: IconListDetails,
+					action: () => {
+						openDialog({
+							title: $t`Feature Configuration`,
+							content: Features
+						});
 					}
 				},
 				{

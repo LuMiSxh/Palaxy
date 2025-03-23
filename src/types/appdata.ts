@@ -41,16 +41,11 @@ export enum SupportedLanguages {
 	 * German language support.
 	 */
 	German = 'de',
-
-	/**
-	 * Japanese language support.
-	 */
-	Japanese = 'ja'
 }
 
 // Translations for the languages
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const __ = [msg`English`, msg`German`, msg`Japanese`];
+const __ = [msg`English`, msg`German`];
 
 /**
  * Enumerates feature flags for enabling or disabling features.

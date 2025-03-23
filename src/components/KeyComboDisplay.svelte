@@ -8,7 +8,7 @@
 
 	let osName = $state('default');
 
-	onMount(() => osName = type());
+	onMount(() => (osName = type()));
 
 	let keySymbols: Record<string, Record<string, string>> = $derived({
 		darwin: {
@@ -55,10 +55,14 @@
 
 	let symbolMap = $derived(osName === 'macos' ? keySymbols.darwin : keySymbols.default);
 	let formatted = $derived.by(() => {
-		return keyCombination.toLowerCase().split('+').map(key => {
-			const trimmedKey = key.trim();
-			return symbolMap[trimmedKey] || trimmedKey.toUpperCase();
-		}).join(' ');
+		return keyCombination
+			.toLowerCase()
+			.split('+')
+			.map((key) => {
+				const trimmedKey = key.trim();
+				return symbolMap[trimmedKey] || trimmedKey.toUpperCase();
+			})
+			.join(' ');
 	});
 </script>
 

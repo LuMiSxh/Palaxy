@@ -20,10 +20,7 @@
 		$appData.autoPop.converter.conversionType = convType;
 		$appData.autoPop.converter.targetLocation = convLocation === '' ? null : convLocation;
 		$appData.autoPop.converter.createNewFolder = convNewFolder;
-		addToast(
-			$t`Auto-Populate Settings Saved`,
-			'info'
-		);
+		addToast($t`Auto-Populate Settings Saved`, 'info');
 		dialogManager.closeDialog(id);
 	}
 
@@ -47,7 +44,7 @@
 					<input
 						type="checkbox"
 						class="toggle-input"
-						onkeydown={(evt) =>{
+						onkeydown={(evt) => {
 							if (evt.key === 'Enter') {
 								evt.preventDefault();
 								evt.stopPropagation();
@@ -57,17 +54,25 @@
 						bind:checked={autoPop}
 					/>
 					<span class="toggle-track">
-            <span class="toggle-thumb"></span>
-          </span>
+						<span class="toggle-thumb"></span>
+					</span>
 				</label>
 			</div>
 		</fieldset>
 
 		<fieldset class="fieldset w-full">
 			<legend class="fieldset-legend">{$t`File Type`}</legend>
-			<select class="select select-secondary w-full"
-							use:handleKeyHint={{keys: [['arrowup', $t`Select up`], ['arrowdown', $t`Select down`], ['enter', $t`Select`]], reset: true}}
-							bind:value={convType}
+			<select
+				class="select select-secondary w-full"
+				use:handleKeyHint={{
+					keys: [
+						['arrowup', $t`Select up`],
+						['arrowdown', $t`Select down`],
+						['enter', $t`Select`]
+					],
+					reset: true
+				}}
+				bind:value={convType}
 			>
 				<option value="PDF">{$t`PDF`}</option>
 				<option value="EPUB">{$t`EPUB`}</option>
@@ -79,16 +84,16 @@
 		<fieldset class="fieldset w-full">
 			<legend class="fieldset-legend">{$t`Target Location`}</legend>
 			<button
-				class="btn btn-primary flex items-center justify-center p-2 select-none w-full"
+				class="btn btn-primary flex w-full items-center justify-center p-2 select-none"
 				onclick={selectLocation}
-				onkeydown={(evt) =>{
+				onkeydown={(evt) => {
 					if (evt.key === 'Enter') {
 						evt.preventDefault();
 						evt.stopPropagation();
 						selectLocation();
 					}
 				}}
-				use:handleKeyHint={{keys: [["enter", $t`Invoke`]]}}
+				use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
 			>
 				{#if !convLocation}
 					<IconFileDownload class="text-primary" />
@@ -106,48 +111,50 @@
 					<input
 						type="checkbox"
 						class="toggle-input"
-						onkeydown={(evt) =>{
+						onkeydown={(evt) => {
 							if (evt.key === 'Enter') {
 								evt.preventDefault();
 								evt.stopPropagation();
 								convNewFolder = !convNewFolder;
 							}
 						}}
-						use:handleKeyHint={{keys: [["enter", $t`Invoke`]]}}
+						use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
 						bind:checked={convNewFolder}
 					/>
 					<span class="toggle-track">
-            <span class="toggle-thumb"></span>
-          </span>
+						<span class="toggle-thumb"></span>
+					</span>
 				</label>
 			</div>
 		</fieldset>
 	</div>
 
-	<div class="flex justify-end gap-2 mt-4">
-		<button class="btn btn-neutral"
-						use:handleKeyHint={{keys: [["enter", $t`Invoke`]]}}
-						onclick={() => dialogManager.closeDialog(id)}
-						onkeydown={(evt) =>{
-							if (evt.key === 'Enter') {
-								evt.preventDefault();
-								evt.stopPropagation();
-								dialogManager.closeDialog(id);
-							}
-						}}
+	<div class="mt-4 flex justify-end gap-2">
+		<button
+			class="btn btn-neutral"
+			use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
+			onclick={() => dialogManager.closeDialog(id)}
+			onkeydown={(evt) => {
+				if (evt.key === 'Enter') {
+					evt.preventDefault();
+					evt.stopPropagation();
+					dialogManager.closeDialog(id);
+				}
+			}}
 		>
 			{$t`Cancel`}
 		</button>
-		<button class="btn btn-primary"
-						use:handleKeyHint={{keys: [["enter", $t`Invoke`]]}}
-						onclick={save}
-						onkeydown={(evt) =>{
-							if (evt.key === 'Enter') {
-								evt.preventDefault();
-								evt.stopPropagation();
-								save();
-							}
-						}}
+		<button
+			class="btn btn-primary"
+			use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
+			onclick={save}
+			onkeydown={(evt) => {
+				if (evt.key === 'Enter') {
+					evt.preventDefault();
+					evt.stopPropagation();
+					save();
+				}
+			}}
 		>
 			{$t`Save`}
 		</button>

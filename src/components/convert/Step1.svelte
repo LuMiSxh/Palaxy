@@ -44,11 +44,7 @@
 				// When there are multiple files toast it
 				if (event.payload.paths.length > 1) {
 					const msg = $t`Multiple paths dropped, only the first path will be used:`;
-					addToast(
-						`${msg} <code>${event.payload.paths[0]}</code>`,
-						'warning',
-						3600
-					);
+					addToast(`${msg} <code>${event.payload.paths[0]}</code>`, 'warning', 3600);
 				}
 
 				converter.source = event.payload.paths[0];
@@ -58,13 +54,9 @@
 
 		// Set Keyboard etc.
 		btn?.focus();
-		unregisterKeyboard = keyboard.smartRegister([
-			['enter', select]
-		]);
+		unregisterKeyboard = keyboard.smartRegister([['enter', select]]);
 
-		unregisterKeyHint = keyHint.smartAdd([
-			['enter', $t`Invoke`]
-		]);
+		unregisterKeyHint = keyHint.smartAdd([['enter', $t`Invoke`]]);
 	});
 
 	onDestroy(() => {

@@ -41,7 +41,7 @@ class DialogState {
 	 * @param {number} id - The ID of the dialog to close.
 	 */
 	closeDialog(id: number): void {
-		this.dialogs = this.dialogs.filter(d => d.id !== id);
+		this.dialogs = this.dialogs.filter((d) => d.id !== id);
 	}
 
 	/**

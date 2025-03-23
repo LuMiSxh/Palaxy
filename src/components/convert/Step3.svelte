@@ -39,9 +39,7 @@
 	}
 
 	onMount(() => {
-		return keyHint.smartAdd([
-			['tab', $t`Navigate between fields`]
-		]);
+		return keyHint.smartAdd([['tab', $t`Navigate between fields`]]);
 	});
 
 	onDestroy(async () => {
@@ -72,18 +70,27 @@
 {/snippet}
 
 <div class="grid h-full w-full grid-cols-3 gap-8">
-	<div class="h-full w-full flex items-center justify-center ">
-		<fieldset class="fieldset w-full m-4">
+	<div class="flex h-full w-full items-center justify-center">
+		<fieldset class="fieldset m-4 w-full">
 			<legend class="fieldset-legend">{$t`File Name(s)`}</legend>
 			<input type="text" class="input input-primary" bind:value={name} />
 		</fieldset>
 	</div>
-	<div class="h-full w-full flex items-center justify-center">
+	<div class="flex h-full w-full items-center justify-center">
 		<fieldset class="fieldset w-full">
 			<legend class="fieldset-legend">{$t`Bundle Type`}</legend>
-			<select class="select select-primary"
-							use:handleKeyHint={{keys: [['arrowup', $t`Select up`], ['arrowdown', $t`Select down`], ['enter', $t`Select`]], reset: true}}
-							bind:value={bundleFlag}>
+			<select
+				class="select select-primary"
+				use:handleKeyHint={{
+					keys: [
+						['arrowup', $t`Select up`],
+						['arrowdown', $t`Select down`],
+						['enter', $t`Select`]
+					],
+					reset: true
+				}}
+				bind:value={bundleFlag}
+			>
 				{@render option(bundleFlag, 'MANUAL', $t`Manual`)}
 				{@render option(bundleFlag, 'IMAGE', $t`Image`)}
 				{#if convState.bundleRecommendation !== 'MANUAL'}
@@ -92,25 +99,41 @@
 			</select>
 		</fieldset>
 	</div>
-	<div class="h-full w-full flex items-center justify-center">
-		<fieldset class="fieldset w-full m-4">
+	<div class="flex h-full w-full items-center justify-center">
+		<fieldset class="fieldset m-4 w-full">
 			<legend class="fieldset-legend">{$t`File Type`}</legend>
-			<select class="select select-secondary"
-							use:handleKeyHint={{keys: [['arrowup', $t`Select up`], ['arrowdown', $t`Select down`], ['enter', $t`Select`]], reset: true}}
-							bind:value={fileFormat}>
+			<select
+				class="select select-secondary"
+				use:handleKeyHint={{
+					keys: [
+						['arrowup', $t`Select up`],
+						['arrowdown', $t`Select down`],
+						['enter', $t`Select`]
+					],
+					reset: true
+				}}
+				bind:value={fileFormat}
+			>
 				{@render option(fileFormat, 'PDF', $t`PDF`)}
 				{@render option(fileFormat, 'EPUB', $t`EPUB`)}
 				{@render option(fileFormat, 'CBZ', $t`CBZ`)}
 			</select>
 		</fieldset>
 	</div>
-	<div class="h-full w-full flex items-center justify-center">
-		<fieldset class="fieldset w-full m-4">
+	<div class="flex h-full w-full items-center justify-center">
+		<fieldset class="fieldset m-4 w-full">
 			<legend class="fieldset-legend">{$t`Reading Direction`}</legend>
 			<select
 				class="select select-secondary"
 				disabled={fileFormat !== 'EPUB'}
-				use:handleKeyHint={{keys: [['arrowup', $t`Select up`], ['arrowdown', $t`Select down`], ['enter', $t`Select`]], reset: true}}
+				use:handleKeyHint={{
+					keys: [
+						['arrowup', $t`Select up`],
+						['arrowdown', $t`Select down`],
+						['enter', $t`Select`]
+					],
+					reset: true
+				}}
 				bind:value={readingDirection}
 			>
 				{@render option(readingDirection, 'Left to Right', $t`Left to Right`)}
@@ -118,13 +141,13 @@
 			</select>
 		</fieldset>
 	</div>
-	<div class="h-full w-full flex items-center justify-center">
-		<fieldset class="fieldset w-full m-4">
+	<div class="flex h-full w-full items-center justify-center">
+		<fieldset class="fieldset m-4 w-full">
 			<legend class="fieldset-legend">{$t`Target Location`}</legend>
 			<button
 				id="dropzone"
 				class="btn btn-primary flex items-center justify-center p-2 select-none"
-				use:handleKeyHint={{keys: [["enter", $t`Invoke`]]}}
+				use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
 				onclick={select}
 			>
 				{#if !targetLocation}
@@ -138,25 +161,25 @@
 			</button>
 		</fieldset>
 	</div>
-	<div class="h-full w-full flex items-center justify-center">
-		<fieldset class="fieldset w-full m-4">
+	<div class="flex h-full w-full items-center justify-center">
+		<fieldset class="fieldset m-4 w-full">
 			<legend class="fieldset-legend">{$t`Create folder`}</legend>
 			<div class="flex items-center justify-center">
 				<label class="toggle toggle-xl">
 					<input
 						type="checkbox"
 						class="toggle-input"
-						use:handleKeyHint={{keys: [["enter", $t`Invoke`]]}}
+						use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
 						bind:checked={createFolder}
 						onkeydown={(evt) => {
-						if (evt.key === 'Enter') {
-							createFolder = !createFolder;
-						}
-					}}
+							if (evt.key === 'Enter') {
+								createFolder = !createFolder;
+							}
+						}}
 					/>
 					<span class="toggle-track">
-					<span class="toggle-thumb"></span>
-				</span>
+						<span class="toggle-thumb"></span>
+					</span>
 				</label>
 			</div>
 		</fieldset>

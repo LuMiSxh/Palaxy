@@ -7,23 +7,66 @@ type KeyHandler = {
 // Define modifiers once
 type Modifier = 'ctrl' | 'alt' | 'shift' | 'meta';
 // Alphabetic keys (a-z)
-type AlphaKey = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' |
-	'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z';
+type AlphaKey =
+	| 'a'
+	| 'b'
+	| 'c'
+	| 'd'
+	| 'e'
+	| 'f'
+	| 'g'
+	| 'h'
+	| 'i'
+	| 'j'
+	| 'k'
+	| 'l'
+	| 'm'
+	| 'n'
+	| 'o'
+	| 'p'
+	| 'q'
+	| 'r'
+	| 's'
+	| 't'
+	| 'u'
+	| 'v'
+	| 'w'
+	| 'x'
+	| 'y'
+	| 'z';
 // Numeric keys (0-9)
 type NumericKey = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
 // Function keys (F1-F24)
-type FunctionKey = `f${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24}`;
+type FunctionKey =
+	`f${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24}`;
 // Navigation keys
 type NavigationKey = 'home' | 'end' | `arrow${'up' | 'down' | 'left' | 'right'}`;
 // Lock keys
 type LockKey = `${'num' | 'caps' | 'scroll' | ''}lock`;
 // Special character keys
-type SpecialCharKey = 'semicolon' | 'equals' | 'comma' | 'dash' | 'period' | 'slash' |
-	'backquote' | 'openbracket' | 'backslash' | 'closebracket' | 'quote';
+type SpecialCharKey =
+	| 'semicolon'
+	| 'equals'
+	| 'comma'
+	| 'dash'
+	| 'period'
+	| 'slash'
+	| 'backquote'
+	| 'openbracket'
+	| 'backslash'
+	| 'closebracket'
+	| 'quote';
 // Action keys
 type ActionKey = 'escape' | 'tab' | 'space' | 'enter' | 'backspace' | 'delete' | 'pause';
 // All base keys combined
-type BaseKey = AlphaKey | NumericKey | FunctionKey | NavigationKey | LockKey | SpecialCharKey | ActionKey;
+type BaseKey =
+	| AlphaKey
+	| NumericKey
+	| FunctionKey
+	| NavigationKey
+	| LockKey
+	| SpecialCharKey
+	| ActionKey;
 // Key combination types
 type SingleKey = Modifier | BaseKey;
 type ModifierCombo = `${Modifier}+${BaseKey}` | `${Modifier}+${Modifier}+${BaseKey}`;
@@ -69,7 +112,7 @@ class KeyboardManager {
 		id = this.generateIdIfNotProvided(id);
 
 		// Check if id is already in use
-		if (this.handlers.get(keyCombo)!.find(h => h.id === id)) {
+		if (this.handlers.get(keyCombo)!.find((h) => h.id === id)) {
 			throw new Error(`Handler with ID "${id}" already exists`);
 		}
 
@@ -131,7 +174,7 @@ class KeyboardManager {
 		// Try to remove a direct handler
 
 		for (const [key, handlers] of this.handlers.entries()) {
-			const index = handlers.findIndex(h => h.id === id);
+			const index = handlers.findIndex((h) => h.id === id);
 			if (index !== -1) {
 				if (handlers.length === 1) {
 					this.handlers.delete(key);
@@ -161,7 +204,7 @@ class KeyboardManager {
 	unregisterScope(scope: string): void {
 		// Remove all handlers with the given scope
 		for (const [key, handlers] of this.handlers.entries()) {
-			const filteredHandlers = handlers.filter(h => h.scope !== scope);
+			const filteredHandlers = handlers.filter((h) => h.scope !== scope);
 			if (filteredHandlers.length === 0) {
 				this.handlers.delete(key);
 			} else {
@@ -189,7 +232,7 @@ class KeyboardManager {
 	smartRegister = (
 		handlers: Parameters<typeof this.register>[],
 		exceptHandlers: Parameters<typeof this.registerExcept>[] = []
-	): () => void => {
+	): (() => void) => {
 		const ids: string[] = [];
 
 		// Register all normal handlers
@@ -206,7 +249,7 @@ class KeyboardManager {
 
 		// Return cleanup function
 		return () => {
-			ids.forEach(id => this.unregister(id));
+			ids.forEach((id) => this.unregister(id));
 		};
 	};
 
@@ -241,7 +284,7 @@ class KeyboardManager {
 
 				// Check all registered key combos
 				for (const handlers of this.handlers.values()) {
-					if (handlers.some(h => h.id === candidateId)) {
+					if (handlers.some((h) => h.id === candidateId)) {
 						isUnique = false;
 						break;
 					}
@@ -276,9 +319,9 @@ class KeyboardManager {
 			event.metaKey ? 'meta' : ''
 		].filter(Boolean);
 
-		const keyCombo = normalizeKeyCombo(modifiers.length > 0
-			? `${modifiers.join('+')}+${event.code}`
-			: event.code);
+		const keyCombo = normalizeKeyCombo(
+			modifiers.length > 0 ? `${modifiers.join('+')}+${event.code}` : event.code
+		);
 
 		// Check if we have handlers for this combination
 		const handlers = this.handlers.get(keyCombo) || [];

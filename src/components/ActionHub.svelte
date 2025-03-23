@@ -17,8 +17,7 @@
 	let {
 		commands = [],
 		placeholderText = $t`Search commands...`,
-		onCommandSelect = () => {
-		},
+		onCommandSelect = () => {},
 		showPalette = $bindable(false)
 	}: Props = $props();
 
@@ -49,15 +48,12 @@
 		// When searching, get results from all levels
 		if (value.trim() !== '') {
 			const allCommands = getAllCommands(commands);
-			return allCommands.filter(item =>
-				item.name.toLowerCase().includes(value.toLowerCase())
-			);
+			return allCommands.filter((item) => item.name.toLowerCase().includes(value.toLowerCase()));
 		}
 
 		// When not searching, show the current navigation level
-		const currentCommands = commandStack.length > 0
-			? commandStack[commandStack.length - 1].subcommands
-			: commands;
+		const currentCommands =
+			commandStack.length > 0 ? commandStack[commandStack.length - 1].subcommands : commands;
 
 		return currentCommands || [];
 	});
@@ -135,45 +131,61 @@
 		const unregisterKeyboard = keyboard.smartRegister(
 			[
 				// Regular key handlers
-				['arrowdown', (event) => {
-					event.preventDefault();
-					if (filteredCommands.length > 0) {
-						selectedIndex = (selectedIndex + 1) % filteredCommands.length;
+				[
+					'arrowdown',
+					(event) => {
+						event.preventDefault();
+						if (filteredCommands.length > 0) {
+							selectedIndex = (selectedIndex + 1) % filteredCommands.length;
+						}
+						return true;
 					}
-					return true;
-				}],
+				],
 
-				['arrowup', (event) => {
-					event.preventDefault();
-					if (filteredCommands.length > 0) {
-						selectedIndex = (selectedIndex - 1 + filteredCommands.length) % filteredCommands.length;
+				[
+					'arrowup',
+					(event) => {
+						event.preventDefault();
+						if (filteredCommands.length > 0) {
+							selectedIndex =
+								(selectedIndex - 1 + filteredCommands.length) % filteredCommands.length;
+						}
+						return true;
 					}
-					return true;
-				}],
+				],
 
-				['enter', (event) => {
-					event.preventDefault();
-					event.stopPropagation();
-					if (filteredCommands.length === 0) return true;
-					executeCommand(filteredCommands[selectedIndex]);
-					return true;
-				}],
+				[
+					'enter',
+					(event) => {
+						event.preventDefault();
+						event.stopPropagation();
+						if (filteredCommands.length === 0) return true;
+						executeCommand(filteredCommands[selectedIndex]);
+						return true;
+					}
+				],
 
-				['escape', () => {
-					goBack();
-					return true;
-				}],
+				[
+					'escape',
+					() => {
+						goBack();
+						return true;
+					}
+				],
 
-				['space', (event) => {
-					event.preventDefault();
-					// Reset all states
-					commandStack = [];
-					handleStack();
-					selectedIndex = 0;
-					value = '';
-					showPalette = false;
-					return true;
-				}]
+				[
+					'space',
+					(event) => {
+						event.preventDefault();
+						// Reset all states
+						commandStack = [];
+						handleStack();
+						selectedIndex = 0;
+						value = '';
+						showPalette = false;
+						return true;
+					}
+				]
 			],
 			[
 				// Except handlers
@@ -193,30 +205,30 @@
 		};
 	});
 </script>
+
 <button
-	class="absolute inset-0 w-screen h-screen border-none bg-background/90 dark:bg-background-dark/90 z-30"
-	onclick={() => showPalette = false}
+	class="bg-background/90 dark:bg-background-dark/90 absolute inset-0 z-30 h-screen w-screen border-none"
+	onclick={() => (showPalette = false)}
 	aria-label={$t`Close dialog`}
 	tabIndex="-1"
 ></button>
 
-
-<div class="command-palette fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 card flex flex-col z-50">
-	<input
-		type="text"
-		bind:value={value}
-		bind:this={inp}
-		placeholder={placeholderText}
-		class="input"
-	/>
-	<div class="divider">
-	</div>
+<div
+	class="command-palette card fixed top-1/2 left-1/2 z-50 flex -translate-x-1/2 -translate-y-1/2 flex-col"
+>
+	<input type="text" bind:value bind:this={inp} placeholder={placeholderText} class="input" />
+	<div class="divider"></div>
 
 	{#if commandStack.length > 0}
-		<div class="breadcrumb text-sm text-gray-500 mb-2 flex gap-2">
+		<div class="breadcrumb mb-2 flex gap-2 text-sm text-gray-500">
 			{#each commandStack as cmd, i}
-				<button class="btn btn-xs btn-primary-soft cursor-pointer"
-								onclick={(event) => {event.stopPropagation(); goBack()}}>
+				<button
+					class="btn btn-xs btn-primary-soft cursor-pointer"
+					onclick={(event) => {
+						event.stopPropagation();
+						goBack();
+					}}
+				>
 					{cmd.name}
 				</button>
 				{i < commandStack.length - 1 ? ' > ' : ''}
@@ -230,28 +242,40 @@
 				<button
 					role="option"
 					aria-selected={i === selectedIndex}
-					class="btn-bare w-full flex !justify-start text-left cursor-pointer {i === selectedIndex ? 'bg-primary text-white' : ''}"
-					onmouseover={() => selectedIndex = i}
+					class="btn-bare flex w-full cursor-pointer !justify-start text-left {i === selectedIndex
+						? 'bg-primary text-white'
+						: ''}"
+					onmouseover={() => (selectedIndex = i)}
 					onfocus={() => {}}
-					onclick={(event) => {event.stopPropagation(); executeCommand(item)}}
+					onclick={(event) => {
+						event.stopPropagation();
+						executeCommand(item);
+					}}
 					tabindex={i === selectedIndex ? 0 : -1}
 					bind:this={listItemRefs[i]}
-					transition:slide={{duration: 350, delay: i * 20}}
+					transition:slide={{ duration: 350, delay: i * 20 }}
 				>
 					{#if item.icon}
-						<item.icon size="22" class="mr-3 {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}" />
+						<item.icon
+							size="22"
+							class="mr-3 {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}"
+						/>
 					{/if}
 					<span>
-								<span
-									class="font-medium {i === selectedIndex ? 'text-white' : 'text-content-tertiary'}">{item.name}</span>
+						<span class="font-medium {i === selectedIndex ? 'text-white' : 'text-content-tertiary'}"
+							>{item.name}</span
+						>
 						{#if item.description}
-									<div
-										class="text-sm {i === selectedIndex ? 'text-white' : 'text-content-tertiary'}">{item.description}</div>
-								{/if}
-							</span>
+							<div class="text-sm {i === selectedIndex ? 'text-white' : 'text-content-tertiary'}">
+								{item.description}
+							</div>
+						{/if}
+					</span>
 					{#if item.subcommands}
-						<IconChevronRight size="20"
-															class="ml-auto {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}" />
+						<IconChevronRight
+							size="20"
+							class="ml-auto {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}"
+						/>
 					{/if}
 				</button>
 			{/each}
@@ -262,17 +286,17 @@
 </div>
 
 <style>
-    .command-palette {
-        width: 50vw;
-        padding: 12px;
-        min-height: 200px;
-        max-height: 90vh;
-    }
+	.command-palette {
+		width: 50vw;
+		padding: 12px;
+		min-height: 200px;
+		max-height: 90vh;
+	}
 
-    ul {
-        padding: 0;
-        margin: 0;
-        list-style: none;
-        min-height: 0;
-    }
+	ul {
+		padding: 0;
+		margin: 0;
+		list-style: none;
+		min-height: 0;
+	}
 </style>

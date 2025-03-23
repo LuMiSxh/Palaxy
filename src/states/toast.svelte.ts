@@ -40,7 +40,7 @@ class ToastState {
 	 * @returns {void}
 	 */
 	removeToast(id: number): void {
-		this.toasts = this.toasts.filter(t => t.id !== id);
+		this.toasts = this.toasts.filter((t) => t.id !== id);
 	}
 
 	/**

@@ -3,8 +3,7 @@ import type { KeyCombination } from '$lib/keyboard';
 class KeyHint {
 	private keys: [KeyCombination, string][] = $state([]);
 
-	constructor() {
-	}
+	constructor() {}
 
 	/**
 	 * Adds a key combination with its hint. If the key combination already exists, overrides its hint.
@@ -13,12 +12,11 @@ class KeyHint {
 	 */
 	addKey(key: KeyCombination, hint: string): this {
 		// Check if the key combination already exists
-		const existingIndex = this.keys.findIndex(k => k[0] === key);
+		const existingIndex = this.keys.findIndex((k) => k[0] === key);
 
 		if (existingIndex >= 0) {
 			// If exists, override the hint
-			this.keys = this.keys.map(k => k[0] === key ? [key, hint] : k);
-
+			this.keys = this.keys.map((k) => (k[0] === key ? [key, hint] : k));
 		} else {
 			// If not exists, add a new key combination
 			this.keys = [...this.keys, [key, hint]];
@@ -33,7 +31,7 @@ class KeyHint {
 	 * @returns This instance
 	 */
 	removeKey(key: KeyCombination): this {
-		this.keys = this.keys.filter(k => k[0] !== key);
+		this.keys = this.keys.filter((k) => k[0] !== key);
 		return this;
 	}
 
@@ -77,13 +75,17 @@ export const keyHint = new KeyHint();
  * @param node
  * @param data
  */
-export function handleKeyHint(node: HTMLElement, data: { keys: Parameters<typeof keyHint.addKey>[], reset?: boolean }) {
+export function handleKeyHint(
+	node: HTMLElement,
+	data: { keys: Parameters<typeof keyHint.addKey>[]; reset?: boolean }
+) {
 	let oldKeyHints = keyHint.get();
 
-	const addHints = () => data.keys.forEach((key) => {
-		oldKeyHints = keyHint.get();
-		keyHint.addKey(...key);
-	});
+	const addHints = () =>
+		data.keys.forEach((key) => {
+			oldKeyHints = keyHint.get();
+			keyHint.addKey(...key);
+		});
 
 	const removeHints = () => {
 		if (data.reset) {

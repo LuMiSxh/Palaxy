@@ -39,7 +39,7 @@
 	});
 </script>
 
-<div class="p-6 max-w-3xl mx-auto">
+<div class="mx-auto max-w-3xl p-6">
 	{#if loading}
 		<div class="flex items-center justify-center p-6">
 			<div class="animate-pulse">{$t`Loading system information...`}</div>
@@ -47,37 +47,37 @@
 	{:else if error}
 		<div class="alert alert-error">{error.message}</div>
 	{:else}
-		<div class="w-full h-full flex gap-2">
+		<div class="flex h-full w-full gap-2">
 			<!-- Application Information -->
 			<div class="px-2">
-				<h3 class="text-lg font-medium mb-1">{$t`Application Information`}</h3>
-				<div class="overflow-x-auto h-full pb-2">
-					<table class="table w-full h-full">
+				<h3 class="mb-1 text-lg font-medium">{$t`Application Information`}</h3>
+				<div class="h-full overflow-x-auto pb-2">
+					<table class="table h-full w-full">
 						<tbody>
-						<tr>
-							<td>
-								{$t`Application Name`}
-							</td>
-							<td>
-								{appName}
-							</td>
-						</tr>
-						<tr>
-							<td>
-								{$t`Application Version`}
-							</td>
-							<td>
-								{appVersion}
-							</td>
-						</tr>
-						<tr>
-							<td>
-								{$t`Tauri Version`}
-							</td>
-							<td>
-								{tauriVersion}
-							</td>
-						</tr>
+							<tr>
+								<td>
+									{$t`Application Name`}
+								</td>
+								<td>
+									{appName}
+								</td>
+							</tr>
+							<tr>
+								<td>
+									{$t`Application Version`}
+								</td>
+								<td>
+									{appVersion}
+								</td>
+							</tr>
+							<tr>
+								<td>
+									{$t`Tauri Version`}
+								</td>
+								<td>
+									{tauriVersion}
+								</td>
+							</tr>
 						</tbody>
 					</table>
 				</div>
@@ -85,23 +85,23 @@
 
 			<!-- System Information -->
 			<div class="px-2">
-				<h3 class="text-lg font-medium mb-1">{$t`System Information`}</h3>
-				<div class="overflow-x-auto h-full pb-2">
-					<table class="table w-full h-full">
-					    <tbody>
-					    <tr>
-					        <td>{$t`Operating System`}</td>
-					        <td>{osName}</td>
-					    </tr>
-					    <tr>
-					        <td>{$t`Architecture`}</td>
-					        <td>{osArch}</td>
-					    </tr>
-					    <tr>
-					        <td>{$t`OS Version`}</td>
-					        <td>{osVersion}</td>
-					    </tr>
-					    </tbody>
+				<h3 class="mb-1 text-lg font-medium">{$t`System Information`}</h3>
+				<div class="h-full overflow-x-auto pb-2">
+					<table class="table h-full w-full">
+						<tbody>
+							<tr>
+								<td>{$t`Operating System`}</td>
+								<td>{osName}</td>
+							</tr>
+							<tr>
+								<td>{$t`Architecture`}</td>
+								<td>{osArch}</td>
+							</tr>
+							<tr>
+								<td>{$t`OS Version`}</td>
+								<td>{osVersion}</td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 			</div>

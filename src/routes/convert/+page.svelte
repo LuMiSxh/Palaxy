@@ -77,30 +77,30 @@
 
 	onMount(() => {
 		return keyboard.smartRegister([
-			['shift+arrowleft', event => {
-				event.preventDefault();
-				if (stepState.disablePrev) {
-					addToast(
-						$t`You cannot return to the previous step.`,
-						'warning'
-					);
-					return;
+			[
+				'shift+arrowleft',
+				(event) => {
+					event.preventDefault();
+					if (stepState.disablePrev) {
+						addToast($t`You cannot return to the previous step.`, 'warning');
+						return;
+					}
+					stepState.index -= stepState.indexDecrement;
+					stepState.indexDecrement = 1;
 				}
-				stepState.index -= stepState.indexDecrement;
-				stepState.indexDecrement = 1;
-			}],
-			['shift+arrowright', event => {
-				event.preventDefault();
-				if (stepState.disableNext) {
-					addToast(
-						$t`You cannot proceed the next step.`,
-						'warning'
-					);
-					return;
+			],
+			[
+				'shift+arrowright',
+				(event) => {
+					event.preventDefault();
+					if (stepState.disableNext) {
+						addToast($t`You cannot proceed the next step.`, 'warning');
+						return;
+					}
+					stepState.index += stepState.indexIncrement;
+					stepState.indexIncrement = 1;
 				}
-				stepState.index += stepState.indexIncrement;
-				stepState.indexIncrement = 1;
-			}]
+			]
 		]);
 	});
 
@@ -128,10 +128,11 @@
 </script>
 
 <div class="flex h-full w-full flex-col">
-	<section class="glass-surface flex h-full w-full flex-col relative">
+	<section class="glass-surface relative flex h-full w-full flex-col">
 		<div class="mb-2 ml-2 w-full">
 			<h1
-				class="dark:text-transparent text-primary bg-clip-text bg-gradient-to-r from-primary via-secondary via-60% to-secondary text-3xl mb-2">
+				class="text-primary from-primary via-secondary to-secondary mb-2 bg-gradient-to-r via-60% bg-clip-text text-3xl dark:text-transparent"
+			>
 				{currentStep.title}
 			</h1>
 			<p class="text-lg">
@@ -149,7 +150,7 @@
 		</div>
 		{#if $appData.mouseSupport}
 			<button
-				class="absolute bottom-5 left-5  btn btn-soft btn-error select-none"
+				class="btn btn-soft btn-error absolute bottom-5 left-5 select-none"
 				onclick={() => {
 					stepState.index -= stepState.indexDecrement;
 					stepState.indexDecrement = 1;
@@ -159,7 +160,7 @@
 				{$t`Previous`}
 			</button>
 			<button
-				class="absolute bottom-5 right-5  btn btn-soft btn-success select-none"
+				class="btn btn-soft btn-success absolute right-5 bottom-5 select-none"
 				onclick={() => {
 					stepState.index += stepState.indexIncrement;
 					stepState.indexIncrement = 1;
@@ -173,31 +174,31 @@
 </div>
 
 <style>
-    @keyframes blink {
-        0% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0.8;
-        }
-        100% {
-            opacity: 1;
-        }
-    }
+	@keyframes blink {
+		0% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.8;
+		}
+		100% {
+			opacity: 1;
+		}
+	}
 
-    #step-progress {
-        transition: value 0.5s ease;
-    }
+	#step-progress {
+		transition: value 0.5s ease;
+	}
 
-    #step-progress::-webkit-progress-value {
-        background: linear-gradient(to left, var(--color-primary), var(--color-secondary));
-        animation: blink 1.5s infinite;
-        transition: width 0.5s ease-in-out;
-    }
+	#step-progress::-webkit-progress-value {
+		background: linear-gradient(to left, var(--color-primary), var(--color-secondary));
+		animation: blink 1.5s infinite;
+		transition: width 0.5s ease-in-out;
+	}
 
-    #step-progress::-moz-progress-bar {
-        background: linear-gradient(to left, var(--color-primary), var(--color-secondary));
-        animation: blink 1.5s infinite;
-        transition: width 0.5s ease-in-out;
-    }
+	#step-progress::-moz-progress-bar {
+		background: linear-gradient(to left, var(--color-primary), var(--color-secondary));
+		animation: blink 1.5s infinite;
+		transition: width 0.5s ease-in-out;
+	}
 </style>

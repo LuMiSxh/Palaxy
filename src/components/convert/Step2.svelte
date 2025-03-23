@@ -2,7 +2,12 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { t } from 'svelte-i18n-lingui';
 	import convState, { stepState } from '$states/converter.svelte';
-	import { IconCircleMinus, IconCirclePlus, IconExclamationCircle, IconLoader2 } from '@tabler/icons-svelte';
+	import {
+		IconCircleMinus,
+		IconCirclePlus,
+		IconExclamationCircle,
+		IconLoader2
+	} from '@tabler/icons-svelte';
 	import { commands } from '$types';
 	import { wrapper } from '$lib/utils';
 	import { keyboard } from '$lib/keyboard';
@@ -39,19 +44,27 @@
 	function focusItem(index: number) {
 		if (index >= 0 && index < allListItems.length) {
 			// Remove focus from all items
-			allListItems.forEach(item => item.classList.remove('focused-item'));
+			allListItems.forEach((item) => item.classList.remove('focused-item'));
 
 			// Add focus to current item
 			const currentItem = allListItems[index];
 			currentItem.classList.add('focused-item');
 
 			// If this is the first item in a section, try to scroll the heading into view too
-			const isFirstItemInSection = currentItem.previousElementSibling === null ||
+			const isFirstItemInSection =
+				currentItem.previousElementSibling === null ||
 				!currentItem.previousElementSibling.classList.contains('list-row');
 
-			if (isFirstItemInSection && currentItem.parentElement && currentItem.parentElement.previousElementSibling) {
+			if (
+				isFirstItemInSection &&
+				currentItem.parentElement &&
+				currentItem.parentElement.previousElementSibling
+			) {
 				// This is likely the first item after a heading, so scroll the heading into view
-				currentItem.parentElement.previousElementSibling.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				currentItem.parentElement.previousElementSibling.scrollIntoView({
+					behavior: 'smooth',
+					block: 'start'
+				});
 			} else {
 				// Otherwise just scroll the item into view
 				currentItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -68,7 +81,8 @@
 		let newIndex = currentFocusIndex;
 
 		if (direction === 'next') {
-			newIndex = currentFocusIndex < allListItems.length - 1 ? currentFocusIndex + 1 : currentFocusIndex;
+			newIndex =
+				currentFocusIndex < allListItems.length - 1 ? currentFocusIndex + 1 : currentFocusIndex;
 		} else {
 			newIndex = currentFocusIndex > 0 ? currentFocusIndex - 1 : currentFocusIndex;
 		}
@@ -103,14 +117,20 @@
 
 		// Register keyboard handlers for navigating between items
 		cleanupKeyboard = keyboard.smartRegister([
-			['arrowup', (event) => {
-				event.preventDefault();
-				navigateItems('prev');
-			}],
-			['arrowdown', (event) => {
-				event.preventDefault();
-				navigateItems('next');
-			}]
+			[
+				'arrowup',
+				(event) => {
+					event.preventDefault();
+					navigateItems('prev');
+				}
+			],
+			[
+				'arrowdown',
+				(event) => {
+					event.preventDefault();
+					navigateItems('next');
+				}
+			]
 		]);
 
 		// Show the key hint for navigating
@@ -139,27 +159,29 @@
 </script>
 
 {#snippet item(message: string, Icon: any, bg: string, txt: string)}
-	<li class="list-row items-center rounded {bg} p-3 mb-2" style="--text-color: {txt}">
-		<Icon class="{txt} mr-3 icon" size={24} />
+	<li class="list-row items-center rounded {bg} mb-2 p-3" style="--text-color: {txt}">
+		<Icon class="{txt} icon mr-3" size={24} />
 		<span class="list-col-grow text-md {txt}">
-		{message}
-	</span>
+			{message}
+		</span>
 	</li>
 {/snippet}
 
 <div class="w-full max-w-3xl">
 	{#if isLoading}
 		<div class="flex flex-col items-center justify-center py-8">
-			<div class="animate-spin mb-4">
+			<div class="mb-4 animate-spin">
 				<IconLoader2 size={32} class="text-primary" />
 			</div>
-			<p class="text-content-secondary dark:text-content-dark-secondary">{$t`Analyzing source material...`}</p>
+			<p class="text-content-secondary dark:text-content-dark-secondary">
+				{$t`Analyzing source material...`}
+			</p>
 		</div>
 	{:else}
 		<div class="results-container" bind:this={resultsContainer} tabindex="-1">
 			{#if negatives.length > 0}
 				<div class="mb-4">
-					<h3 class="text-lg font-semibold mb-2 text-error flex items-center">
+					<h3 class="text-error mb-2 flex items-center text-lg font-semibold">
 						{$t`Issues Found`}
 					</h3>
 					<div class="space-y-2">
@@ -172,7 +194,7 @@
 
 			{#if warnings.length > 0}
 				<div class="mb-4">
-					<h3 class="text-lg font-semibold mb-2 text-warning flex items-center">
+					<h3 class="text-warning mb-2 flex items-center text-lg font-semibold">
 						{$t`Warnings`}
 					</h3>
 					<div class="space-y-2">
@@ -185,7 +207,7 @@
 
 			{#if positives.length > 0}
 				<div>
-					<h3 class="text-lg font-semibold mb-2 text-success flex items-center">
+					<h3 class="text-success mb-2 flex items-center text-lg font-semibold">
 						{$t`Good Points`}
 					</h3>
 					<div class="space-y-2">
@@ -206,75 +228,75 @@
 </div>
 
 <style>
-    .results-container {
-        max-height: 70vh;
-        overflow-y: auto;
-        padding-right: 0.5rem;
-        outline: none;
-        scroll-behavior: smooth;
-    }
+	.results-container {
+		max-height: 70vh;
+		overflow-y: auto;
+		padding-right: 0.5rem;
+		outline: none;
+		scroll-behavior: smooth;
+	}
 
-    .list-row {
-        display: flex;
-        align-items: center;
-        transition: all 0.3s ease;
-        border-left: 3px solid transparent;
-        padding-left: calc(0.75rem - 3px);
-    }
+	.list-row {
+		display: flex;
+		align-items: center;
+		transition: all 0.3s ease;
+		border-left: 3px solid transparent;
+		padding-left: calc(0.75rem - 3px);
+	}
 
-    .list-row:hover {
-        transform: translateX(5px);
-        border-left-color: var(--text-color, currentColor);
-    }
+	.list-row:hover {
+		transform: translateX(5px);
+		border-left-color: var(--text-color, currentColor);
+	}
 
-    .list-row.focused-item {
-        transform: translateX(5px);
-        border-left-color: var(--text-color, currentColor);
-        outline: none;
-    }
+	.list-row.focused-item {
+		transform: translateX(5px);
+		border-left-color: var(--text-color, currentColor);
+		outline: none;
+	}
 
-    .list-col-grow {
-        flex-grow: 1;
-    }
+	.list-col-grow {
+		flex-grow: 1;
+	}
 
-    .icon {
-        transition: transform 0.2s ease;
-    }
+	.icon {
+		transition: transform 0.2s ease;
+	}
 
-    .list-row:hover .icon,
-    .list-row.focused-item .icon {
-        transform: scale(1.15);
-    }
+	.list-row:hover .icon,
+	.list-row.focused-item .icon {
+		transform: scale(1.15);
+	}
 
-    .list-row {
-        animation: var(--animate-slide-right);
-        opacity: 0;
-        animation-fill-mode: forwards;
-        animation-delay: calc(var(--index, 0) * 0.1s);
-    }
+	.list-row {
+		animation: var(--animate-slide-right);
+		opacity: 0;
+		animation-fill-mode: forwards;
+		animation-delay: calc(var(--index, 0) * 0.1s);
+	}
 
-    /* Add staggered animation for multiple items */
-    .space-y-2 > :nth-child(1) {
-        --index: 1;
-    }
+	/* Add staggered animation for multiple items */
+	.space-y-2 > :nth-child(1) {
+		--index: 1;
+	}
 
-    .space-y-2 > :nth-child(2) {
-        --index: 2;
-    }
+	.space-y-2 > :nth-child(2) {
+		--index: 2;
+	}
 
-    .space-y-2 > :nth-child(3) {
-        --index: 3;
-    }
+	.space-y-2 > :nth-child(3) {
+		--index: 3;
+	}
 
-    .space-y-2 > :nth-child(4) {
-        --index: 4;
-    }
+	.space-y-2 > :nth-child(4) {
+		--index: 4;
+	}
 
-    .space-y-2 > :nth-child(5) {
-        --index: 5;
-    }
+	.space-y-2 > :nth-child(5) {
+		--index: 5;
+	}
 
-    .space-y-2 > :nth-child(n+6) {
-        --index: 6;
-    }
+	.space-y-2 > :nth-child(n + 6) {
+		--index: 6;
+	}
 </style>

@@ -12,15 +12,18 @@
 	import ActionHub from '$components/ActionHub.svelte';
 	import {
 		IconAutomation,
-		IconBrightness, IconBrightness2, IconBrightnessFilled,
-		IconBrush, IconHighlight,
+		IconBrightnessFilled,
+		IconBrush,
+		IconHighlight,
 		IconHome,
 		IconKeyboard,
-		IconLanguage, IconLanguageHiragana,
+		IconLanguage,
 		IconMouse,
 		IconSearch,
-		IconSettings, IconSettingsCode,
-		IconSettingsQuestion, IconShadow,
+		IconSettings,
+		IconSettingsCode,
+		IconSettingsQuestion,
+		IconShadow,
 		IconTransform,
 		IconUsers
 	} from '@tabler/icons-svelte';
@@ -38,14 +41,11 @@
 
 	onMount(() => {
 		const unmountKeyboard = keyboard.mount();
-		const unregisterKeyboard = keyboard.register(
-			'space',
-			(event) => {
-				event.preventDefault();
-				event.stopPropagation();
-				showPalette = !showPalette;
-			}
-		);
+		const unregisterKeyboard = keyboard.register('space', (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			showPalette = !showPalette;
+		});
 		return () => {
 			unmountKeyboard();
 			keyboard.unregister(unregisterKeyboard);
@@ -141,15 +141,6 @@
 								$appData.language = SupportedLanguages.German;
 								addToast($t`Language changed to German`);
 							}
-						},
-						{
-							name: $t`Japanese`,
-							description: $t`Change the language to Japanese`,
-							icon: IconLanguageHiragana,
-							action: () => {
-								$appData.language = SupportedLanguages.Japanese;
-								addToast($t`Language changed to Japanese`);
-							}
 						}
 					]
 				},
@@ -160,7 +151,7 @@
 					action: () => {
 						openDialog({
 							title: $t`Auto-Populate Settings`,
-							content: AutoPopulate,
+							content: AutoPopulate
 						});
 					}
 				},
@@ -170,7 +161,9 @@
 					icon: IconKeyboard,
 					action: () => {
 						$appData.showKeyHints = !$appData.showKeyHints;
-						addToast($appData.showKeyHints ? $t`KeyHints are now shown` : $t`KeyHints are now hidden`);
+						addToast(
+							$appData.showKeyHints ? $t`KeyHints are now shown` : $t`KeyHints are now hidden`
+						);
 					}
 				},
 				{
@@ -179,11 +172,15 @@
 					icon: IconMouse,
 					action: () => {
 						$appData.mouseSupport = !$appData.mouseSupport;
-						addToast($appData.mouseSupport ? $t`Mouse Support is now enabled` : $t`Mouse Support is now disabled`);
+						addToast(
+							$appData.mouseSupport
+								? $t`Mouse Support is now enabled`
+								: $t`Mouse Support is now disabled`
+						);
 					}
 				},
 				{
-					name: $t`System Info`,
+					name: $t`System Information`,
 					description: $t`Show the system information of the application`,
 					icon: IconSettingsQuestion,
 					action: () => {
@@ -243,30 +240,25 @@
 <Dialog />
 
 {#if showPalette}
-	<ActionHub {commands} bind:showPalette={showPalette} />
+	<ActionHub {commands} bind:showPalette />
 {/if}
 
-<div class="h-screen w-screen flex flex-col bg-background dark:bg-background-dark overflow-hidden">
+<div class="bg-background dark:bg-background-dark flex h-screen w-screen flex-col overflow-hidden">
 	<!-- --- -->
-	<div class="flex-1 overflow-y-hidden overflow-x-hidden">
+	<div class="flex-1 overflow-x-hidden overflow-y-hidden">
 		{@render children()}
 	</div>
 	<!-- --- -->
 	{#if $appData.showKeyHints || $appData.mouseSupport}
 		<div
-			class="h-8 z-50 px-2 flex justify-center items-center bg-background-secondary dark:bg-background-dark-secondary">
+			class="bg-background-secondary dark:bg-background-dark-secondary z-50 flex h-8 items-center justify-center px-2"
+		>
 			{#if $appData.showKeyHints}
 				<KeyHint />
 			{/if}
 			{#if $appData.mouseSupport}
-				<button
-					class="btn h-full !p-0"
-					onclick={() => showPalette = !showPalette}>
-					<img
-						src="/icon.png"
-						class="max-w-full max-h-full"
-						alt="ActionHub"
-					/>
+				<button class="btn h-full !p-0" onclick={() => (showPalette = !showPalette)}>
+					<img src="/icon.png" class="max-h-full max-w-full" alt="ActionHub" />
 				</button>
 			{/if}
 		</div>
@@ -275,8 +267,11 @@
 
 {#if dev}
 	<div
-		class="absolute {($appData.showKeyHints || $appData.mouseSupport)? 'bottom-10' : 'bottom-5'} right-5 badge badge-error text-lg! opacity-70 pointer-events-none select-none"
-		style="z-index: 9999;">
+		class="absolute {$appData.showKeyHints || $appData.mouseSupport
+			? 'bottom-10'
+			: 'bottom-5'} badge badge-error pointer-events-none right-5 text-lg! opacity-70 select-none"
+		style="z-index: 9999;"
+	>
 		Development Build
 	</div>
 {/if}

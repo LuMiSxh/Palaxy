@@ -1,7 +1,7 @@
 <script lang="ts">
 	import toaster from '$states/toast.svelte';
 	import { IconX } from '@tabler/icons-svelte';
-	import { slide  } from 'svelte/transition';
+	import { slide } from 'svelte/transition';
 
 	function getAlertType(type: 'info' | 'success' | 'warning' | 'error') {
 		switch (type) {
@@ -34,9 +34,12 @@
 	}
 </script>
 
-<div class="fixed flex flex-col gap-2 right-4 top-4 z-50">
+<div class="fixed top-4 right-4 z-50 flex flex-col gap-2">
 	{#each toaster.toasts as toast}
-		<div class="alert {getAlertType(toast.type)} flex justify-between items-center" transition:slide>
+		<div
+			class="alert {getAlertType(toast.type)} flex items-center justify-between"
+			transition:slide
+		>
 			<span class="mr-2">
 				<!--eslint-disable-next-line svelte/no-at-html-tags-->
 				{@html toast.message}

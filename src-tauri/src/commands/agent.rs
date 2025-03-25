@@ -17,7 +17,7 @@ pub async fn get_agent_list(state: State<'_, Mutex<AgentState>>) -> EResult<Comm
         .collect();
 
     Ok(CommListAgents {
-        duration: start.elapsed().as_secs(),
+        duration: start.elapsed().as_secs_f64(),
         comment: None,
         payload: Some(agents),
     })

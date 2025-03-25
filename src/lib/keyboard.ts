@@ -55,7 +55,9 @@ type SpecialCharKey =
 	| 'openbracket'
 	| 'backslash'
 	| 'closebracket'
-	| 'quote';
+	| 'quote'
+	| 'plus'
+	| 'minus';
 // Action keys
 type ActionKey = 'escape' | 'tab' | 'space' | 'enter' | 'backspace' | 'delete' | 'pause';
 // All base keys combined

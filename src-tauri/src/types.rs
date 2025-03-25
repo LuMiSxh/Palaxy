@@ -100,13 +100,13 @@ pub trait Agent: Send + Sync {
 
 #[derive(Serialize, Deserialize, Default, Type)]
 pub struct BaseResponse<T = ()> {
-    pub duration: u64,
+    pub duration: f64,
     pub comment: Option<String>,
     pub payload: Option<T>,
 }
 
 impl BaseResponse<()> {
-    pub fn default_duration(duration: u64) -> Self {
+    pub fn default_duration(duration: f64) -> Self {
         Self {
             duration,
             comment: None,

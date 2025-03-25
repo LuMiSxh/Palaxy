@@ -104,7 +104,6 @@ export function handleKeyHint(
 
 	return {
 		destroy() {
-			console.log('destroy');
 			removeHints();
 			node.removeEventListener('focus', addHints);
 			node.removeEventListener('blur', removeHints);

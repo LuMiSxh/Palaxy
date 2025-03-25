@@ -43,7 +43,7 @@ pub async fn conv_state_set(
         ConvStateKey::Data(value) => state.data = value,
     }
 
-    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
+    Ok(BaseResponse::default_duration(start.elapsed().as_secs_f64()))
 }
 
 #[tauri::command(async)]
@@ -56,7 +56,7 @@ pub async fn conv_state_get(
     let state = state.lock().await;
 
     Ok(BaseResponse {
-        duration: start.elapsed().as_secs(),
+        duration: start.elapsed().as_secs_f64(),
         comment: None,
         payload: Some(state.clone()),
     })
@@ -70,7 +70,7 @@ pub async fn conv_state_reset(state: State<'_, Mutex<ConvState>>) -> EResult<Bas
     let mut state = state.lock().await;
     state.reset();
 
-    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
+    Ok(BaseResponse::default_duration(start.elapsed().as_secs_f64()))
 }
 
 // -- PROCESSES --
@@ -100,7 +100,7 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
         Err(e) => {
             negative.push(e.to_string());
             return Ok(CommAnalyzeMeta {
-                duration: start.elapsed().as_secs(),
+                duration: start.elapsed().as_secs_f64(),
                 comment: None,
                 payload: Some(AnalyzeResponse {
                     negative,
@@ -120,7 +120,7 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
             Err(e) => {
                 negative.push(e.to_string());
                 return Ok(CommAnalyzeMeta {
-                    duration: start.elapsed().as_secs(),
+                    duration: start.elapsed().as_secs_f64(),
                     comment: None,
                     payload: Some(AnalyzeResponse {
                         negative,
@@ -142,7 +142,7 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
         );
 
         return Ok(CommAnalyzeMeta {
-            duration: start.elapsed().as_secs(),
+            duration: start.elapsed().as_secs_f64(),
             comment: None,
             payload: Some(AnalyzeResponse {
                 negative,
@@ -160,7 +160,7 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
         );
 
         return Ok(CommAnalyzeMeta {
-            duration: start.elapsed().as_secs(),
+            duration: start.elapsed().as_secs_f64(),
             comment: None,
             payload: Some(AnalyzeResponse {
                 negative,
@@ -382,7 +382,7 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
     }
 
     Ok(CommAnalyzeMeta {
-        duration: start.elapsed().as_secs(),
+        duration: start.elapsed().as_secs_f64(),
         comment: None,
         payload: Some(AnalyzeResponse {
             negative,
@@ -491,7 +491,7 @@ pub async fn conv_bundle(
     state.data = pages;
 
     Ok(CommBundle {
-        duration: start.elapsed().as_secs(),
+        duration: start.elapsed().as_secs_f64(),
         comment: None,
         payload: Some(BundleResponse {
             total_chapters,
@@ -647,5 +647,5 @@ pub async fn conv_convert(
         }
     }
 
-    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
+    Ok(BaseResponse::default_duration(start.elapsed().as_secs_f64()))
 }

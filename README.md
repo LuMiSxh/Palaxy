@@ -16,21 +16,21 @@ to manually check for updates on the release page.
 Palaxy comes with a light and dark mode (as well as system default), which you can switch between using the settings
 menu.
 
-![Light and Dark Mode](./assets/ui-color-mode.png)
+![Light and Dark Mode](./assets/ui-theme.png)
 
-## Different bundle options
+## i18n Support
 
-Palaxy offers different bundle options for your manga. You can manually allocate the pages to a volume or let Palaxy
-handle it for you by either using the cover pages for differentiating volumes or by using the page count.
+Palaxy supports multiple languages and is currently available in English and German.
+You can change the language via the ActionHub.
 
-![Bundle Options](./assets/ui-bundle-options.png)
+![i18n Support](./assets/ui-i18n.png)
 
-## Customizable output
+## Customizable Output / Metadata
 
-Palaxy allows you to customize the output to your liking. You can change the file format, the reading direction,
-folder creation, and more to come in the future.
+Palaxy allows you to customize the output of your manga. You can choose between different metadata options and
+customize the output directory.
 
-![Customizable Output](./assets/ui-converter-options.png)
+![Customizable Output](./assets/ui-metadata.png)
 
 ## Blazingly fast
 

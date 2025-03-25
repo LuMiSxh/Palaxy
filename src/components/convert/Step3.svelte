@@ -28,7 +28,9 @@
 		$appData.autoPop.enabled ? ($appData.autoPop.converter.conversionType ?? 'CBZ') : 'CBZ'
 	);
 	let readingDirection: Direction = $state('Left to Right');
-	let bundleFlag: BundleFlag = $state(convState.bundleRecommendation);
+	let bundleFlag: BundleFlag = $state(convState.bundle ? convState.bundle : convState.bundleRecommendation);
+
+	$inspect(bundleFlag);
 
 	async function select() {
 		targetLocation =
@@ -49,8 +51,8 @@
 		convState.target = targetLocation;
 
 		// Set Tauri AppState
-		await wrapper(commands.convStateSet({ Name: name ?? '' }));
 		await wrapper(commands.convStateSet({ BundleFlag: bundleFlag }));
+		await wrapper(commands.convStateSet({ Name: name ?? '' }));
 		await wrapper(commands.convStateSet({ Direction: readingDirection }));
 		await wrapper(commands.convStateSet({ Format: fileFormat }));
 		await wrapper(commands.convStateSet({ CreateDirectory: createFolder }));
@@ -69,7 +71,7 @@
 	<option selected={type === value} {value}>{text}</option>
 {/snippet}
 
-<div class="grid h-full w-full grid-cols-3 gap-8">
+<div class="grid h-full w-full grid-cols-3 gap-4 px-4">
 	<div class="flex h-full w-full items-center justify-center">
 		<fieldset class="fieldset m-4 w-full">
 			<legend class="fieldset-legend">{$t`File Name(s)`}</legend>

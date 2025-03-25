@@ -29,7 +29,9 @@
 			arrowdown: '↓',
 			arrowleft: '←',
 			arrowright: '→',
-			space: $t`Space`
+			space: $t`Space`,
+			plus: '+',
+			minus: '-'
 		},
 		default: {
 			ctrl: $t`Ctrl`,
@@ -49,7 +51,9 @@
 			arrowdown: '↓',
 			arrowleft: '←',
 			arrowright: '→',
-			space: $t`Space`
+			space: $t`Space`,
+			plus: '+',
+			minus: '-'
 		}
 	});
 

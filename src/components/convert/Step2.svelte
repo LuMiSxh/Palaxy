@@ -12,6 +12,7 @@
 	import { wrapper } from '$lib/utils';
 	import { keyboard } from '$lib/keyboard';
 	import { keyHint } from '$states/keyhint.svelte';
+	import LoadingSpinner from '$components/LoadingSpinner.svelte';
 
 	let positives: string[] = $state([]);
 	let negatives: string[] = $state([]);
@@ -135,8 +136,8 @@
 
 		// Show the key hint for navigating
 		cleanupKeyHint = keyHint.smartAdd([
-			['arrowdown', $t`Navigate down`],
-			['arrowup', $t`Navigate up`]
+			['arrowdown', $t`Scroll down`],
+			['arrowup', $t`Scroll up`]
 		]);
 	});
 
@@ -169,14 +170,7 @@
 
 <div class="w-full max-w-3xl">
 	{#if isLoading}
-		<div class="flex flex-col items-center justify-center py-8">
-			<div class="mb-4 animate-spin">
-				<IconLoader2 size={32} class="text-primary" />
-			</div>
-			<p class="text-content-secondary dark:text-content-dark-secondary">
-				{$t`Analyzing source material...`}
-			</p>
-		</div>
+		<LoadingSpinner text={$t`Analyzing source material...`}/>
 	{:else}
 		<div class="results-container" bind:this={resultsContainer} tabindex="-1">
 			{#if negatives.length > 0}

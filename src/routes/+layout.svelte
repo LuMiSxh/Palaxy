@@ -99,7 +99,7 @@
 							description: $t`Change the theme to light`,
 							icon: IconBrightnessFilled,
 							action: () => {
-								setTheme(Theme.Light);
+								$appData.theme = Theme.Light;
 								addToast($t`Theme changed to light`);
 							}
 						},
@@ -108,7 +108,7 @@
 							description: $t`Change the theme to dark`,
 							icon: IconShadow,
 							action: () => {
-								setTheme(Theme.Dark);
+								$appData.theme = Theme.Dark;
 								addToast($t`Theme changed to dark`);
 							}
 						},
@@ -117,7 +117,7 @@
 							description: $t`Change the theme to system`,
 							icon: IconAutomation,
 							action: () => {
-								setTheme(Theme.System);
+								$appData.theme = Theme.System;
 								addToast($t`Theme changed to system`);
 							}
 						}
@@ -204,8 +204,7 @@
 						openDialog({
 							title: $t`Information`,
 							content: SystemInfo,
-							onConfirm: () => {
-							}
+							onConfirm: () => {}
 						});
 					}
 				},
@@ -235,7 +234,13 @@
 		// Load AppData
 		const appDataValue = localStorage.getItem(appDataKey);
 		if (appDataValue) {
-			appData.set(JSON.parse(appDataValue));
+			try {
+				const parsedData = JSON.parse(appDataValue);
+				appData.set(parsedData);
+			} catch (error) {
+				console.error('Error parsing app data:', error);
+				appData.set(defaultAppData);
+			}
 		} else {
 			appData.set(defaultAppData);
 		}
@@ -247,9 +252,6 @@
 				setTheme(newColorScheme ? Theme.Dark : Theme.Light);
 			}
 		});
-
-		// Set dark / light mode
-		setTheme($appData.theme);
 	}
 </script>
 

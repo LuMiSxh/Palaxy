@@ -42,13 +42,13 @@
 
 	// All available features as an array
 	const availableFeatures = Object.values(FeatureFlag).filter(
-		value => typeof value === 'number'
+		(value) => typeof value === 'number'
 	) as FeatureFlag[];
 
 	// Toggle a feature selection
 	function toggleFeature(feature: FeatureFlag) {
 		if (selectedFeatures.includes(feature)) {
-			selectedFeatures = selectedFeatures.filter(f => f !== feature);
+			selectedFeatures = selectedFeatures.filter((f) => f !== feature);
 		} else {
 			selectedFeatures = [...selectedFeatures, feature];
 		}
@@ -58,19 +58,13 @@
 		// Save the selected features
 		$appData.featureFlags = selectedFeatures;
 
-		addToast(
-			$t`Feature flags saved`,
-			'success'
-		);
+		addToast($t`Feature flags saved`, 'success');
 		dialogManager.closeDialog(id);
 	}
 
 	function cancel() {
 		// Reset the selected features
-		addToast(
-			$t`Feature flags are not saved`,
-			'warning'
-		);
+		addToast($t`Feature flags are not saved`, 'warning');
 		dialogManager.closeDialog(id);
 	}
 
@@ -89,12 +83,17 @@
 					<div>
 						<div class="flex items-center gap-2">
 							<h3>{featureMap[feature].name}</h3>
-							<span class={`badge badge-sm ${
-			          featureMap[feature].type === 'experimental' ? 'badge-error' :
-			          featureMap[feature].type === 'beta' ? 'badge-warning' : 'badge-success'
-			        }`}>
-			          {$t(featureMap[feature].type)}
-			        </span>
+							<span
+								class={`badge badge-sm ${
+									featureMap[feature].type === 'experimental'
+										? 'badge-error'
+										: featureMap[feature].type === 'beta'
+											? 'badge-warning'
+											: 'badge-success'
+								}`}
+							>
+								{$t(featureMap[feature].type)}
+							</span>
 						</div>
 						<p class="text-content-secondary dark:text-content-dark-secondary text-sm">
 							{featureMap[feature].description}
@@ -105,53 +104,55 @@
 						<input
 							type="checkbox"
 							class="toggle-input"
-							use:handleKeyHint={{ keys: [['enter', $t`Invoke`]]}}
+							use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
 							onkeydown={(evt) => {
-			          if (evt.key === 'Enter') {
-			            evt.preventDefault();
-			            evt.stopPropagation();
+								if (evt.key === 'Enter') {
+									evt.preventDefault();
+									evt.stopPropagation();
 
-			            toggleFeature(feature);
-			          }
-			        }}
+									toggleFeature(feature);
+								}
+							}}
 							checked={selectedFeatures.includes(feature)}
 							onchange={() => toggleFeature(feature)}
 						/>
 						<span class="toggle-track">
-			        <span class="toggle-thumb"></span>
-			      </span>
+							<span class="toggle-thumb"></span>
+						</span>
 					</label>
 				</div>
 			</div>
 		{/each}
 	</div>
 
-	<div class="flex justify-end mt-6 space-x-3">
-		<button class="btn btn-outline"
-						onclick={cancel}
-						use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
-						onkeydown={(evt) => {
-							if (evt.key === 'Enter') {
-								evt.preventDefault();
-								evt.stopPropagation();
+	<div class="mt-6 flex justify-end space-x-3">
+		<button
+			class="btn btn-outline"
+			onclick={cancel}
+			use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
+			onkeydown={(evt) => {
+				if (evt.key === 'Enter') {
+					evt.preventDefault();
+					evt.stopPropagation();
 
-								cancel();
-							}
-						}}
+					cancel();
+				}
+			}}
 		>
 			{$t`Cancel`}
 		</button>
-		<button class="btn btn-primary"
-						onclick={save}
-						use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
-						onkeydown={(evt) => {
-						if (evt.key === 'Enter') {
-							evt.preventDefault();
-							evt.stopPropagation();
+		<button
+			class="btn btn-primary"
+			onclick={save}
+			use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
+			onkeydown={(evt) => {
+				if (evt.key === 'Enter') {
+					evt.preventDefault();
+					evt.stopPropagation();
 
-							save();
-						}
-					}}
+					save();
+				}
+			}}
 		>
 			{$t`Save`}
 		</button>

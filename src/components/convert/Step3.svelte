@@ -28,7 +28,9 @@
 		$appData.autoPop.enabled ? ($appData.autoPop.converter.conversionType ?? 'CBZ') : 'CBZ'
 	);
 	let readingDirection: Direction = $state('Left to Right');
-	let bundleFlag: BundleFlag = $state(convState.bundle ? convState.bundle : convState.bundleRecommendation);
+	let bundleFlag: BundleFlag = $state(
+		convState.bundle ? convState.bundle : convState.bundleRecommendation
+	);
 
 	$inspect(bundleFlag);
 
@@ -156,7 +158,7 @@
 					<IconFileDownload class="text-primary" />
 					<span>{$t`Click to select or drag a folder in`}</span>
 				{:else if targetLocation}
-					<code class="text-white">{targetLocation.split('/').pop()}</code>
+					<code class="text-black dark:text-white">{targetLocation.split('/').pop()}</code>
 				{:else}
 					<span class="text-error">{$t`None selected`}</span>
 				{/if}

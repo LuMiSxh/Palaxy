@@ -52,10 +52,13 @@
 
 		const unregisterKeyboard = keyboard.smartRegister([['escape', handleEscapeKey]]);
 
-		const unregisterKeyHint = keyHint.smartAdd([
-			['escape', $t`Close`],
-			['tab', $t`Navigate between fields`]
-		], ['enter']);  // Ignore enter key hint
+		const unregisterKeyHint = keyHint.smartAdd(
+			[
+				['escape', $t`Close`],
+				['tab', $t`Navigate between fields`]
+			],
+			['enter']
+		); // Ignore enter key hint
 
 		return () => {
 			unregisterKeyboard();
@@ -93,7 +96,7 @@
 
 	<div class="divider mx-4 my-0"></div>
 
-	<div class="px-2 pb-6 overflow-y-auto max-h-[70vh]">
+	<div class="max-h-[70vh] overflow-y-auto px-2 pb-6">
 		{#if typeof dialog.content === 'string'}
 			<p class="text-content-tertiary">{dialog.content}</p>
 		{:else}
@@ -135,11 +138,11 @@
 </div>
 
 <style>
-    .card {
-        min-width: 50vw;
-        min-height: 10vh;
-        max-height: 88vh;
-        padding: 12px;
-        border-radius: 8px;
-    }
+	.card {
+		min-width: 50vw;
+		min-height: 10vh;
+		max-height: 88vh;
+		padding: 12px;
+		border-radius: 8px;
+	}
 </style>

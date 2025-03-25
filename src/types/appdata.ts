@@ -40,7 +40,7 @@ export enum SupportedLanguages {
 	/**
 	 * German language support.
 	 */
-	German = 'de',
+	German = 'de'
 }
 
 // Translations for the languages

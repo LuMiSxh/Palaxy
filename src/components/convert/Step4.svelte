@@ -56,12 +56,12 @@
 	});
 </script>
 
-<div class="flex h-full w-full flex-col" style="height: calc(100vh - 8rem)">
+<div class="flex h-fit w-full flex-col" style="max-height: calc(100vh - 8rem)">
 	{#if step4State.loading}
 		<div class="flex h-full items-center justify-center">
 			<LoadingSpinner text={$t`Running Bundler...`} />
 		</div>
-	{:else if convState.bundle === "MANUAL"}
+	{:else if convState.bundle === 'MANUAL'}
 		<ManualBundling />
 	{:else}
 		<div class="grid h-full grid-cols-[1fr_2fr] gap-6 p-4">
@@ -69,12 +69,12 @@
 			<div class="flex flex-col gap-4">
 				<div class="card">
 					<div class="card-body">
-						<h3 class="mb-4 text-xl font-semibold">{$t`Detection Result`}</h3>
+						<h3 class="mb-4 font-semibold">{$t`Detection Result`}</h3>
 
 						<div class="space-y-4">
 							<div class="flex items-center justify-between">
 								<span class="flex items-center">
-									<IconBookmark class="mr-2 text-primary" size={20} />
+									<IconBookmark class="text-primary mr-2" size={20} />
 									{$t`Detected Chapters`}
 								</span>
 								<span class="badge badge-primary">{step4State.result?.total_chapters ?? 0}</span>
@@ -82,7 +82,7 @@
 
 							<div class="flex items-center justify-between">
 								<span class="flex items-center">
-									<IconFileZip class="mr-2 text-primary" size={20} />
+									<IconFileZip class="text-primary mr-2" size={20} />
 									{$t`Detected Volumes`}
 								</span>
 								<span class="badge badge-primary">{step4State.result?.total_volumes ?? 0}</span>
@@ -91,15 +91,56 @@
 					</div>
 				</div>
 
+				{#if convState.bundle === 'IMAGE'}
+					<div class="card">
+						<div class="card-body">
+							<h3 class="mb-4 font-semibold">{$t`Sensibility Settings`}</h3>
+
+							<div class="w-full">
+								<div class="mb-2 flex items-center justify-between">
+									<label for="range-slider" class="">
+										{$t`Grayscale Sensibility`}:
+										<code class="text-primary">
+											{step4State.sensibility}%
+										</code>
+									</label>
+								</div>
+								<input
+									id="range-slider"
+									type="range"
+									min="0"
+									max="100"
+									step="5"
+									class="bg-background-tertiary dark:bg-background-dark-tertiary h-2 w-full cursor-pointer appearance-none rounded-lg"
+									bind:value={step4State.sensibility}
+									use:handleKeyHint={{
+										keys: [
+											['arrowleft', $t`Decrease`],
+											['arrowright', $t`Increase`]
+										]
+									}}
+								/>
+								<div class="mt-1 flex w-full justify-between">
+									<span>0%</span>
+									<span>25%</span>
+									<span>50%</span>
+									<span>75%</span>
+									<span>100%</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				{/if}
+
 				<div class="card">
 					<div class="card-body">
-						<h3 class="mb-4 text-xl font-semibold">{$t`Bundle Options`}</h3>
+						<h3 class="mb-4 font-semibold">{$t`Bundle Options`}</h3>
 
 						<button
-							class="btn btn-outline w-full mb-2"
-							use:handleKeyHint={{keys: [['enter', $t`Invoke`]]}}
+							class="btn btn-outline mb-2 w-full"
+							use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
 							onclick={() => {
-								convState.bundle = "MANUAL"
+								convState.bundle = 'MANUAL';
 							}}
 						>
 							{$t`Switch to Manual Bundling`}
@@ -107,7 +148,7 @@
 
 						<button
 							class="btn btn-primary w-full"
-							use:handleKeyHint={{keys: [['enter', $t`Invoke`]]}}
+							use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
 							onclick={runBundler}
 						>
 							{$t`Rerun Bundler`}
@@ -118,74 +159,6 @@
 
 			<!-- Right side: Volumes visualization -->
 			<VolumeVisualisation />
-			<!--{#if convState.bundle === "IMAGE"}-->
-			<!--	<div class="h-full w-full p-2">-->
-			<!--		<table class="table">-->
-			<!--			<thead>-->
-			<!--			<tr>-->
-			<!--				<th>{$t`Image Detection`}</th>-->
-			<!--			</tr>-->
-			<!--			</thead>-->
-			<!--			<tbody>-->
-			<!--			<tr>-->
-			<!--				<td>-->
-			<!--					<div class="w-full">-->
-			<!--						<div class="flex items-center justify-between mb-2">-->
-			<!--							<label for="range-slider" class="text-sm">-->
-			<!--								{$t`Grayscale Sensibility`}:-->
-			<!--								<code class="text-primary">-->
-			<!--									{sensibility}%-->
-			<!--								</code>-->
-			<!--							</label>-->
-			<!--						</div>-->
-			<!--						<input-->
-			<!--							id="range-slider"-->
-			<!--							type="range"-->
-			<!--							min="0"-->
-			<!--							max="100"-->
-			<!--							step="5"-->
-			<!--							class="w-full h-2 bg-background-tertiary dark:bg-background-dark-tertiary rounded-lg appearance-none cursor-pointer"-->
-			<!--							bind:value={sensibility}-->
-			<!--							use:handleKeyHint={{-->
-			<!--									keys: [-->
-			<!--										['arrowleft', $t`Decrease`],-->
-			<!--										['arrowright', $t`Increase`]-->
-			<!--									],-->
-			<!--									reset: true-->
-			<!--								}}-->
-			<!--						/>-->
-			<!--						<div class="flex w-full justify-between text-xs mt-1">-->
-			<!--							<span>0%</span>-->
-			<!--							<span>25%</span>-->
-			<!--							<span>50%</span>-->
-			<!--							<span>75%</span>-->
-			<!--							<span>100%</span>-->
-			<!--						</div>-->
-			<!--					</div>-->
-			<!--				</td>-->
-			<!--			</tr>-->
-			<!--			<tr>-->
-			<!--				<td class="flex h-full w-full items-center justify-around pt-4">-->
-			<!--					<button-->
-			<!--						class="btn bg-primary hover:bg-primary-hover active:bg-primary-active"-->
-			<!--						onclick={runBundler}-->
-			<!--					>-->
-			<!--						{$t`Rerun Bundler`}-->
-			<!--					</button>-->
-			<!--					<button-->
-			<!--						class="btn bg-secondary hover:bg-secondary-hover active:bg-secondary-active"-->
-			<!--						onclick={() => {-->
-			<!--								convState.bundle = "MANUAL"-->
-			<!--							}}-->
-			<!--					>-->
-			<!--						{$t`Manual Bundling`}-->
-			<!--					</button>-->
-			<!--				</td>-->
-			<!--			</tr>-->
-			<!--			</tbody>-->
-			<!--		</table>-->
-			<!--	</div>-->
-			<!--{/if}-->
 		</div>
 	{/if}
 </div>

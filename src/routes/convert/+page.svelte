@@ -150,7 +150,7 @@
 		</div>
 		{#if $appData.mouseSupport}
 			<button
-				class="btn btn-soft btn-error absolute bottom-5 left-5 select-none"
+				class="btn btn-error absolute bottom-5 left-5 shadow-lg select-none"
 				onclick={() => {
 					stepState.index -= stepState.indexDecrement;
 					stepState.indexDecrement = 1;
@@ -160,7 +160,7 @@
 				{$t`Previous`}
 			</button>
 			<button
-				class="btn btn-soft btn-success absolute right-5 bottom-5 select-none"
+				class="btn btn-success absolute right-5 bottom-5 shadow-lg select-none"
 				onclick={() => {
 					stepState.index += stepState.indexIncrement;
 					stepState.indexIncrement = 1;

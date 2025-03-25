@@ -3,8 +3,7 @@ import type { KeyCombination } from '$lib/keyboard';
 class KeyHint {
 	private keys: [KeyCombination, string][] = $state([]);
 
-	constructor() {
-	}
+	constructor() {}
 
 	/**
 	 * Adds a key combination with its hint. If the key combination already exists, overrides its hint.
@@ -42,7 +41,10 @@ class KeyHint {
 	 * @param ignore An array of key combinations to ignore when re-applying the previous key combinations
 	 * @returns A function to remove the added key combinations
 	 */
-	smartAdd(keyhints: Parameters<typeof this.addKey>[], ignore: KeyCombination[] | undefined = undefined): () => void {
+	smartAdd(
+		keyhints: Parameters<typeof this.addKey>[],
+		ignore: KeyCombination[] | undefined = undefined
+	): () => void {
 		// Get all current key hints
 		const currentKeys = this.keys;
 

@@ -1,5 +1,3 @@
-// TODO: Add state class, functions, and exports here
-
 import type { BundleResponse } from '$types';
 import { addToast } from '$states/toast.svelte';
 import { gt } from 'svelte-i18n-lingui';
@@ -32,7 +30,8 @@ export function checkChapterLimits(): void {
 		if (totalUsed > step4State.result.total_chapters) {
 			addToast(
 				gt({
-					message: 'The total number of chapters {usedNumber} used exceeds the detected number of chapters {detectedNumber}',
+					message:
+						'The total number of chapters {usedNumber} used exceeds the detected number of chapters {detectedNumber}',
 					values: {
 						usedNumber: totalUsed,
 						detectedNumber: step4State.result.total_chapters

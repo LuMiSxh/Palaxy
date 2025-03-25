@@ -17,8 +17,7 @@
 	let {
 		commands = $bindable([]),
 		placeholderText = $t`Search commands...`,
-		onCommandSelect = () => {
-		},
+		onCommandSelect = () => {},
 		showPalette = $bindable(false)
 	}: Props = $props();
 
@@ -65,7 +64,6 @@
 		return (currentCommands || []).filter((item) => {
 			// If the command has the "hidden" property and is set to true, return false
 			return !item.hidden;
-
 		});
 	});
 
@@ -277,46 +275,53 @@
 					{#if item.icon}
 						<item.icon
 							size="22"
-							class="mr-3 flex-shrink-0 {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}"
+							class="mr-3 flex-shrink-0 {i === selectedIndex
+								? 'stroke-white'
+								: 'stroke-content-tertiary'}"
 						/>
 					{/if}
 					<span class="flex-grow overflow-hidden">
-					<span class="font-medium {i === selectedIndex ? 'text-white' : 'text-content-tertiary'}"
-					>{item.name}</span
-					>
+						<span class="font-medium {i === selectedIndex ? 'text-white' : 'text-content-tertiary'}"
+							>{item.name}</span
+						>
 						{#if item.description}
-						<div
-							class="text-sm overflow-hidden text-ellipsis {i === selectedIndex ? 'text-white' : 'text-content-tertiary'}">
-							{item.description}
-						</div>
-					{/if}
-				</span>
+							<div
+								class="overflow-hidden text-sm text-ellipsis {i === selectedIndex
+									? 'text-white'
+									: 'text-content-tertiary'}"
+							>
+								{item.description}
+							</div>
+						{/if}
+					</span>
 					{#if item.subcommands}
 						<IconChevronRight
 							size="20"
-							class="ml-auto flex-shrink-0 {i === selectedIndex ? 'stroke-white' : 'stroke-content-tertiary'}"
+							class="ml-auto flex-shrink-0 {i === selectedIndex
+								? 'stroke-white'
+								: 'stroke-content-tertiary'}"
 						/>
 					{/if}
 				</button>
 			{/each}
 		{:else}
-			<div class="p-2 text-center dark:text-error text-error-dark-light">No commands found</div>
+			<div class="dark:text-error text-error-dark-light p-2 text-center">No commands found</div>
 		{/if}
 	</ul>
 </div>
 
 <style>
-    .command-palette {
-        width: 50vw;
-        padding: 12px;
-        min-height: 50px;
-        max-height: 88vh;
-    }
+	.command-palette {
+		width: 50vw;
+		padding: 12px;
+		min-height: 50px;
+		max-height: 88vh;
+	}
 
-    ul {
-        padding: 0;
-        margin: 0;
-        list-style: none;
-        min-height: 0;
-    }
+	ul {
+		padding: 0;
+		margin: 0;
+		list-style: none;
+		min-height: 0;
+	}
 </style>

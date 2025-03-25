@@ -95,7 +95,7 @@
 			<IconFileDownload class="text-primary" />
 			<span>{$t`Click to select or drag a folder in`}</span>
 		{:else if converter.source}
-			<code class="text-white">{converter.source.split('/').pop()}</code>
+			<code class="text-black dark:text-white">{converter.source.split('/').pop()}</code>
 		{:else}
 			<span class="text-error">{$t`None selected`}</span>
 		{/if}

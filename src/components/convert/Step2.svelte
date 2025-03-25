@@ -5,8 +5,7 @@
 	import {
 		IconCircleMinus,
 		IconCirclePlus,
-		IconExclamationCircle,
-		IconLoader2
+		IconExclamationCircle
 	} from '@tabler/icons-svelte';
 	import { commands } from '$types';
 	import { wrapper } from '$lib/utils';
@@ -170,7 +169,7 @@
 
 <div class="w-full max-w-3xl">
 	{#if isLoading}
-		<LoadingSpinner text={$t`Analyzing source material...`}/>
+		<LoadingSpinner text={$t`Analyzing source material...`} />
 	{:else}
 		<div class="results-container" bind:this={resultsContainer} tabindex="-1">
 			{#if negatives.length > 0}

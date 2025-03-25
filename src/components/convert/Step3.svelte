@@ -32,8 +32,6 @@
 		convState.bundle ? convState.bundle : convState.bundleRecommendation
 	);
 
-	$inspect(bundleFlag);
-
 	async function select() {
 		targetLocation =
 			(await open({

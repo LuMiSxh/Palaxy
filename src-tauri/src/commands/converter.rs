@@ -41,9 +41,12 @@ pub async fn conv_state_set(
         ConvStateKey::CreateDirectory(value) => state.create_directory = value,
         ConvStateKey::VolumeSizes(value) => state.volume_sizes = value,
         ConvStateKey::Data(value) => state.data = value,
+        ConvStateKey::EditedData(value) => state.edited_data = value,
     }
 
-    Ok(BaseResponse::default_duration(start.elapsed().as_secs_f64()))
+    Ok(BaseResponse::default_duration(
+        start.elapsed().as_secs_f64(),
+    ))
 }
 
 #[tauri::command(async)]
@@ -70,7 +73,9 @@ pub async fn conv_state_reset(state: State<'_, Mutex<ConvState>>) -> EResult<Bas
     let mut state = state.lock().await;
     state.reset();
 
-    Ok(BaseResponse::default_duration(start.elapsed().as_secs_f64()))
+    Ok(BaseResponse::default_duration(
+        start.elapsed().as_secs_f64(),
+    ))
 }
 
 // -- PROCESSES --
@@ -554,10 +559,22 @@ pub async fn conv_convert(
     .unwrap()
     .to_string();
 
+    // check if we have edited data, otherwise use normal data
+    let pages = match state.edited_data {
+        Some(ref data) => {
+            if data.is_empty() {
+                state.data.clone()
+            } else {
+                data.clone()
+            }
+        }
+        None => state.data.clone(),
+    };
+
     let data = Arc::new(SharedData {
         name: state.name.clone(),
         target_directory: target_directory_path,
-        pages: state.data.clone(),
+        pages,
         chapters_per_volume: state.volume_sizes.clone(),
     });
 
@@ -647,5 +664,7 @@ pub async fn conv_convert(
         }
     }
 
-    Ok(BaseResponse::default_duration(start.elapsed().as_secs_f64()))
+    Ok(BaseResponse::default_duration(
+        start.elapsed().as_secs_f64(),
+    ))
 }

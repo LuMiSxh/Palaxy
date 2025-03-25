@@ -12,7 +12,6 @@
 	import VolumeVisualisation from '$components/convert/step4/VolumeVisualisation.svelte';
 	import ManualBundling from '$components/convert/step4/ManualBundling.svelte';
 
-	// FIXME Rework manual and image bundling
 	let unregisterKeyHint: () => void;
 
 	async function runBundler() {

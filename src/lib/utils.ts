@@ -69,10 +69,8 @@ export function ffIsEnabled(appData: AppData, flag: FeatureFlag): boolean {
  */
 export async function wrapper<T>(input: Promise<Result<T, Error>>): Promise<T | null> {
 	const output = await input;
-	console.log('Command response:', output);
-	if (output.status === 'ok') return output.data;
 
-	console.error('Command error:', output);
+	if (output.status === 'ok') return output.data;
 
 	let message = gt`An error occurred`;
 

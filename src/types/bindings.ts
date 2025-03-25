@@ -101,6 +101,7 @@ export type ConvState = {
 	create_directory: boolean;
 	volume_sizes: number[];
 	data: string[][];
+	edited_data: string[][] | null;
 };
 export type ConvStateKey =
 	| { Name: string }
@@ -110,7 +111,8 @@ export type ConvStateKey =
 	| { Format: FileFormat }
 	| { CreateDirectory: boolean }
 	| { VolumeSizes: number[] }
-	| { Data: string[][] };
+	| { Data: string[][] }
+	| { EditedData: string[][] | null };
 export type Direction = 'Left to Right' | 'Right to Left';
 export type Error =
 	| { type: 'Io' }

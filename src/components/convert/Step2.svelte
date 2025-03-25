@@ -2,11 +2,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { t } from 'svelte-i18n-lingui';
 	import convState, { stepState } from '$states/converter.svelte';
-	import {
-		IconCircleMinus,
-		IconCirclePlus,
-		IconExclamationCircle
-	} from '@tabler/icons-svelte';
+	import { IconCircleMinus, IconCirclePlus, IconExclamationCircle } from '@tabler/icons-svelte';
 	import { commands } from '$types';
 	import { wrapper } from '$lib/utils';
 	import { keyboard } from '$lib/keyboard';

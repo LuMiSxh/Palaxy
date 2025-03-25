@@ -12,19 +12,19 @@
 	import ActionHub from '$components/ActionHub.svelte';
 	import {
 		IconAutomation,
-		IconBrightnessFilled,
 		IconBrush,
 		IconHighlight,
 		IconHome,
 		IconKeyboard,
 		IconLanguage,
 		IconListDetails,
+		IconMoon,
 		IconMouse,
 		IconSearch,
 		IconSettings,
 		IconSettingsCode,
 		IconSettingsQuestion,
-		IconShadow,
+		IconSun,
 		IconTransform,
 		IconUsers
 	} from '@tabler/icons-svelte';
@@ -97,7 +97,7 @@
 						{
 							name: $t`Light`,
 							description: $t`Change the theme to light`,
-							icon: IconBrightnessFilled,
+							icon: IconSun,
 							action: () => {
 								$appData.theme = Theme.Light;
 								addToast($t`Theme changed to light`);
@@ -106,7 +106,7 @@
 						{
 							name: $t`Dark`,
 							description: $t`Change the theme to dark`,
-							icon: IconShadow,
+							icon: IconMoon,
 							action: () => {
 								$appData.theme = Theme.Dark;
 								addToast($t`Theme changed to dark`);

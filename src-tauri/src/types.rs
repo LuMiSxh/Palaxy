@@ -62,6 +62,7 @@ pub enum ConvStateKey {
     CreateDirectory(bool),
     VolumeSizes(Vec<usize>),
     Data(Vec<Vec<PathBuf>>),
+    EditedData(Option<Vec<Vec<PathBuf>>>),
 }
 
 // --- Structs ---

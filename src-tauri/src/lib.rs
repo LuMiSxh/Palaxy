@@ -33,6 +33,7 @@ pub fn run() {
     let mut ts = Typescript::default();
     ts = ts.bigint(specta_typescript::BigIntExportBehavior::Number);
 
+    #[cfg(debug_assertions)] // <- Only export on non-release builds
     builder
         .export(ts, "../src/types/bindings.ts")
         .expect("Failed to export typescript bindings");

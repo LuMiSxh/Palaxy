@@ -1,8 +1,7 @@
-use printpdf::image_crate;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::path::PathBuf;
-use crate::types::{Agent, BundleFlag, Direction, FileFormat};
+pub use crate::types::*;
 
 // Error types
 #[derive(Debug, thiserror::Error, Type)]
@@ -36,25 +35,13 @@ pub enum Error {
     Epub(
         #[from]
         #[serde(skip)]
-        eyre::Report,
+        epub_builder::Error,
     ),
     #[error(transparent)]
     Zip(
         #[from]
         #[serde(skip)]
         zip::result::ZipError,
-    ),
-    #[error(transparent)]
-    PrintPdf(
-        #[from]
-        #[serde(skip)]
-        printpdf::Error,
-    ),
-    #[error(transparent)]
-    PrintPdfImage(
-        #[from]
-        #[serde(skip)]
-        image_crate::error::ImageError,
     ),
     #[error(transparent)]
     Reqwest(

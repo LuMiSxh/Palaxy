@@ -53,12 +53,14 @@
 	});
 </script>
 
+{#if isLoading}
+	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<LoadingSpinner text={$t`Loading Images...`} />
+	</div>
+{/if}
+
 <div class="flex h-full w-full flex-col p-4" style="max-height: calc(100vh - 8rem)">
-	{#if isLoading}
-		<div class="flex h-full items-center justify-center">
-			<LoadingSpinner text={$t`Analyzing source material...`} />
-		</div>
-	{:else}
+	{#if !isLoading}
 		<div class="card">
 			<div class="card-header">
 				<h3 class="font-semibold">

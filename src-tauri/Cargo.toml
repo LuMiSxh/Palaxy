@@ -21,7 +21,6 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = ["protocol-asset", "macos-private-api"] }
-tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2.0"
@@ -29,11 +28,9 @@ regex = "1.11"
 image = "0.25"
 lazy_static = { version = "1.5", features = [] }
 tokio = { version = "1.44", features = ["fs"] }
-epub-builder = "0.7.4"
+epub-builder = "0.8"
 zip = "2.5"
 rayon = "1.10"
-eyre = "0.6"
-printpdf = { version = "0.7.0", features = ["image", "embedded_images"] }
 tauri-plugin-dialog = "2.2"
 reqwest = { version = "0.12", features = ["json"] }
 scraper = "0.23"
@@ -42,3 +39,4 @@ specta-typescript = "0.0.9"
 tauri-specta = { version = "=2.0.0-rc.21", features = ["derive", "typescript"] }
 specta = "=2.0.0-rc.22"
 tauri-plugin-os = "2"
+memmap2 = "0.9"

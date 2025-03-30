@@ -83,7 +83,6 @@
 			}}
 			bind:value={convType}
 		>
-			<option value="PDF">{$t`PDF`}</option>
 			<option value="EPUB">{$t`EPUB`}</option>
 			<option value="CBZ">{$t`CBZ`}</option>
 			<option value={null}>{$t`None`}</option>

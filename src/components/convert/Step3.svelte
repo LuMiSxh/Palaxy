@@ -135,7 +135,6 @@
 						}}
 						bind:value={fileFormat}
 					>
-						<option selected={fileFormat === 'PDF'} value="PDF">{$t`PDF`}</option>
 						<option selected={fileFormat === 'EPUB'} value="EPUB">{$t`EPUB`}</option>
 						<option selected={fileFormat === 'CBZ'} value="CBZ">{$t`CBZ`}</option>
 					</select>

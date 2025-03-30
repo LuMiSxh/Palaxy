@@ -81,8 +81,8 @@ export type BundleResponse = { total_chapters: number; total_volumes: number | n
 export type ConvState = { name: string; source: string; target: string; bundle_flag: BundleFlag; direction: Direction; format: FileFormat; create_directory: boolean; volume_sizes: number[]; data: string[][]; edited_data: string[][] | null }
 export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null }
 export type Direction = "Left to Right" | "Right to Left"
-export type Error = { type: "Io" } | { type: "Regex" } | { type: "Tauri" } | { type: "Image" } | { type: "Epub" } | { type: "Zip" } | { type: "PrintPdf" } | { type: "PrintPdfImage" } | { type: "Reqwest" } | { type: "InvalidPath"; data: [string, string] } | { type: "AsyncTaskError"; data: string } | { type: "Unsupported"; data: string } | { type: "NotFound"; data: string }
-export type FileFormat = "PDF" | "EPUB" | "CBZ"
+export type Error = { type: "Io" } | { type: "Regex" } | { type: "Tauri" } | { type: "Image" } | { type: "Epub" } | { type: "Zip" } | { type: "Reqwest" } | { type: "InvalidPath"; data: [string, string] } | { type: "AsyncTaskError"; data: string } | { type: "Unsupported"; data: string } | { type: "NotFound"; data: string }
+export type FileFormat = "EPUB" | "CBZ"
 export type StatusFlag = "Experimental" | "Deprecated" | "Stable"
 export type TagType = { Language: string } | { Status: StatusFlag } | { Other: string }
 

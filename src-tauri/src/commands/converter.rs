@@ -1,16 +1,17 @@
 use crate::collector::Collector;
+use crate::generator::cbz::Cbz;
+use crate::generator::epub::EPub;
 use crate::generator::Generator;
 use crate::prelude::*;
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use regex::Regex;
 use std::path::{Path, PathBuf};
-use tauri::async_runtime::{spawn};
+use std::sync::Arc;
+use tauri::async_runtime::spawn;
 use tauri::State;
 use tokio::fs::create_dir;
-use tokio::sync::Mutex;
-use crate::generator::cbz::Cbz;
-use crate::generator::epub::EPub;
+use tokio::sync::{Mutex, Semaphore};
 
 lazy_static! {
     static ref REGEX_ANALYZE: Regex = Regex::new(r"\d+-\d+(\.\d+)?").unwrap();
@@ -552,9 +553,9 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
             }
         }
     }?
-        .to_str()
-        .unwrap()
-        .to_string();
+    .to_str()
+    .unwrap()
+    .to_string();
 
     // check if we have edited data, otherwise use normal data
     let pages = match edited_data {
@@ -568,6 +569,11 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
         None => data,
     };
 
+    // Create a semaphore to limit concurrent conversions
+    // Use available CPU cores or a reasonable fixed limit
+    let max_concurrent = num_cpus::get().min(10); // Use at most 10 threads or available cores, whichever is smaller
+    let semaphore = Arc::new(Semaphore::new(max_concurrent));
+
     // Create a vector of tasks, each processing one volume
     let mut tasks = Vec::new();
 
@@ -577,12 +583,18 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
         let target_dir = target_directory_path.clone();
         let format_clone = format;
         let direction_clone = direction;
+        let semaphore_clone = Arc::clone(&semaphore);
 
         // Clone the necessary data for this volume
         let volume_pages = pages[j..(j + chapters)].to_vec();
 
         // Spawn a task for each volume to process them in parallel
         let task = spawn(async move {
+            // Acquire a permit from the semaphore before starting the conversion
+            let _permit = semaphore_clone.acquire().await.map_err(|e| {
+                Error::AsyncTaskError(format!("Failed to acquire semaphore: {}", e))
+            })?;
+
             match format_clone {
                 FileFormat::Cbz => {
                     // Create a new CBZ generator
@@ -598,11 +610,13 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
                     // Set metadata and save
                     generator.set_metadata(&volume_name, i + 1).await?;
                     generator.save().await?;
-                },
+                }
                 FileFormat::Epub => {
                     // Make sure we have pages for the cover
                     if volume_pages.is_empty() || volume_pages[0].is_empty() {
-                        return Err(Error::Unsupported("Cannot create EPUB without cover image".to_string()));
+                        return Err(Error::Unsupported(
+                            "Cannot create EPUB without cover image".to_string(),
+                        ));
                     }
 
                     // Create a new EPUB generator
@@ -619,12 +633,14 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
 
                     // Add chapters
                     for (chapter_idx, chapter_pages) in volume_pages.iter().enumerate() {
-                        generator.add_chapter(chapter_idx + 1, chapter_pages).await?;
+                        generator
+                            .add_chapter(chapter_idx + 1, chapter_pages)
+                            .await?;
                     }
 
                     // Save the EPUB
                     generator.save().await?;
-                },
+                }
             }
 
             Ok(())
@@ -635,7 +651,8 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
 
     // Wait for all tasks to complete
     for task in tasks {
-        task.await.map_err(|e| Error::AsyncTaskError(e.to_string()))??;
+        task.await
+            .map_err(|e| Error::AsyncTaskError(e.to_string()))??;
     }
 
     Ok(BaseResponse::default_duration(

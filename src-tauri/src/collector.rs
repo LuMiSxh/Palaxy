@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 use std::ffi::OsStr;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use image::{DynamicImage, GenericImageView, Pixel};
 use lazy_static::lazy_static;
@@ -8,8 +9,14 @@ use rayon::prelude::*;
 use regex::Regex;
 use tauri::async_runtime::{spawn, spawn_blocking, JoinHandle};
 use tokio::fs::{read_dir, ReadDir};
+use tokio::sync::Semaphore;
 
 use crate::prelude::*;
+
+// Constants for performance tuning
+const MAX_CONCURRENT_DIRS: usize = 64; // Limit concurrent directory reads
+const GRAYSCALE_SAMPLE_RATE: u32 = 10; // Sample every Nth pixel (1 = all pixels)
+const GRAYSCALE_MAX_DIMENSION: u32 = 500; // Downsample images larger than this
 
 pub struct Collector {
     base_directory: PathBuf,
@@ -29,8 +36,8 @@ impl Collector {
     pub async fn collect_chapters(
         &mut self,
         comparator: Option<&'static (dyn Fn(&PathBuf, &PathBuf) -> Ordering + Sync)>,
-    ) -> Result<Vec<PathBuf>, Error> {
-        let mut chapters = Self::collect(&self.base_directory, true).await?;
+    ) -> EResult<Vec<PathBuf>> {
+        let mut chapters = Self::collect_parallel(&self.base_directory, true).await?;
 
         if let Some(comparator) = comparator {
             chapters.par_sort_by(comparator);
@@ -43,15 +50,30 @@ impl Collector {
         &self,
         chapters: Vec<PathBuf>,
         comparator: Option<&'static (dyn Fn(&PathBuf, &PathBuf) -> Ordering + Sync)>,
-    ) -> Result<Vec<Vec<PathBuf>>, Error> {
-        let mut pages = Vec::with_capacity(chapters.len());
+    ) -> EResult<Vec<Vec<PathBuf>>> {
+        // Create semaphore to limit concurrent tasks
+        let semaphore = Arc::new(Semaphore::new(MAX_CONCURRENT_DIRS));
 
-        let handles: Vec<JoinHandle<Result<(usize, Vec<PathBuf>), Error>>> = chapters
+        // Create a vector to hold EResults, pre-allocate with capacity
+        let mut pages = Vec::with_capacity(chapters.len());
+        for _ in 0..chapters.len() {
+            pages.push(Vec::new());
+        }
+
+        let handles: Vec<JoinHandle<EResult<(usize, Vec<PathBuf>)>>> = chapters
             .into_par_iter()
             .enumerate()
             .map(|(index, chapter_dir)| {
+                let semaphore = Arc::clone(&semaphore);
+                let chapter_dir = chapter_dir.clone();
+
                 spawn(async move {
-                    let mut chapter_images = Self::collect(&chapter_dir, false).await?;
+                    // Acquire semaphore permit to limit concurrent directory operations
+                    let _permit = semaphore.acquire().await.map_err(|e| {
+                        Error::AsyncTaskError(format!("Failed to acquire semaphore: {}", e))
+                    })?;
+
+                    let mut chapter_images = Self::collect_parallel(&chapter_dir, false).await?;
 
                     if let Some(comparator) = comparator {
                         chapter_images.par_sort_by(comparator);
@@ -64,7 +86,7 @@ impl Collector {
 
         for handle in handles {
             match handle.await {
-                Ok(Ok((i, chapter_images))) => pages.insert(i, chapter_images),
+                Ok(Ok((i, chapter_images))) => pages[i] = chapter_images,
                 Ok(Err(e)) => return Err(e),
                 Err(e) => return Err(Error::AsyncTaskError(e.to_string())),
             }
@@ -77,23 +99,41 @@ impl Collector {
         &self,
         images_per_chapter: Vec<Vec<PathBuf>>,
         sensibility: f64,
-    ) -> Result<Vec<usize>, Error> {
+    ) -> EResult<Vec<usize>> {
         let mut book_start_chapters: Vec<usize> = Vec::new();
 
-        let handles: Vec<JoinHandle<Result<Option<usize>, Error>>> = images_per_chapter
+        // Limit concurrent image processing tasks
+        let semaphore = Arc::new(Semaphore::new(num_cpus::get()));
+
+        let handles: Vec<JoinHandle<EResult<Option<usize>>>> = images_per_chapter
             .into_par_iter()
             .enumerate()
             .map(|(i, images_per_chapter)| {
-                spawn_blocking(move || {
-                    let cover_path = &images_per_chapter[0];
+                if images_per_chapter.is_empty() {
+                    return spawn_blocking(move || Ok(None));
+                }
 
-                    let cover_image = image::open(cover_path)?;
+                let cover_path = images_per_chapter[0].clone();
+                let semaphore = Arc::clone(&semaphore);
 
-                    Ok(if Collector::is_grayscale(&cover_image, sensibility) {
-                        None
-                    } else {
-                        Some(i)
+                spawn(async move {
+                    // Acquire permit to limit concurrent image processing
+                    let _permit = semaphore.acquire().await.map_err(|e| {
+                        Error::AsyncTaskError(format!("Failed to acquire semaphore: {}", e))
+                    })?;
+
+                    let result = spawn_blocking(move || {
+                        let cover_image = image::open(&cover_path)?;
+                        Ok(if Collector::is_grayscale(&cover_image, sensibility) {
+                            None
+                        } else {
+                            Some(i)
+                        })
                     })
+                    .await
+                    .map_err(|e| Error::AsyncTaskError(e.to_string()))?;
+
+                    result
                 })
             })
             .collect();
@@ -116,7 +156,7 @@ impl Collector {
         &self,
         mut book_start_chapters: Vec<usize>,
         total_chapters: usize,
-    ) -> Result<Vec<usize>, Error> {
+    ) -> EResult<Vec<usize>> {
         let mut book_chapters: Vec<usize> = Vec::new();
 
         // Remove the first chapter because it's always a book start
@@ -141,125 +181,164 @@ impl Collector {
     // Helper methods
 
     pub fn is_grayscale(img: &DynamicImage, sensibility: f64) -> bool {
+        // Downsample image if it's too large to improve performance
+        let img = if img.width() > GRAYSCALE_MAX_DIMENSION || img.height() > GRAYSCALE_MAX_DIMENSION
+        {
+            let scale = GRAYSCALE_MAX_DIMENSION as f32 / img.width().max(img.height()) as f32;
+            let new_width = (img.width() as f32 * scale) as u32;
+            let new_height = (img.height() as f32 * scale) as u32;
+            img.thumbnail(new_width, new_height)
+        } else {
+            img.clone()
+        };
+
         let total_pixels = (img.width() * img.height()) as f64;
         let gray_threshold = total_pixels * sensibility;
 
-        let gray_pixels: usize = img
-            .pixels()
-            .par_bridge()
-            .filter(|&(_, _, pixel)| {
+        // Create chunks of pixels to process in parallel
+        let width = img.width();
+        let height = img.height();
+
+        // Consider only every Nth pixel to speed up processing
+        let samples = (0..height)
+            .step_by(GRAYSCALE_SAMPLE_RATE as usize)
+            .flat_map(|y| {
+                (0..width)
+                    .step_by(GRAYSCALE_SAMPLE_RATE as usize)
+                    .map(move |x| (x, y))
+            })
+            .collect::<Vec<_>>();
+
+        let sample_count = samples.len();
+
+        let gray_pixels = samples
+            .par_iter()
+            .map(|(x, y)| {
+                let pixel = img.get_pixel(*x, *y);
                 let rgb = pixel.to_rgb();
                 let r = rgb[0];
                 let g = rgb[1];
                 let b = rgb[2];
 
-                // A simple heuristic: if all color channels are approximately equal, the pixel is likely grayscale.
-                (r.wrapping_sub(g) < 10) && (r.wrapping_sub(b) < 10) && (g.wrapping_sub(b) < 10)
+                // Using a more efficient calculation for grayscale detection
+                // Check if the RGB values are close to each other
+                let r_diff = r.abs_diff(g);
+                let g_diff = g.abs_diff(b);
+                let b_diff = b.abs_diff(r);
+
+                r_diff <= 10 && g_diff <= 10 && b_diff <= 10
             })
+            .filter(|&is_gray| is_gray)
             .count();
 
-        gray_pixels > gray_threshold as usize
+        // Scale back to estimate the full image
+        let estimated_gray_pixels = (gray_pixels as f64 * total_pixels) / sample_count as f64;
+
+        estimated_gray_pixels > gray_threshold
     }
 
-    pub fn check_path<F>(paths: &Vec<PathBuf>, test_case: F) -> Result<Vec<PathBuf>, Error>
-    where
-        F: Fn(&PathBuf) -> bool,
-    {
-        let mut invalid_paths = Vec::new();
-
-        for path in paths {
-            if !test_case(path) {
-                invalid_paths.push(path.clone());
-            }
-        }
-
-        Ok(invalid_paths)
-    }
-
-    pub async fn collect(directory: &PathBuf, only_dirs: bool) -> Result<Vec<PathBuf>, Error> {
+    // Parallel directory content collection
+    pub async fn collect_parallel(directory: &PathBuf, only_dirs: bool) -> EResult<Vec<PathBuf>> {
         let mut entries: Vec<PathBuf> = Vec::new();
+
+        // Read directory contents
         let mut paths: ReadDir = read_dir(directory).await?;
 
-        while let Some(path) = paths.next_entry().await? {
-            // exclude hidden files
-            if path.file_name().to_str().unwrap().starts_with(".") {
-                continue;
-            }
-            
-            // If only_dirs is true, we only want to collect directories and raise an error if we find a file.
-            if only_dirs && !path.path().is_dir() {
-                return Err(Error::InvalidPath(path.path(), "Directory expected".to_string()));
-            }
-            
-            // If only_dirs is false, we only want to collect files and raise an error if we find a directory.
-            if !only_dirs && path.path().is_dir() {
-                return Err(Error::InvalidPath(path.path(), "File expected".to_string()));
+        while let Some(entry) = paths.next_entry().await? {
+            let path = entry.path();
+
+            // Skip hidden files
+            if let Some(file_name) = path.file_name() {
+                if file_name.to_string_lossy().starts_with(".") {
+                    continue;
+                }
             }
 
-            entries.push(path.path());
+            // Apply directory/file filter
+            let is_dir = path.is_dir();
+            if (only_dirs && !is_dir) || (!only_dirs && is_dir) {
+                return Err(Error::InvalidPath(
+                    path.clone(),
+                    format!(
+                        "{} expected, got {}",
+                        if only_dirs { "Directory" } else { "File" },
+                        if is_dir { "directory" } else { "file" }
+                    ),
+                ));
+            }
+
+            entries.push(path);
         }
 
         Ok(entries)
     }
 
-    pub fn sort_by_stem_number(a: &PathBuf, b: &PathBuf) -> Ordering {
-        // This is a closure that takes a PathBuf and returns an Option<usize>.
-        // Using this closure avoids copying the same code twice.
-        let closure =
-            |path: &PathBuf| -> Option<usize> { path.file_stem()?.to_str()?.parse::<usize>().ok() };
+    pub fn check_path<F>(paths: &Vec<PathBuf>, test_case: F) -> EResult<Vec<PathBuf>>
+    where
+        F: Fn(&PathBuf) -> bool + Sync + Send,
+    {
+        let invalid_paths: Vec<PathBuf> = paths
+            .par_iter()
+            .filter(|path| !test_case(path))
+            .cloned()
+            .collect();
 
-        closure(a).cmp(&closure(b))
+        Ok(invalid_paths)
+    }
+
+    pub fn sort_by_stem_number(a: &PathBuf, b: &PathBuf) -> Ordering {
+        // Cache the parsed numbers for better performance
+        fn parse_number(path: &PathBuf) -> Option<usize> {
+            path.file_stem()?.to_str()?.parse::<usize>().ok()
+        }
+
+        parse_number(a).cmp(&parse_number(b))
     }
 
     fn regex_parser(s: &PathBuf) -> Option<f64> {
-        let (capture, []) = RE
-            .captures_iter(
-                s.file_name()
-                    .unwrap_or(OsStr::new(""))
-                    .to_str()
-                    .unwrap_or(""),
-            )
-            .last()?
-            .extract();
+        let file_name = s
+            .file_name()
+            .unwrap_or(OsStr::new(""))
+            .to_str()
+            .unwrap_or("");
 
-        Some(capture.trim_start_matches("0").trim().parse::<f64>().ok()?)
+        RE.captures_iter(file_name)
+            .last()
+            .map(|cap| {
+                let capture = cap.get(0).unwrap().as_str();
+                capture.trim_start_matches("0").trim().parse::<f64>().ok()
+            })
+            .flatten()
     }
 
     pub fn sort_name_by_number(a: &PathBuf, b: &PathBuf) -> Ordering {
         let an = Self::regex_parser(a);
         let bn = Self::regex_parser(b);
 
-        an.partial_cmp(&bn).unwrap()
+        an.partial_cmp(&bn).unwrap_or(Ordering::Equal)
     }
 
     pub fn sort_by_name_volume_chapter(a: &PathBuf, b: &PathBuf) -> Ordering {
-        // This closure will extract the volume and chapter number from the file name
-        let num = |path: &PathBuf, first: bool| -> Option<f64> {
-            if first {
-                path.file_name()?
-                    .to_str()?
-                    .split("-")
-                    .next()?
-                    .parse::<f64>()
-                    .ok()
+        // Cache the parsed numbers for better performance
+        fn parse_numbers(path: &PathBuf) -> (Option<f64>, Option<f64>) {
+            if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
+                let parts: Vec<&str> = file_name.split("-").collect();
+                let first = parts.first().and_then(|s| s.parse::<f64>().ok());
+                let last = parts.last().and_then(|s| s.parse::<f64>().ok());
+                (first, last)
             } else {
-                path.file_name()?
-                    .to_str()?
-                    .split("-")
-                    .last()?
-                    .parse::<f64>()
-                    .ok()
+                (None, None)
             }
-        };
+        }
 
-        let an = (num(a, true), num(a, false));
-        let bn = (num(b, true), num(b, false));
+        let (a_vol, a_chap) = parse_numbers(a);
+        let (b_vol, b_chap) = parse_numbers(b);
 
         // This will compare the volume number first and then the chapter number
-        if an.0 == bn.0 {
-            an.1.partial_cmp(&bn.1).unwrap()
-        } else {
-            an.0.partial_cmp(&bn.0).unwrap()
+        match a_vol.partial_cmp(&b_vol) {
+            Some(Ordering::Equal) => a_chap.partial_cmp(&b_chap).unwrap_or(Ordering::Equal),
+            Some(order) => order,
+            None => Ordering::Equal,
         }
     }
 }

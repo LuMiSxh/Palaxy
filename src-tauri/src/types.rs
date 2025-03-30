@@ -56,12 +56,14 @@ pub enum TagType {
 pub enum ConvStateKey {
     Name(String),
     Source(PathBuf),
+    Target(PathBuf),
     BundleFlag(BundleFlag),
     Direction(Direction),
     Format(FileFormat),
     CreateDirectory(bool),
     VolumeSizes(Vec<usize>),
     Data(Vec<Vec<PathBuf>>),
+    EditedData(Option<Vec<Vec<PathBuf>>>),
 }
 
 // --- Structs ---
@@ -100,13 +102,13 @@ pub trait Agent: Send + Sync {
 
 #[derive(Serialize, Deserialize, Default, Type)]
 pub struct BaseResponse<T = ()> {
-    pub duration: u64,
+    pub duration: f64,
     pub comment: Option<String>,
     pub payload: Option<T>,
 }
 
 impl BaseResponse<()> {
-    pub fn default_duration(duration: u64) -> Self {
+    pub fn default_duration(duration: f64) -> Self {
         Self {
             duration,
             comment: None,
@@ -127,7 +129,7 @@ pub type CommBundle = BaseResponse<BundleResponse>; // <- was: CommandBundle
 pub struct AnalyzeResponse {
     pub negative: Vec<String>,
     pub positive: Vec<String>,
-    pub suggest: Vec<String>,
+    pub warning: Vec<String>,
     pub flag: BundleFlag,
 }
 pub type CommAnalyzeMeta = BaseResponse<AnalyzeResponse>; // <- was: CommandAnalyze

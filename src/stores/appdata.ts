@@ -1,5 +1,5 @@
 import { type AppData, defaultAppData } from '$types/appdata';
-import { setTheme } from '$lib/utils';
+import { setLocale, setTheme } from '$lib/utils';
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 
@@ -9,18 +9,33 @@ import { browser } from '$app/environment';
 export const appDataKey = 'appData';
 
 /**
- * A Svelte store holding the application data.
- *
- * @remarks
- * Initializes the store from local storage if available, or uses a default value.
+ * Safely retrieves the app data from localStorage with error handling
  */
-export const appData = writable<AppData>(
-	JSON.parse(
-		browser
-			? localStorage.getItem(appDataKey) || JSON.stringify(defaultAppData)
-			: JSON.stringify(defaultAppData)
-	)
-);
+function getStoredAppData(): AppData {
+	if (!browser) return { ...defaultAppData };
+
+	try {
+		const stored = localStorage.getItem(appDataKey);
+		if (!stored) return { ...defaultAppData };
+
+		const parsed = JSON.parse(stored);
+		// Validate that we have a proper object
+		if (typeof parsed !== 'object' || parsed === null) {
+			return { ...defaultAppData };
+		}
+
+		// Merge with defaultAppData to ensure all fields exist
+		return { ...defaultAppData, ...parsed };
+	} catch (error) {
+		console.error('Error reading app data from localStorage:', error);
+		return { ...defaultAppData };
+	}
+}
+
+/**
+ * A Svelte store holding the application data.
+ */
+export const appData = writable<AppData>(getStoredAppData());
 
 /**
  * Subscribes to the store changes.
@@ -29,11 +44,13 @@ export const appData = writable<AppData>(
  * Persists new values to local storage and adjusts the theme when the store updates.
  */
 appData.subscribe((value) => {
-	if (typeof value === 'object') {
-		if (browser) localStorage.setItem(appDataKey, JSON.stringify(value));
+	if (!browser || !value) return;
 
+	try {
+		localStorage.setItem(appDataKey, JSON.stringify(value));
 		setTheme(value.theme);
-		// FIXME: Uncomment as soon as lingui extract is fixed
-		// setLocale(value.language).then();
+		setLocale(value.language).then();
+	} catch (error) {
+		console.error('Error saving app data to localStorage:', error);
 	}
 });

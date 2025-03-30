@@ -84,7 +84,7 @@ impl serde::Serialize for Error {
 pub type EResult<T> = Result<T, Error>;
 
 // App states
-#[derive(Serialize, Deserialize, Clone, Default, Type)]
+#[derive(Serialize, Deserialize, Clone, Default, Type, Debug)]
 pub struct ConvState {
     pub name: String,
     pub source: PathBuf,
@@ -95,6 +95,7 @@ pub struct ConvState {
     pub create_directory: bool,
     pub volume_sizes: Vec<usize>,
     pub data: Vec<Vec<PathBuf>>,
+    pub edited_data: Option<Vec<Vec<PathBuf>>>,
 }
 
 impl ConvState {

@@ -1,7 +1,7 @@
 import { type AppData, FeatureFlag, SupportedLanguages, Theme } from '$types/appdata';
 import { browser } from '$app/environment';
 import type { Error, Result } from '$types';
-import { addToast } from '$stores/toast';
+import { addToast } from '$states/toast.svelte';
 import { gt, locale } from 'svelte-i18n-lingui';
 
 const LIGHT = 'alya';
@@ -69,9 +69,8 @@ export function ffIsEnabled(appData: AppData, flag: FeatureFlag): boolean {
  */
 export async function wrapper<T>(input: Promise<Result<T, Error>>): Promise<T | null> {
 	const output = await input;
-	if (output.status === 'ok') return output.data;
 
-	console.error(output);
+	if (output.status === 'ok') return output.data;
 
 	let message = gt`An error occurred`;
 
@@ -98,4 +97,29 @@ export async function wrapper<T>(input: Promise<Result<T, Error>>): Promise<T | 
 export async function setLocale(lang: SupportedLanguages): Promise<void> {
 	const { messages } = await import(`../locales/${lang}.ts`);
 	locale.set(lang, messages);
+}
+
+/**
+ * Truncates a file path to a specified maximum length.
+ *
+ * @param {string} path - The file path to truncate.
+ * @param {number} maxLength - The maximum length of the truncated path (default is 50).
+ * @returns {string} - The truncated file path.
+ */
+export function truncatePath(path: string, maxLength: number = 50): string {
+	if (!path || path.length <= maxLength) return path;
+
+	const parts = path.split('/');
+	const fileName = parts.pop() || '';
+	const dirName = parts[0] || '';
+
+	// Preserve first directory and filename, truncate the middle
+	if (fileName.length + dirName.length + 5 >= maxLength) {
+		// If filename itself is very long
+		return fileName.length > maxLength - 5
+			? fileName.substring(0, maxLength - 5) + '...'
+			: fileName;
+	}
+
+	return dirName + '/.../' + fileName;
 }

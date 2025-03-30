@@ -45,9 +45,9 @@ async convBundle(sensibility: number | null) : Promise<Result<BaseResponse<Bundl
     else return { status: "error", error: e  as any };
 }
 },
-async convConvert(createDirectory: boolean, target: string, fileFormat: FileFormat, direction: Direction) : Promise<Result<BaseResponse<null>, Error>> {
+async convConvert() : Promise<Result<BaseResponse<null>, Error>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("conv_convert", { createDirectory, target, fileFormat, direction }) };
+    return { status: "ok", data: await TAURI_INVOKE("conv_convert") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -74,12 +74,12 @@ async getAgentList() : Promise<Result<BaseResponse<AgentMeta[]>, Error>> {
 /** user-defined types **/
 
 export type AgentMeta = { name: string; url: string; icon: string | null; tags: TagType[] }
-export type AnalyzeResponse = { negative: string[]; positive: string[]; suggest: string[]; flag: BundleFlag }
+export type AnalyzeResponse = { negative: string[]; positive: string[]; warning: string[]; flag: BundleFlag }
 export type BaseResponse<T> = { duration: number; comment: string | null; payload: T | null }
 export type BundleFlag = "NAME" | "IMAGE" | "MANUAL"
 export type BundleResponse = { total_chapters: number; total_volumes: number | null; chapter_sizes: number[] | null }
-export type ConvState = { name: string; source: string; target: string; bundle_flag: BundleFlag; direction: Direction; format: FileFormat; create_directory: boolean; volume_sizes: number[]; data: string[][] }
-export type ConvStateKey = { Name: string } | { Source: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { VolumeSizes: number[] } | { Data: string[][] }
+export type ConvState = { name: string; source: string; target: string; bundle_flag: BundleFlag; direction: Direction; format: FileFormat; create_directory: boolean; volume_sizes: number[]; data: string[][]; edited_data: string[][] | null }
+export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null }
 export type Direction = "Left to Right" | "Right to Left"
 export type Error = { type: "Io" } | { type: "Regex" } | { type: "Tauri" } | { type: "Image" } | { type: "Epub" } | { type: "Zip" } | { type: "PrintPdf" } | { type: "PrintPdfImage" } | { type: "Reqwest" } | { type: "InvalidPath"; data: [string, string] } | { type: "AsyncTaskError"; data: string } | { type: "Unsupported"; data: string } | { type: "NotFound"; data: string }
 export type FileFormat = "PDF" | "EPUB" | "CBZ"

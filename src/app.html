@@ -1,9 +1,36 @@
 <!doctype html>
-<html lang="en" data-theme="alya">
+<html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<title>Palaxy</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!-- Prevent theme flash with immediate class application -->
+		<script>
+			(function () {
+				try {
+					const storedData = localStorage.getItem('appData');
+					if (storedData) {
+						const data = JSON.parse(storedData);
+						const theme = data.theme;
+
+						// Theme.Dark = 2, Theme.Light = 1, Theme.System = -1
+						if (theme === 2) {
+							// Dark theme
+							document.documentElement.classList.add('dark');
+						} else if (theme === -1) {
+							// System theme
+							if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+								document.documentElement.classList.add('dark');
+							}
+						}
+						// For light theme (theme === 1), we don't need to add any class
+					}
+				} catch (e) {
+					console.error('Error applying initial theme:', e);
+				}
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "dialog",
+  "description": "Capability for the dialog plugin",
+  "windows": ["*"],
+  "permissions": [
+    "dialog:allow-open",
+    "dialog:deny-ask",
+    "dialog:deny-confirm",
+    "dialog:deny-save"
+  ]
+}

@@ -1,14 +1,17 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { commands } from '$types';
 	import { t } from 'svelte-i18n-lingui';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import converter from '$states/converter.svelte';
 	import convState, { stepState } from '$states/converter.svelte';
-	import { wrapper } from '$lib/utils';
-	import { getCurrentWebview } from '@tauri-apps/api/webview';
-	import { addToast } from '$stores/toast';
-	import { IconFileDownload } from '@tabler/icons-svelte';
+	import { truncatePath, wrapper } from '$lib/utils';
+	import { IconFolder } from '@tabler/icons-svelte';
+	import { handleKeyHint } from '$states/keyhint.svelte';
+	import { keyboard } from '$lib/keyboard';
+
+	let btn: HTMLButtonElement | null = $state(null);
+	let unregisterKeyboard: () => void;
 
 	onMount(async () => {
 		// Reset
@@ -16,44 +19,24 @@
 		converter.reset();
 		stepState.reset();
 
-		const webview = getCurrentWebview();
-		await webview.onDragDropEvent(async (event) => {
-			if (event.payload.type === 'drop') {
-				// get the coordinates of the dropzone
-				const dropzone = document.getElementById('dropzone');
-				if (dropzone === null) return;
-				const rect = dropzone.getBoundingClientRect();
-
-				// check if the drop event happened outside the dropzone
-				if (
-					event.payload.position.x < rect.left ||
-					event.payload.position.x > rect.right ||
-					event.payload.position.y < rect.top ||
-					event.payload.position.y > rect.bottom
-				) {
-					return;
-				}
-
-				// When there are multiple files toast it
-				if (event.payload.paths.length > 1) {
-					addToast(
-						`Multiple paths dropped, only the first path will be used: <code>${event.payload.paths[0]}</code>`,
-						'warning',
-						3600
-					);
-				}
-
-				converter.source = event.payload.paths[0];
-				await wrapper(commands.convStateSet({ Source: convState.source ?? '' }));
-			}
-		});
+		// Set Keyboard etc.
+		btn?.focus();
+		unregisterKeyboard = keyboard.smartRegister([['enter', select]]);
 	});
 
-	async function select() {
-		converter.source = await open({
-			directory: true,
-			multiple: false
-		});
+	onDestroy(() => {
+		if (unregisterKeyboard) unregisterKeyboard();
+	});
+
+	async function select(evt: KeyboardEvent | MouseEvent | undefined = undefined) {
+		evt?.stopPropagation();
+		evt?.preventDefault();
+
+		convState.source =
+			(await open({
+				directory: true,
+				multiple: false
+			})) ?? '';
 
 		if (converter.source !== null) {
 			await wrapper(commands.convStateSet({ Source: convState.source ?? '' }));
@@ -65,20 +48,43 @@
 	});
 </script>
 
-<fieldset class="fieldset">
-	<legend class="fieldset-legend">{$t`Source Location`}</legend>
-	<button
-		id="dropzone"
-		class="btn btn-soft flex items-center justify-center p-2 select-none"
-		onclick={select}
-	>
-		{#if !converter.source}
-			<IconFileDownload class="text-primary" />
-			<span>{$t`Click to select or drag it onto it`}</span>
-		{:else if converter.source}
-			<code class="text-primary">{converter.source.split('/').pop()}</code>
-		{:else}
-			<span class="text-error">{$t`None selected`}</span>
-		{/if}
-	</button>
-</fieldset>
+<div class="card">
+	<div class="card-header">
+		<h3 class="text-lg font-bold">
+			{$t`Select a folder to convert`}
+		</h3>
+	</div>
+	<div class="card-body">
+		<div class="">
+			<label for="source-location" class="mb-2 block font-medium">{$t`Source Location`}</label>
+			<div class="flex gap-3">
+				<button
+					id="source-location"
+					class="btn btn-primary flex-1 justify-between overflow-hidden"
+					bind:this={btn}
+					use:handleKeyHint={{ keys: [['enter', $t`Select location`]] }}
+					onclick={select}
+				>
+					<span class="flex items-center">
+						<IconFolder class="mr-2" size={20} />
+						{#if !convState.source}
+							<span>{$t`Select input folder`}</span>
+						{:else}
+							<span class="overflow-hidden text-ellipsis"
+								>{truncatePath(convState.source).split('/').pop()}</span
+							>
+						{/if}
+					</span>
+				</button>
+			</div>
+			{#if convState.source}
+				<p
+					class="text-content-secondary dark:text-content-dark-secondary mt-1 truncate text-xs"
+					title={convState.source}
+				>
+					{truncatePath(convState.source, 60)}
+				</p>
+			{/if}
+		</div>
+	</div>
+</div>

@@ -40,17 +40,12 @@ export enum SupportedLanguages {
 	/**
 	 * German language support.
 	 */
-	German = 'de',
-
-	/**
-	 * Japanese language support.
-	 */
-	Japanese = 'ja'
+	German = 'de'
 }
 
 // Translations for the languages
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const __ = [msg`English`, msg`German`, msg`Japanese`];
+const __ = [msg`English`, msg`German`];
 
 /**
  * Enumerates feature flags for enabling or disabling features.
@@ -69,7 +64,17 @@ export enum FeatureFlag {
 	/**
 	 * Adds browsing agents feature.
 	 */
-	BROWSE_AGENTS = 13
+	BROWSE_AGENTS = 13,
+
+	/**
+	 * Enables mouse support.
+	 */
+	MOUSE_SUPPORT = 14,
+
+	/**
+	 * Enables custom keybinding configuration.
+	 */
+	CUSTOM_KEYBINDS = 15
 }
 
 /**
@@ -90,6 +95,16 @@ export interface AppData {
 	 * A list of activated feature flags.
 	 */
 	featureFlags: Array<FeatureFlag>;
+
+	/**
+	 * Specifies whether key hints should be shown.
+	 */
+	showKeyHints: boolean;
+
+	/**
+	 * Specifies whether mouse support should be enabled.
+	 */
+	mouseSupport: boolean;
 
 	/**
 	 * Configuration for autoPop features.
@@ -116,7 +131,7 @@ export interface AppData {
 			/**
 			 * Whether a new folder should be created during conversion.
 			 */
-			createNewFolder: boolean | null;
+			createNewFolder: boolean;
 		};
 	};
 }
@@ -128,12 +143,14 @@ export const defaultAppData: AppData = {
 	theme: Theme.System,
 	language: SupportedLanguages.English,
 	featureFlags: [],
+	showKeyHints: true,
+	mouseSupport: false,
 	autoPop: {
 		enabled: false,
 		converter: {
 			conversionType: null,
 			targetLocation: null,
-			createNewFolder: null
+			createNewFolder: true
 		}
 	}
 };

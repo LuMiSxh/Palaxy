@@ -1,44 +1,246 @@
 <script lang="ts">
 	import '../app.css';
-	import { page } from '$app/state';
 	import { t } from 'svelte-i18n-lingui';
-	import { onNavigate } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { appData, appDataKey } from '$stores/appdata.js';
-	import { defaultAppData, Theme } from '$types/appdata';
-	import { setTheme } from '$lib/utils';
-	import { browser } from '$app/environment';
-	import { fade } from 'svelte/transition';
+	import { defaultAppData, FeatureFlag, SupportedLanguages, Theme } from '$types/appdata';
+	import { ffIsEnabled, setTheme } from '$lib/utils';
+	import { browser, dev } from '$app/environment';
 	import Toast from '$components/Toast.svelte';
+	import { onMount } from 'svelte';
+	import { keyboard } from '$lib/keyboard';
+	import ActionHub from '$components/ActionHub.svelte';
+	import {
+		IconAutomation,
+		IconBrush,
+		IconHighlight,
+		IconHome,
+		IconKeyboard,
+		IconLanguage,
+		IconListDetails,
+		IconMoon,
+		IconMouse,
+		IconSearch,
+		IconSettings,
+		IconSettingsCode,
+		IconSettingsQuestion,
+		IconSun,
+		IconTransform,
+		IconUsers
+	} from '@tabler/icons-svelte';
+	import { addToast } from '$states/toast.svelte';
+	import Dialog from '$components/Dialog.svelte';
+	import { openDialog } from '$states/dialog.svelte';
+	import SystemInfo from '$components/dialogs/SystemInfo.svelte';
+	import KeyHint from '$components/KeyHint.svelte';
+	import { keyHint } from '$states/keyhint.svelte';
+	import AutoPopulate from '$components/dialogs/AutoPopulate.svelte';
+	import Features from '$components/dialogs/Features.svelte';
 
 	let { children } = $props();
 
-	let pathMap: Record<string, string> = $state({
-		'/': $t`Home`,
-		'/convert': $t`Convert`,
-		'/search': $t`Search`,
-		'/agents': $t`Agents`,
-		'/settings': $t`Settings`
-	});
+	let showPalette = $state(false);
 
-	let currentPath = $derived(pathMap[page.route.id === null ? '/' : page.route.id]);
-
-	// Wait for the view transition to complete
-	onNavigate((navigation) => {
-		if (!document.startViewTransition) return;
-
-		return new Promise((resolve) => {
-			document.startViewTransition(async () => {
-				resolve();
-				await navigation.complete;
-			});
+	onMount(() => {
+		const unmountKeyboard = keyboard.mount();
+		const unregisterKeyboard = keyboard.register('space', (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			showPalette = !showPalette;
 		});
+		return () => {
+			unmountKeyboard();
+			keyboard.unregister(unregisterKeyboard);
+		};
 	});
+
+	// Set KeyHint
+	keyHint.addKey('space', $t`ActionHub`);
+
+	let commands = $derived([
+		{
+			name: $t`Home`,
+			description: $t`Go to the home page`,
+			icon: IconHome,
+			action: () => goto('/')
+		},
+		{
+			name: $t`Convert`,
+			description: $t`Convert your manga images into a digital format that can be read on your favorite devices`,
+			icon: IconTransform,
+			action: () => goto('/convert')
+		},
+		{
+			name: $t`Search`,
+			description: $t`Search for your favorite manga series and chapters from various sources`,
+			icon: IconSearch,
+			hidden: !ffIsEnabled($appData, FeatureFlag.SEARCH_MANGA),
+			action: () => goto('/search')
+		},
+		{
+			name: $t`Agents`,
+			description: $t`Manage your agents and their settings for better search results`,
+			icon: IconUsers,
+			hidden: !ffIsEnabled($appData, FeatureFlag.BROWSE_AGENTS),
+			action: () => goto('/agents')
+		},
+		{
+			name: $t`Settings`,
+			description: $t`Change the settings of the application`,
+			icon: IconSettings,
+			subcommands: [
+				{
+					name: $t`Theme`,
+					description: $t`Change the theme of the application`,
+					icon: IconBrush,
+					subcommands: [
+						{
+							name: $t`Light`,
+							description: $t`Change the theme to light`,
+							icon: IconSun,
+							action: () => {
+								$appData.theme = Theme.Light;
+								addToast($t`Theme changed to light`);
+							}
+						},
+						{
+							name: $t`Dark`,
+							description: $t`Change the theme to dark`,
+							icon: IconMoon,
+							action: () => {
+								$appData.theme = Theme.Dark;
+								addToast($t`Theme changed to dark`);
+							}
+						},
+						{
+							name: $t`System`,
+							description: $t`Change the theme to system`,
+							icon: IconAutomation,
+							action: () => {
+								$appData.theme = Theme.System;
+								addToast($t`Theme changed to system`);
+							}
+						}
+					]
+				},
+				{
+					name: $t`Language`,
+					description: $t`Change the language of the application`,
+					icon: IconLanguage,
+					hidden: !ffIsEnabled($appData, FeatureFlag.CHANGE_LANGUAGE),
+					subcommands: [
+						{
+							name: $t`English`,
+							description: $t`Change the language to English`,
+							icon: IconLanguage,
+							action: () => {
+								$appData.language = SupportedLanguages.English;
+								addToast($t`Language changed to English`);
+							}
+						},
+						{
+							name: $t`German`,
+							description: $t`Change the language to German`,
+							icon: IconLanguage,
+							action: () => {
+								$appData.language = SupportedLanguages.German;
+								addToast($t`Language changed to German`);
+							}
+						}
+					]
+				},
+				{
+					name: $t`Auto-Populate Fields`,
+					description: $t`Enable or disable the auto-population of fields in the application`,
+					icon: IconHighlight,
+					action: () => {
+						openDialog({
+							title: $t`Auto-Populate Settings`,
+							content: AutoPopulate
+						});
+					}
+				},
+				{
+					name: $t`Show KeyHints`,
+					description: $t`Show the key hints of the application and their actions in the current context`,
+					icon: IconKeyboard,
+					action: () => {
+						$appData.showKeyHints = !$appData.showKeyHints;
+						addToast(
+							$appData.showKeyHints ? $t`KeyHints are now shown` : $t`KeyHints are now hidden`
+						);
+					}
+				},
+				{
+					name: $t`Mouse Support`,
+					description: $t`Enable or disable a button to show the ActionHub`,
+					icon: IconMouse,
+					hidden: !ffIsEnabled($appData, FeatureFlag.MOUSE_SUPPORT),
+					action: () => {
+						$appData.mouseSupport = !$appData.mouseSupport;
+						addToast(
+							$appData.mouseSupport
+								? $t`Mouse Support is now enabled`
+								: $t`Mouse Support is now disabled`
+						);
+					}
+				},
+				{
+					name: $t`Features`,
+					description: $t`Enable or disable features of the application`,
+					icon: IconListDetails,
+					action: () => {
+						openDialog({
+							title: $t`Feature Configuration`,
+							content: Features
+						});
+					}
+				},
+				{
+					name: $t`System Information`,
+					description: $t`Show the system information of the application`,
+					icon: IconSettingsQuestion,
+					action: () => {
+						openDialog({
+							title: $t`Information`,
+							content: SystemInfo,
+							onConfirm: () => {}
+						});
+					}
+				},
+				{
+					name: $t`Reset`,
+					description: $t`Reset the state of the application`,
+					icon: IconSettingsCode,
+					action: () => {
+						openDialog({
+							title: $t`Confirmation`,
+							content: $t`Are you sure you want to reset the state of the application?`,
+							onConfirm: () => {
+								appData.set(defaultAppData);
+								addToast($t`Reset successfull`, 'success');
+							},
+							onCancel: () => {
+								addToast($t`Reset canceled`, 'info');
+							}
+						});
+					}
+				}
+			]
+		}
+	]);
 
 	if (browser) {
 		// Load AppData
 		const appDataValue = localStorage.getItem(appDataKey);
 		if (appDataValue) {
-			appData.set(JSON.parse(appDataValue));
+			try {
+				const parsedData = JSON.parse(appDataValue);
+				appData.set(parsedData);
+			} catch (error) {
+				console.error('Error parsing app data:', error);
+				appData.set(defaultAppData);
+			}
 		} else {
 			appData.set(defaultAppData);
 		}
@@ -50,110 +252,46 @@
 				setTheme(newColorScheme ? Theme.Dark : Theme.Light);
 			}
 		});
-
-		// Set dark / light mode
-		setTheme($appData.theme);
 	}
-
-	// TODO: Redraw the images so they are not cut off
 </script>
 
 <Toast />
+<Dialog />
 
-<div class="flex h-screen max-h-screen w-full flex-col overflow-y-hidden">
-	<div class="navbar bg-base-100 shadow-sm select-none" style="view-transition-name: disabled;">
-		<a href="/">
-			<img src="/icon.png" alt="Logo" class="!mr-0 aspect-square size-[2.75rem] select-none" />
-		</a>
-		<div class="flex-1"></div>
-		<div class="relative flex-none">
-			{#key currentPath}
-				<div
-					class="absolute top-0 right-0 flex h-full items-center justify-center whitespace-nowrap"
-					transition:fade={{ duration: 120 }}
-				>
-					{#if currentPath === 'Home'}
-						<h6
-							class="from-primary to-secondary bg-linear-to-r via-50% bg-clip-text text-3xl font-medium text-transparent drop-shadow-lg dark:drop-shadow-none"
-						>
-							{$t`Palaxy`}
-						</h6>
-					{:else}
-						<h6 class="text-3xl font-medium">
-							<span
-								class="from-primary to-secondary bg-linear-to-r via-50% bg-clip-text text-transparent drop-shadow-lg dark:drop-shadow-none"
-							>
-								{$t`Palaxy`}
-							</span>
-							| {currentPath}
-						</h6>
-					{/if}
-				</div>
-			{/key}
-		</div>
+{#if showPalette}
+	<ActionHub {commands} bind:showPalette />
+{/if}
+
+<div class="bg-background dark:bg-background-dark flex h-screen w-screen flex-col overflow-hidden">
+	<!-- --- -->
+	<div class="flex-1 overflow-x-hidden overflow-y-hidden">
+		{@render children()}
 	</div>
-
-	<main class="relative h-full w-full grow overflow-auto px-3 py-2">
-		<img
-			src="/chars/alya.png"
-			alt=""
-			class="absolute bottom-0 left-0 -z-50 max-h-full drop-shadow-xs"
-		/>
-		<img
-			src="/chars/masachika.png"
-			alt=""
-			class="absolute right-0 bottom-0 -z-50 max-h-full drop-shadow-xs"
-		/>
-		<div class="h-full">
-			{@render children()}
+	<!-- --- -->
+	{#if $appData.showKeyHints || $appData.mouseSupport}
+		<div
+			class="bg-background-secondary dark:bg-background-dark-secondary z-50 flex h-8 items-center justify-center px-2"
+			draggable="false"
+		>
+			{#if $appData.showKeyHints}
+				<KeyHint />
+			{/if}
+			{#if $appData.mouseSupport}
+				<button class="btn h-full !p-0" onclick={() => (showPalette = !showPalette)}>
+					<img src="/icon.png" class="max-h-full max-w-full" alt="ActionHub" />
+				</button>
+			{/if}
 		</div>
-	</main>
+	{/if}
 </div>
 
-<style>
-	@keyframes fade-in {
-		from {
-			opacity: 0;
-		}
-	}
-
-	@keyframes fade-out {
-		to {
-			opacity: 0;
-		}
-	}
-
-	@keyframes slide-from-right {
-		from {
-			transform: translateX(25vw);
-		}
-	}
-
-	@keyframes slide-to-left {
-		to {
-			transform: translateX(-25vw);
-		}
-	}
-
-	:root::view-transition-old(root) {
-		animation:
-			90ms cubic-bezier(0.4, 0, 1, 1) both fade-out,
-			300ms cubic-bezier(0.4, 0, 0.2, 1) both slide-to-left;
-	}
-
-	:root::view-transition-new(root) {
-		animation:
-			210ms cubic-bezier(0, 0, 0.2, 1) 90ms both fade-in,
-			300ms cubic-bezier(0.4, 0, 0.2, 1) both slide-from-right;
-	}
-
-	:root::view-transition-group(disabled),
-	:root::view-transition-old(disabled),
-	:root::view-transition-new(disabled) {
-		animation-duration: 0s !important;
-	}
-
-	:global(button) {
-		user-select: none !important;
-	}
-</style>
+{#if dev}
+	<div
+		class="absolute {$appData.showKeyHints || $appData.mouseSupport
+			? 'bottom-10'
+			: 'bottom-5'} badge badge-error pointer-events-none right-5 text-lg! opacity-70 select-none"
+		style="z-index: 9999;"
+	>
+		Development Build
+	</div>
+{/if}

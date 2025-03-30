@@ -2,8 +2,8 @@ use crate::collector::Collector;
 use crate::generator::{cbz, epub, pdf};
 use crate::prelude::*;
 use crate::types::{
-    AnalyzeResponse, BaseResponse, BundleFlag, BundleResponse, CommAnalyzeMeta, CommBundle
-    , ConvStateKey, Direction, FileFormat,
+    AnalyzeResponse, BaseResponse, BundleFlag, BundleResponse, CommAnalyzeMeta, CommBundle,
+    ConvStateKey, Direction, FileFormat,
 };
 use lazy_static::lazy_static;
 use rayon::prelude::*;
@@ -35,15 +35,19 @@ pub async fn conv_state_set(
     match input {
         ConvStateKey::Name(value) => state.name = value,
         ConvStateKey::Source(value) => state.source = value,
+        ConvStateKey::Target(value) => state.target = value,
         ConvStateKey::BundleFlag(value) => state.bundle_flag = value,
         ConvStateKey::Direction(value) => state.direction = value,
         ConvStateKey::Format(value) => state.format = value,
         ConvStateKey::CreateDirectory(value) => state.create_directory = value,
         ConvStateKey::VolumeSizes(value) => state.volume_sizes = value,
         ConvStateKey::Data(value) => state.data = value,
+        ConvStateKey::EditedData(value) => state.edited_data = value,
     }
 
-    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
+    Ok(BaseResponse::default_duration(
+        start.elapsed().as_secs_f64(),
+    ))
 }
 
 #[tauri::command(async)]
@@ -56,7 +60,7 @@ pub async fn conv_state_get(
     let state = state.lock().await;
 
     Ok(BaseResponse {
-        duration: start.elapsed().as_secs(),
+        duration: start.elapsed().as_secs_f64(),
         comment: None,
         payload: Some(state.clone()),
     })
@@ -70,7 +74,9 @@ pub async fn conv_state_reset(state: State<'_, Mutex<ConvState>>) -> EResult<Bas
     let mut state = state.lock().await;
     state.reset();
 
-    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
+    Ok(BaseResponse::default_duration(
+        start.elapsed().as_secs_f64(),
+    ))
 }
 
 // -- PROCESSES --
@@ -90,17 +96,47 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
 
     let mut negative = Vec::new();
     let mut positive = Vec::new();
-    let mut suggest = Vec::new();
+    let mut warning = Vec::new();
     let mut flag = BundleFlag::Image;
     let mut collector = Collector::new(&state.source);
 
-    let chapters = collector.collect_chapters(None).await?;
+    // Handle errors for the collection
+    let chapters = match collector.collect_chapters(None).await {
+        Ok(chapters) => chapters,
+        Err(e) => {
+            negative.push(e.to_string());
+            return Ok(CommAnalyzeMeta {
+                duration: start.elapsed().as_secs_f64(),
+                comment: None,
+                payload: Some(AnalyzeResponse {
+                    negative,
+                    positive,
+                    warning,
+                    flag,
+                }),
+            });
+        }
+    };
+
+    // Handle errors for the collection
     let mut pages = match chapters.is_empty() {
         true => Vec::new(),
-        false => collector
-            .collect_pages(chapters.clone(), None)
-            .await?
-            .concat(),
+        false => match collector.collect_pages(chapters.clone(), None).await {
+            Ok(pages) => pages.concat(),
+            Err(e) => {
+                negative.push(e.to_string());
+                return Ok(CommAnalyzeMeta {
+                    duration: start.elapsed().as_secs_f64(),
+                    comment: None,
+                    payload: Some(AnalyzeResponse {
+                        negative,
+                        positive,
+                        warning,
+                        flag,
+                    }),
+                });
+            }
+        },
     };
 
     pages.retain(|path| path.is_file());
@@ -112,12 +148,12 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
         );
 
         return Ok(CommAnalyzeMeta {
-            duration: start.elapsed().as_secs(),
+            duration: start.elapsed().as_secs_f64(),
             comment: None,
             payload: Some(AnalyzeResponse {
                 negative,
                 positive,
-                suggest,
+                warning,
                 flag,
             }),
         });
@@ -130,12 +166,12 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
         );
 
         return Ok(CommAnalyzeMeta {
-            duration: start.elapsed().as_secs(),
+            duration: start.elapsed().as_secs_f64(),
             comment: None,
             payload: Some(AnalyzeResponse {
                 negative,
                 positive,
-                suggest,
+                warning,
                 flag,
             }),
         });
@@ -156,6 +192,104 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
             dir.file_name().unwrap()
         ));
     });
+
+    // Image Format Validation
+    let unsupported_formats = Collector::check_path(&pages, |path| {
+        match path.extension().and_then(|ext| ext.to_str()) {
+            Some(ext) => matches!(ext.to_lowercase().as_str(), "jpg" | "jpeg" | "png" | "webp"),
+            None => false, // Files without extensions are unsupported
+        }
+    })?;
+
+    if !unsupported_formats.is_empty() {
+        let format_examples: Vec<String> = unsupported_formats
+            .iter()
+            .take(3)
+            .filter_map(|path| path.file_name().map(|n| n.to_string_lossy().to_string()))
+            .collect();
+
+        let example_msg = if !format_examples.is_empty() {
+            format!(" Examples: {}", format_examples.join(", "))
+        } else {
+            String::new()
+        };
+
+        negative.push(format!(
+            "Found {} files with unsupported formats. Only JPG, PNG, and WebP are fully supported.{}",
+            unsupported_formats.len(),
+            example_msg
+        ));
+    }
+
+    // File Size Consistency Check
+    let file_sizes: Vec<u64> = pages
+        .iter()
+        .filter_map(|p| p.metadata().ok().map(|m| m.len()))
+        .collect();
+
+    if !file_sizes.is_empty() {
+        let avg_size = file_sizes.iter().sum::<u64>() / file_sizes.len() as u64;
+        let outliers: Vec<_> = file_sizes
+            .iter()
+            .enumerate()
+            .filter(|(_, &size)| size < avg_size / 3 || size > avg_size * 3)
+            .collect();
+
+        if !outliers.is_empty() && outliers.len() < file_sizes.len() / 10 {
+            warning.push(format!("Detected {} files with unusual sizes. These might be cover pages, blank pages, or corrupted images.", outliers.len()));
+        }
+    }
+
+    // File Count Consistency
+    if !chapters.is_empty() {
+        let chapter_pages = collector.collect_pages(chapters.clone(), None).await;
+        if let Ok(pages_vec) = chapter_pages {
+            let chapter_file_counts: Vec<usize> = pages_vec.iter().map(|p| p.len()).collect();
+
+            if !chapter_file_counts.is_empty() {
+                let avg_count =
+                    chapter_file_counts.iter().sum::<usize>() / chapter_file_counts.len();
+                let outliers = chapter_file_counts
+                    .iter()
+                    .filter(|&&count| count < avg_count / 2 || count > avg_count * 2)
+                    .count();
+
+                if outliers > 0 {
+                    warning.push(format!("Found {} chapters with significantly different page counts. This may indicate missing pages or incorrectly organized content.", outliers));
+                }
+            }
+        }
+    }
+
+    // Path Length Warning
+    let long_paths = pages
+        .iter()
+        .filter(|p| p.to_string_lossy().len() > 240)
+        .count();
+
+    if long_paths > 0 {
+        warning.push(format!(
+            "Found {} paths that are very long. This may cause issues on some operating systems.",
+            long_paths
+        ));
+    }
+
+    // Special Character Check
+    let special_chars = chapters
+        .iter()
+        .filter(|path| {
+            path.to_string_lossy().contains(|c: char| {
+                !(c.is_alphanumeric() || c == '-' || c == '_' || c == ' ' || c == '.' || c == '/')
+            })
+        })
+        .count();
+
+    if special_chars > 0 {
+        warning.push(
+            "Some directories contain special characters which may cause issues during processing."
+                .to_string(),
+        );
+    }
 
     chapters.iter().for_each(|chapter| {
         if !has_perms(chapter) {
@@ -180,14 +314,14 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
     })?;
 
     if !dir_lacks_naming.is_empty() {
-        suggest.push("Subdirectory naming convention not followed; use 'VOLUME-CHAPTER' (e.g., '002-032') for faster bundling.".to_string());
+        warning.push("Subdirectory naming convention not followed; use 'VOLUME-CHAPTER' (e.g., '002-032') for faster bundling.".to_string());
     }
 
     if dir_lacks_numeric.is_empty() && dir_lacks_naming.is_empty() {
         positive.push("Directories correctly named and numbered. Automatic bundling will proceed with the fastest algorithm.".to_string());
         flag = BundleFlag::Name;
     } else {
-        positive.push("Automatic bundling will use fallback mechanisms, potentially slowing the process and increasing error risk.".to_string());
+        warning.push("Automatic bundling will use fallback mechanisms, potentially slowing the process and increasing error risk.".to_string());
     }
 
     let file_lack_numeric = Collector::check_path(&pages, |path| {
@@ -207,13 +341,59 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
         ));
     });
 
+    // Check if all images are consistently named
+    let consistently_named = pages
+        .iter()
+        .map(|path| path.file_stem().and_then(|s| s.to_str()))
+        .all(|stem| {
+            stem.map(|s| {
+                let numeric_part = s.chars().filter(|c| c.is_ascii_digit()).collect::<String>();
+                !numeric_part.is_empty() && numeric_part.parse::<u32>().is_ok()
+            })
+            .unwrap_or(false)
+        });
+
+    if consistently_named {
+        positive.push("All image files are consistently named with numeric identifiers. This ensures correct page ordering.".to_string());
+    }
+
+    // Check for reasonable total image count
+    if !pages.is_empty() && pages.len() <= 10000 {
+        positive.push(format!(
+            "Total of {} images found. Amount is within reasonable processing limits.",
+            pages.len()
+        ));
+    } else if pages.len() > 10000 {
+        warning.push(format!(
+            "Large number of images detected ({}). Processing may take a long time.",
+            pages.len()
+        ));
+    }
+
+    // Check if all images are in the same format
+    let image_formats = pages
+        .iter()
+        .filter_map(|p| p.extension().and_then(|e| e.to_str()))
+        .map(|e| e.to_lowercase())
+        .collect::<std::collections::HashSet<_>>();
+
+    if image_formats.len() == 1 {
+        positive.push(format!(
+            "All images use the same format ({}). This ensures consistent quality and processing.",
+            image_formats
+                .iter()
+                .next()
+                .unwrap_or(&"unknown".to_string())
+        ));
+    }
+
     Ok(CommAnalyzeMeta {
-        duration: start.elapsed().as_secs(),
+        duration: start.elapsed().as_secs_f64(),
         comment: None,
         payload: Some(AnalyzeResponse {
             negative,
             positive,
-            suggest,
+            warning,
             flag,
         }),
     })
@@ -317,7 +497,7 @@ pub async fn conv_bundle(
     state.data = pages;
 
     Ok(CommBundle {
-        duration: start.elapsed().as_secs(),
+        duration: start.elapsed().as_secs_f64(),
         comment: None,
         payload: Some(BundleResponse {
             total_chapters,
@@ -344,21 +524,27 @@ struct SharedData {
 
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn conv_convert(
-    create_directory: bool,
-    target: String,
-    file_format: FileFormat,
-    direction: Direction,
-    state: State<'_, Mutex<ConvState>>,
-) -> EResult<BaseResponse> {
+pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseResponse> {
     let start = std::time::Instant::now();
 
-    let state = state.lock().await;
+    // Extract all needed data while the lock is held
+    let (name, target, create_directory, format, direction, volume_sizes, data, edited_data) = {
+        let state = state.lock().await;
+        (
+            state.name.clone(),
+            state.target.clone(),
+            state.create_directory,
+            state.format,
+            state.direction,
+            state.volume_sizes.clone(),
+            state.data.clone(),
+            state.edited_data.clone(),
+        )
+    }; // Lock is released here
 
-    // Get all the state data needed
     let target_directory_path = match create_directory {
         true => {
-            let path = Path::new(&target).join(&state.name);
+            let path = Path::new(&target).join(&name);
             if !path.exists() {
                 create_dir(&path).await?;
             }
@@ -380,23 +566,34 @@ pub async fn conv_convert(
     .unwrap()
     .to_string();
 
-    let data = Arc::new(SharedData {
-        name: state.name.clone(),
+    // check if we have edited data, otherwise use normal data
+    let pages = match edited_data {
+        Some(e_data) => {
+            if e_data.is_empty() {
+                data
+            } else {
+                e_data
+            }
+        }
+        None => data,
+    };
+
+    let shared_data = Arc::new(SharedData {
+        name,
         target_directory: target_directory_path,
-        pages: state.data.clone(),
-        chapters_per_volume: state.volume_sizes.clone(),
+        pages,
+        chapters_per_volume: volume_sizes.clone(),
     });
 
-    let handles: Vec<JoinHandle<Result<(), Error>>> = state
-        .volume_sizes
+    let handles: Vec<JoinHandle<Result<(), Error>>> = volume_sizes
         .clone()
         .into_iter()
         .enumerate()
         .map(|(i, chapters)| {
-            let data = Arc::clone(&data);
+            let data = Arc::clone(&shared_data);
 
             // Spawn a new thread for each volume but make sure to use the correct spawning method
-            match file_format {
+            match format {
                 FileFormat::Cbz => spawn_blocking(move || {
                     let j: usize = data.chapters_per_volume[0..i].par_iter().sum();
 
@@ -473,5 +670,7 @@ pub async fn conv_convert(
         }
     }
 
-    Ok(BaseResponse::default_duration(start.elapsed().as_secs()))
+    Ok(BaseResponse::default_duration(
+        start.elapsed().as_secs_f64(),
+    ))
 }

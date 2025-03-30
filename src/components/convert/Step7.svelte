@@ -74,8 +74,7 @@
 	</div>
 {:else}
 	{#if showConfetti}
-		<!-- eslint-disable @typescript-eslint/no-unused-vars -->
-		<Confetti duration={null} />
+		<Confetti count={300} autoStart duration={null} />
 	{/if}
 
 	<div
@@ -109,12 +108,11 @@
 				</div>
 
 				<div class="mb-4 flex justify-center">
-					<button
-						class="btn btn-lg btn-success gap-2 transition-all hover:scale-105"
-						onclick={() => stepState.reset()}
-					>
+					<button class="btn btn-lg btn-success gap-2" onclick={() => stepState.reset()}>
 						<IconCheck size={20} />
-						{$t`Convert another manga`}
+						<span>
+							{$t`Convert another manga`}
+						</span>
 					</button>
 				</div>
 			</div>

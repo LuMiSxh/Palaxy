@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { type } from '@tauri-apps/plugin-os';
 	import { t } from 'svelte-i18n-lingui';
-	import type { KeyCombination } from '$lib/keyboard';
+	import type { KeyCombination } from '$types/keys';
 	import { onMount } from 'svelte';
 
 	let { keyCombination }: { keyCombination: KeyCombination } = $props();

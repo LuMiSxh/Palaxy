@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n-lingui';
 
-	let images = ['/holo/watame.png', '/holo/suisei.png'];
+	let images = ['/holo/watame.png', '/holo/suisei.png', '/holo/towa.png', '/holo/laplus.png'];
 
 	let currentImage = $derived(images[Math.floor(Math.random() * images.length)]);
 </script>
@@ -9,7 +9,7 @@
 <div class="grid h-full w-full grid-cols-2 grid-rows-1 gap-2">
 	<div class="h-full w-full p-4">
 		<h1
-			class="text-primary from-primary via-secondary to-secondary mb-2 bg-gradient-to-r via-60% bg-clip-text text-4xl dark:text-transparent"
+			class="from-primary via-secondary to-secondary mb-2 bg-gradient-to-r via-60% bg-clip-text text-4xl text-transparent"
 		>
 			{$t`Welcome to Palaxy!`}
 		</h1>
@@ -18,6 +18,16 @@
 		</p>
 	</div>
 	<div class="flex items-end justify-end">
-		<img src={currentImage} class="max-h-full max-w-full object-contain" alt="Character" />
+		<img
+			src={currentImage}
+			class="fade-left-image max-h-full max-w-full object-contain"
+			alt="Character"
+		/>
 	</div>
 </div>
+
+<style>
+	.fade-left-image {
+		mask-image: linear-gradient(to right, transparent 0%, black 20%);
+	}
+</style>

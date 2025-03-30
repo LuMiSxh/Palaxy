@@ -1,10 +1,40 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "palaxy",
+  "version": "0.3.0",
+  "identifier": "com.palaxy.app",
   "build": {
-    "beforeBuildCommand": "pnpm run build",
-    "beforeDevCommand": "pnpm run dev",
-    "frontendDist": "../build",
-    "devUrl": "http://localhost:5173"
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../build"
+  },
+  "app": {
+    "windows": [
+      {
+        "fullscreen": false,
+        "hiddenTitle": true,
+        "resizable": true,
+        "title": "Palaxy",
+        "transparent": false,
+        "minWidth": 1080,
+        "minHeight": 608,
+        "dragDropEnabled": false
+      }
+    ],
+    "macOSPrivateApi": true,
+    "security": {
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": {
+          "allow": [
+            "**"
+          ]
+        }
+      },
+      "capabilities": ["core-app", "dialog"]
+    }
   },
   "bundle": {
     "active": true,
@@ -37,68 +67,6 @@
     "linux": {
       "deb": {
         "depends": []
-      }
-    }
-  },
-  "productName": "Palaxy",
-  "version": "0.3.0",
-  "identifier": "Pala.Xy",
-  "plugins": {},
-  "app": {
-    "windows": [
-      {
-        "fullscreen": false,
-        "hiddenTitle": true,
-        "resizable": true,
-        "title": "Palaxy",
-        "transparent": false,
-        "minWidth": 1080,
-        "minHeight": 608,
-        "dragDropEnabled": false
-      }
-    ],
-    "macOSPrivateApi": true,
-    "security": {
-      "csp": null,
-      "capabilities": [
-        {
-          "identifier": "app",
-          "description": "Capability for the core app",
-          "windows": [
-            "*"
-          ],
-          "permissions": [
-            "core:window:default",
-            "core:webview:default",
-            "core:resources:default",
-            "core:path:default",
-            "core:menu:default",
-            "core:image:default",
-            "core:event:default",
-            "core:app:default"
-          ]
-        },
-        {
-          "identifier": "dialog",
-          "description": "Capability for the dialog plugin",
-          "windows": [
-            "*"
-          ],
-          "permissions": [
-            "dialog:allow-open",
-            "dialog:deny-ask",
-            "dialog:deny-confirm",
-            "dialog:deny-save"
-          ]
-        }
-      ],
-      "assetProtocol": {
-        "enable": true,
-        "scope": {
-          "allow": [
-            "**"
-          ]
-        }
       }
     }
   }

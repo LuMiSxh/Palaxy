@@ -32,7 +32,14 @@ export default ts.config(
 		}
 	},
 	{
-		ignores: ['build/', '.svelte-kit/', 'dist/', 'venv/', 'src/locales/', 'src/types/bindings.ts']
+		ignores: [
+			'build/',
+			'.svelte-kit/',
+			'dist/',
+			'src/locales/',
+			'src/types/bindings.ts',
+			'src-tauri/'
+		]
 	},
 	{
 		rules: {

@@ -136,7 +136,7 @@
 						<h3 class="mb-4 font-semibold">{$t`Bundle Options`}</h3>
 
 						<button
-							class="btn btn-outline mb-2 w-full"
+							class="btn btn-secondary btn-outline mb-2 w-full"
 							use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
 							onclick={() => {
 								convState.bundle = 'MANUAL';

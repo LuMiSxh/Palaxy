@@ -1,4 +1,4 @@
-import type { KeyCombination } from '$lib/keyboard';
+import type { KeyCombination } from '$types/keys';
 
 class KeyHint {
 	private keys: [KeyCombination, string][] = $state([]);

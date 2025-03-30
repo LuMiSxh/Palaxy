@@ -148,6 +148,51 @@
 			add(selection);
 		}
 	}
+
+	function dragEnter(event: DragEvent, imageIndex: number) {
+		event.preventDefault();
+		event.stopPropagation();
+
+		// Only respond if it's our type of drag
+		if (event.dataTransfer?.types.includes('application/image-drag')) {
+			draggedOverIndex = imageIndex;
+		}
+	}
+
+	function dragStart(event: DragEvent, imageIndex: number) {
+		// Set a specific application type to identify our drag operation
+		event.dataTransfer?.setData('application/image-drag', 'true');
+		event.dataTransfer?.setData('text/plain', `${imageIndex}`);
+		// Set effectAllowed to move to make it clearer this is a move operation
+		if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+	}
+
+	function dragOver(event: DragEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+		// Only respond if it's our type of drag
+		if (event.dataTransfer?.types.includes('application/image-drag')) {
+			event.dataTransfer.dropEffect = 'move';
+		}
+	}
+
+	function dragLeave(event: DragEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+		draggedOverIndex = null;
+	}
+
+	function drop(event: DragEvent, imageIndex: number) {
+		event.preventDefault();
+		event.stopPropagation();
+		// Only process if it's our specific drag type
+		if (event.dataTransfer?.types.includes('application/image-drag')) {
+			const fromIndex = parseInt(event.dataTransfer?.getData('text/plain') || '0');
+			moveImage(chapterIndex, fromIndex, imageIndex);
+			convState.changedOrder = true;
+		}
+		draggedOverIndex = null;
+	}
 </script>
 
 <div class="mb-4">
@@ -164,7 +209,7 @@
 	<div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
 		{#each images[chapterIndex] as imagePath, imageIndex (imagePath)}
 			<div
-				class="relative h-40 w-full overflow-hidden rounded select-none"
+				class="relative h-40 w-full cursor-grab overflow-hidden rounded select-none"
 				class:drag-over={draggedOverIndex === imageIndex}
 				animate:flip={{ duration: 300 }}
 				onclick={() => toggleOverlay(chapterIndex, imageIndex)}
@@ -180,46 +225,11 @@
 				}}
 				id={'image-' + chapterIndex + '-' + imageIndex}
 				draggable="true"
-				ondragstart={(e) => {
-					e.stopPropagation();
-					// Set a specific application type to identify our drag operation
-					e.dataTransfer?.setData('application/image-drag', 'true');
-					e.dataTransfer?.setData('text/plain', `${imageIndex}`);
-					// Set effectAllowed to move to make it clearer this is a move operation
-					if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
-				}}
-				ondragenter={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					// Only respond if it's our type of drag
-					if (e.dataTransfer?.types.includes('application/image-drag')) {
-						draggedOverIndex = imageIndex;
-					}
-				}}
-				ondragover={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					// Only respond if it's our type of drag
-					if (e.dataTransfer?.types.includes('application/image-drag')) {
-						e.dataTransfer.dropEffect = 'move';
-					}
-				}}
-				ondragleave={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					draggedOverIndex = null;
-				}}
-				ondrop={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					// Only process if it's our specific drag type
-					if (e.dataTransfer?.types.includes('application/image-drag')) {
-						const fromIndex = parseInt(e.dataTransfer?.getData('text/plain') || '0');
-						moveImage(chapterIndex, fromIndex, imageIndex);
-						convState.changedOrder = true;
-					}
-					draggedOverIndex = null;
-				}}
+				ondragenter={(evt) => dragEnter(evt, imageIndex)}
+				ondragover={dragOver}
+				ondragleave={dragLeave}
+				ondragstart={(evt) => dragStart(evt, imageIndex)}
+				ondrop={(evt) => drop(evt, imageIndex)}
 			>
 				{#if imageLoadErrorState[chapterIndex][imageIndex]}
 					<div
@@ -240,9 +250,7 @@
 
 				{#if !isVisibleState[chapterIndex][imageIndex]}
 					<div class="absolute top-0 left-0 z-10 h-full w-full">
-						<div
-							class="bg-secondary/70 dark:bg-secondary-dark/70 absolute inset-0 flex items-center justify-center"
-						>
+						<div class="bg-secondary/20 absolute inset-0 flex items-center justify-center">
 							<IconEyeClosed size={32} class="stroke-black" />
 						</div>
 					</div>
@@ -251,7 +259,7 @@
 				{#if coverState[chapterIndex][imageIndex]}
 					<div
 						transition:fade={{ duration: 150 }}
-						class="bg-secondary/90 dark:bg-primary/90 absolute top-2 left-2 rounded-md px-2 py-0.5 text-xs font-semibold shadow"
+						class="badge badge-primary absolute top-2 left-2"
 					>
 						{$t`Cover`}
 					</div>

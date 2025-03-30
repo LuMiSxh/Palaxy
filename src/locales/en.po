@@ -26,7 +26,7 @@ msgstr "ActionHub"
 msgid "Add browsing agents feature"
 msgstr "Add browsing agents feature"
 
-#: src/components/convert/step5/Chapter.svelte:267
+#: src/components/convert/step5/Chapter.svelte:275
 msgid "Add Image"
 msgstr "Add Image"
 
@@ -114,7 +114,7 @@ msgstr "Auto-Populate Fields"
 msgid "Auto-Populate Settings"
 msgstr "Auto-Populate Settings"
 
-#: src/components/dialogs/AutoPopulate.svelte:23
+#: src/components/dialogs/AutoPopulate.svelte:30
 msgid "Auto-Populate Settings Saved"
 msgstr "Auto-Populate Settings Saved"
 
@@ -148,11 +148,11 @@ msgstr "Bundling"
 
 #: src/components/DialogContent.svelte:119
 #: src/components/dialogs/Features.svelte:142
-#: src/components/dialogs/AutoPopulate.svelte:144
+#: src/components/dialogs/AutoPopulate.svelte:172
 msgid "Cancel"
 msgstr "Cancel"
 
-#: src/components/dialogs/AutoPopulate.svelte:78
+#: src/components/dialogs/AutoPopulate.svelte:88
 #: src/components/convert/Step3.svelte:140
 msgid "CBZ"
 msgstr "CBZ"
@@ -197,17 +197,17 @@ msgstr "Change the theme to light"
 msgid "Change the theme to system"
 msgstr "Change the theme to system"
 
-#: src/components/convert/step4/VolumeVisualisation.svelte:87
+#: src/components/convert/step4/VolumeVisualisation.svelte:43
 #: src/components/convert/step4/ManualBundling.svelte:295
 msgid "chapter"
 msgstr "chapter"
 
 #: src/components/convert/Step6.svelte:329
-#: src/components/convert/step5/Chapter.svelte:159
+#: src/components/convert/step5/Chapter.svelte:204
 msgid "Chapter"
 msgstr "Chapter"
 
-#: src/components/convert/step4/VolumeVisualisation.svelte:97
+#: src/components/convert/step4/VolumeVisualisation.svelte:53
 msgid "Chapter {0} of Volume {1}"
 msgstr "Chapter {0} of Volume {1}"
 
@@ -220,7 +220,7 @@ msgid "Chapter Distribution"
 msgstr "Chapter Distribution"
 
 #: src/components/convert/Step6.svelte:299
-#: src/components/convert/step4/VolumeVisualisation.svelte:87
+#: src/components/convert/step4/VolumeVisualisation.svelte:43
 #: src/components/convert/step4/ManualBundling.svelte:295
 msgid "chapters"
 msgstr "chapters"
@@ -237,7 +237,7 @@ msgstr "Chapters in volume"
 msgid "Choose Source Material Directory"
 msgstr "Choose Source Material Directory"
 
-#: src/components/dialogs/AutoPopulate.svelte:99
+#: src/components/dialogs/AutoPopulate.svelte:112
 msgid "Click to select a folder"
 msgstr "Click to select a folder"
 
@@ -274,7 +274,7 @@ msgstr "Confirmation"
 msgid "Conversion"
 msgstr "Conversion"
 
-#: src/components/convert/Step7.svelte:88
+#: src/components/convert/Step7.svelte:87
 msgid "Conversion Complete!"
 msgstr "Conversion Complete!"
 
@@ -286,7 +286,7 @@ msgstr "Conversion Summary"
 msgid "Convert"
 msgstr "Convert"
 
-#: src/components/convert/Step7.svelte:117
+#: src/components/convert/Step7.svelte:114
 #: src/components/convert/Step7.svelte:30
 msgid "Convert another manga"
 msgstr "Convert another manga"
@@ -303,7 +303,7 @@ msgstr "Convert your manga images into a digital format that can be read on your
 msgid "Converting..."
 msgstr "Converting..."
 
-#: src/components/convert/step5/Chapter.svelte:256
+#: src/components/convert/step5/Chapter.svelte:264
 msgid "Cover"
 msgstr "Cover"
 
@@ -315,7 +315,7 @@ msgstr "Cover Images"
 #~ msgid "Create folder"
 #~ msgstr "Create folder"
 
-#: src/components/dialogs/AutoPopulate.svelte:107
+#: src/components/dialogs/AutoPopulate.svelte:130
 #: src/components/convert/Step6.svelte:188
 #: src/components/convert/Step3.svelte:211
 msgid "Create New Folder"
@@ -360,7 +360,7 @@ msgstr "Detected Volumes"
 msgid "Detection Result"
 msgstr "Detection Result"
 
-#: src/components/dialogs/AutoPopulate.svelte:41
+#: src/components/dialogs/AutoPopulate.svelte:50
 msgid "Enable Auto-Population"
 msgstr "Enable Auto-Population"
 
@@ -406,7 +406,7 @@ msgstr "Enter"
 msgid "Enter project name"
 msgstr "Enter project name"
 
-#: src/components/dialogs/AutoPopulate.svelte:77
+#: src/components/dialogs/AutoPopulate.svelte:87
 #: src/components/convert/Step3.svelte:139
 msgid "EPUB"
 msgstr "EPUB"
@@ -461,7 +461,7 @@ msgstr "Features"
 #~ msgid "File Name(s)"
 #~ msgstr "File Name(s)"
 
-#: src/components/dialogs/AutoPopulate.svelte:64
+#: src/components/dialogs/AutoPopulate.svelte:73
 #: src/components/convert/Step6.svelte:146
 #: src/components/convert/Step3.svelte:124
 msgid "File Type"
@@ -520,7 +520,7 @@ msgstr "Hover for details"
 msgid "Image"
 msgstr "Image"
 
-#: src/components/convert/step5/Chapter.svelte:229
+#: src/components/convert/step5/Chapter.svelte:239
 msgid "Image Error"
 msgstr "Image Error"
 
@@ -529,7 +529,7 @@ msgid "Image Statistics"
 msgstr "Image Statistics"
 
 #: src/components/convert/Step6.svelte:299
-#: src/components/convert/step5/Chapter.svelte:161
+#: src/components/convert/step5/Chapter.svelte:206
 msgid "images"
 msgstr "images"
 
@@ -555,10 +555,10 @@ msgstr "Information"
 #: src/components/dialogs/Features.svelte:107
 #: src/components/dialogs/Features.svelte:132
 #: src/components/dialogs/Features.svelte:147
-#: src/components/dialogs/AutoPopulate.svelte:95
-#: src/components/dialogs/AutoPopulate.svelte:120
-#: src/components/dialogs/AutoPopulate.svelte:134
-#: src/components/dialogs/AutoPopulate.svelte:148
+#: src/components/dialogs/AutoPopulate.svelte:107
+#: src/components/dialogs/AutoPopulate.svelte:144
+#: src/components/dialogs/AutoPopulate.svelte:162
+#: src/components/dialogs/AutoPopulate.svelte:176
 #: src/components/convert/Step4.svelte:140
 #: src/components/convert/Step4.svelte:150
 msgid "Invoke"
@@ -705,7 +705,7 @@ msgstr "New Images"
 msgid "Next"
 msgstr "Next"
 
-#: src/components/convert/Step2.svelte:137
+#: src/components/convert/Step2.svelte:138
 msgid "No analysis results found. There might be an issue with the source material."
 msgstr "No analysis results found. There might be an issue with the source material."
 
@@ -713,11 +713,11 @@ msgstr "No analysis results found. There might be an issue with the source mater
 msgid "No volumes added yet. Add your first volume below."
 msgstr "No volumes added yet. Add your first volume below."
 
-#: src/components/convert/step4/VolumeVisualisation.svelte:109
+#: src/components/convert/step4/VolumeVisualisation.svelte:65
 msgid "No volumes detected. Try running the bundler again."
 msgstr "No volumes detected. Try running the bundler again."
 
-#: src/components/dialogs/AutoPopulate.svelte:79
+#: src/components/dialogs/AutoPopulate.svelte:89
 msgid "None"
 msgstr "None"
 
@@ -753,12 +753,12 @@ msgstr "Output Settings"
 msgid "Palaxy is now converting your material. Please wait."
 msgstr "Palaxy is now converting your material. Please wait."
 
-#: src/components/dialogs/AutoPopulate.svelte:76
+#: src/components/dialogs/AutoPopulate.svelte:86
 #: src/components/convert/Step3.svelte:138
 msgid "PDF"
 msgstr "PDF"
 
-#: src/components/convert/Step2.svelte:146
+#: src/components/convert/Step2.svelte:148
 msgid "Please resolve these issues before continuing."
 msgstr "Please resolve these issues before continuing."
 
@@ -767,7 +767,7 @@ msgstr "Please resolve these issues before continuing."
 msgid "Previous"
 msgstr "Previous"
 
-#: src/components/convert/Step7.svelte:100
+#: src/components/convert/Step7.svelte:99
 msgid "Processing Time"
 msgstr "Processing Time"
 
@@ -831,19 +831,19 @@ msgid "Running Bundler..."
 msgstr "Running Bundler..."
 
 #: src/components/dialogs/Features.svelte:157
-#: src/components/dialogs/AutoPopulate.svelte:158
+#: src/components/dialogs/AutoPopulate.svelte:186
 msgid "Save"
 msgstr "Save"
 
 #: src/components/convert/Step6.svelte:77
 #: src/components/convert/Step2.svelte:44
-#: src/components/convert/step4/VolumeVisualisation.svelte:72
+#: src/components/convert/step4/VolumeVisualisation.svelte:28
 msgid "Scroll down"
 msgstr "Scroll down"
 
 #: src/components/convert/Step6.svelte:76
 #: src/components/convert/Step2.svelte:45
-#: src/components/convert/step4/VolumeVisualisation.svelte:71
+#: src/components/convert/step4/VolumeVisualisation.svelte:27
 msgid "Scroll up"
 msgstr "Scroll up"
 
@@ -869,7 +869,7 @@ msgid "seconds"
 msgstr "seconds"
 
 #: src/components/ActionHub.svelte:131
-#: src/components/dialogs/AutoPopulate.svelte:71
+#: src/components/dialogs/AutoPopulate.svelte:81
 #: src/components/convert/Step3.svelte:100
 #: src/components/convert/Step3.svelte:132
 #: src/components/convert/Step3.svelte:162
@@ -880,7 +880,7 @@ msgstr "Select"
 msgid "Select a folder to convert"
 msgstr "Select a folder to convert"
 
-#: src/components/dialogs/AutoPopulate.svelte:70
+#: src/components/dialogs/AutoPopulate.svelte:80
 #: src/components/convert/Step3.svelte:99
 #: src/components/convert/Step3.svelte:131
 #: src/components/convert/Step3.svelte:161
@@ -904,7 +904,7 @@ msgstr "Select output folder"
 msgid "Select the directory where the source material is located."
 msgstr "Select the directory where the source material is located."
 
-#: src/components/dialogs/AutoPopulate.svelte:69
+#: src/components/dialogs/AutoPopulate.svelte:79
 #: src/components/convert/Step3.svelte:98
 #: src/components/convert/Step3.svelte:130
 #: src/components/convert/Step3.svelte:160
@@ -968,11 +968,11 @@ msgstr "stable"
 #~ msgid "Stable"
 #~ msgstr "Stable"
 
-#: src/components/convert/step5/Chapter.svelte:178
+#: src/components/convert/step5/Chapter.svelte:223
 msgid "Swap next"
 msgstr "Swap next"
 
-#: src/components/convert/step5/Chapter.svelte:177
+#: src/components/convert/step5/Chapter.svelte:222
 msgid "Swap prev"
 msgstr "Swap prev"
 
@@ -994,7 +994,7 @@ msgstr "System"
 msgid "System Information"
 msgstr "System Information"
 
-#: src/components/dialogs/AutoPopulate.svelte:84
+#: src/components/dialogs/AutoPopulate.svelte:95
 #: src/components/convert/Step6.svelte:158
 #: src/components/convert/Step3.svelte:179
 msgid "Target Location"
@@ -1004,7 +1004,7 @@ msgstr "Target Location"
 msgid "Tauri Version"
 msgstr "Tauri Version"
 
-#: src/components/convert/Step7.svelte:94
+#: src/components/convert/Step7.svelte:93
 msgid "The conversion process has completed successfully"
 msgstr "The conversion process has completed successfully"
 
@@ -1037,11 +1037,11 @@ msgid "This is the last step. There are no more steps."
 msgstr "This is the last step. There are no more steps."
 
 #: src/components/convert/Step3.svelte:218
-#: src/components/convert/step5/Chapter.svelte:176
+#: src/components/convert/step5/Chapter.svelte:221
 msgid "Toggle"
 msgstr "Toggle"
 
-#: src/components/convert/step4/VolumeVisualisation.svelte:119
+#: src/components/convert/step4/VolumeVisualisation.svelte:75
 msgid "Total Chapter Usage"
 msgstr "Total Chapter Usage"
 
@@ -1070,13 +1070,13 @@ msgstr "Volume"
 #~ msgid "Volume "
 #~ msgstr "Volume "
 
-#: src/components/convert/step4/VolumeVisualisation.svelte:85
+#: src/components/convert/step4/VolumeVisualisation.svelte:41
 #: src/components/convert/step4/ManualBundling.svelte:224
 msgid "Volume {0}"
 msgstr "Volume {0}"
 
 #: src/components/convert/Step6.svelte:285
-#: src/components/convert/step4/VolumeVisualisation.svelte:76
+#: src/components/convert/step4/VolumeVisualisation.svelte:32
 msgid "Volume Distribution"
 msgstr "Volume Distribution"
 
@@ -1096,11 +1096,13 @@ msgstr "Warnings"
 msgid "Welcome to Palaxy!"
 msgstr "Welcome to Palaxy!"
 
+#: src/components/dialogs/AutoPopulate.svelte:153
 #: src/components/convert/Step6.svelte:203
 #: src/components/convert/Step3.svelte:232
 msgid "Will create a new folder for output files"
 msgstr "Will create a new folder for output files"
 
+#: src/components/dialogs/AutoPopulate.svelte:154
 #: src/components/convert/Step6.svelte:204
 #: src/components/convert/Step3.svelte:233
 msgid "Will save directly in target location"

@@ -36,8 +36,8 @@
 		}
 
 		// Focus on the results container after ui render pass
-		await tick()
-		resultsContainer?.focus()
+		await tick();
+		resultsContainer?.focus();
 
 		// Show the key hint for navigating
 		cleanupKeyHint = keyHint.smartAdd([
@@ -84,7 +84,7 @@
 									<div class="space-y-2">
 										{#each negatives as negative, i (i)}
 											<div
-												class="list-row items-center rounded bg-error/10 px-4 py-3 border-l-3 border-error"
+												class="list-row bg-error/10 border-error items-center rounded border-l-3 px-4 py-3"
 												style="--index: {i}"
 											>
 												<span class="list-col-grow text-md">{negative}</span>
@@ -103,7 +103,7 @@
 									<div class="space-y-2">
 										{#each warnings as warning, i (i)}
 											<div
-												class="list-row items-center rounded bg-warning/10 px-4 py-3 border-l-3 border-warning"
+												class="list-row bg-warning/10 border-warning items-center rounded border-l-3 px-4 py-3"
 												style="--index: {i + negatives.length}"
 											>
 												<span class="list-col-grow text-md">{warning}</span>
@@ -122,7 +122,7 @@
 									<div class="space-y-2">
 										{#each positives as positive, i (i)}
 											<div
-												class="list-row items-center rounded bg-success/10 px-4 py-3 border-l-3 border-success"
+												class="list-row bg-success/10 border-success items-center rounded border-l-3 px-4 py-3"
 												style="--index: {i + negatives.length + warnings.length}"
 											>
 												<span class="list-col-grow text-md">{positive}</span>
@@ -134,7 +134,9 @@
 						</div>
 					{:else}
 						<div class="alert alert-info">
-							<p>{$t`No analysis results found. There might be an issue with the source material.`}</p>
+							<p>
+								{$t`No analysis results found. There might be an issue with the source material.`}
+							</p>
 						</div>
 					{/if}
 				</div>
@@ -160,15 +162,15 @@
 		scroll-behavior: smooth;
 	}
 
-  /* Forcefully remove all focus indicators */
-  .results-container:focus {
-      outline: none !important;
-      box-shadow: none !important;
-      -webkit-box-shadow: none !important;
-      -moz-box-shadow: none !important;
-  }
+	/* Forcefully remove all focus indicators */
+	.results-container:focus {
+		outline: none !important;
+		box-shadow: none !important;
+		-webkit-box-shadow: none !important;
+		-moz-box-shadow: none !important;
+	}
 
-  .list-row {
+	.list-row {
 		display: flex;
 		align-items: center;
 	}

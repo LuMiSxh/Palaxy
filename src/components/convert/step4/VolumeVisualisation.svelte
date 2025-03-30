@@ -2,55 +2,13 @@
 	import convState from '$states/converter.svelte';
 	import { t } from 'svelte-i18n-lingui';
 	import {
-		checkChapterLimits,
 		getChaptersPercentage,
 		getTotalChapters,
 		step4State
 	} from '$components/convert/step4/utils.svelte';
 	import { handleKeyHint } from '$states/keyhint.svelte';
 
-	let volVisContainer: HTMLDivElement | null = $state(null);
 	let volVisFocused = $state(false);
-	let volVisSelectedIdx = $state(-1);
-
-	function scrollToSelectedVolume() {
-		if (volVisSelectedIdx < 0 || !volVisContainer) return;
-
-		const volumeItems = volVisContainer.querySelectorAll('.volume-item');
-		if (volumeItems[volVisSelectedIdx]) {
-			volumeItems[volVisSelectedIdx].scrollIntoView({
-				behavior: 'smooth',
-				block: 'nearest'
-			});
-		}
-	}
-
-	function handleVolumeContainerKeyDown(event: KeyboardEvent) {
-		if (!convState.chapterSizes.length) return;
-
-		if (event.key === 'ArrowUp') {
-			event.preventDefault();
-			volVisSelectedIdx = Math.max(0, volVisSelectedIdx - 1);
-			scrollToSelectedVolume();
-		} else if (event.key === 'ArrowDown') {
-			event.preventDefault();
-			volVisSelectedIdx = Math.min(convState.chapterSizes.length - 1, volVisSelectedIdx + 1);
-			scrollToSelectedVolume();
-		} else if (event.key === 'Delete' && volVisSelectedIdx >= 0) {
-			// Remove selected volume
-			convState.chapterSizes = [
-				...convState.chapterSizes.slice(0, volVisSelectedIdx),
-				...convState.chapterSizes.slice(volVisSelectedIdx + 1)
-			];
-
-			// Adjust selected index after deletion
-			if (volVisSelectedIdx >= convState.chapterSizes.length) {
-				volVisSelectedIdx = Math.max(0, convState.chapterSizes.length - 1);
-			}
-
-			checkChapterLimits();
-		}
-	}
 </script>
 
 <div
@@ -62,8 +20,6 @@
 		class="card-body flex flex-col overflow-y-auto"
 		tabindex="0"
 		role="tab"
-		bind:this={volVisContainer}
-		onkeydown={handleVolumeContainerKeyDown}
 		onfocus={() => (volVisFocused = true)}
 		onblur={() => (volVisFocused = false)}
 		use:handleKeyHint={{
@@ -153,9 +109,5 @@
 		transition:
 			background-color 0.15s ease,
 			border-color 0.15s ease;
-	}
-
-	.volume-item:hover:not(.selected) {
-		border-color: var(--color-primary);
 	}
 </style>

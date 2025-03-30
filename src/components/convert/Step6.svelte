@@ -99,7 +99,7 @@
 </script>
 
 <div
-	class="flex h-full w-full flex-col overflow-y-auto p-4 focus:outline-none"
+	class="flex h-full w-full flex-col overflow-y-auto p-4"
 	style="max-height: calc(100vh - 8rem)"
 	bind:this={scrollContainer}
 	tabindex="0"
@@ -221,17 +221,17 @@
 				<!-- Summary Overview with Graphics -->
 				<div class="mb-6 flex flex-col items-center">
 					<div class="mb-4 grid w-full grid-cols-3 gap-4 text-center">
-						<div class="bg-primary/20 flex flex-col items-center rounded-lg p-3">
+						<div class="bg-primary flex flex-col items-center rounded-lg p-3">
 							<IconBook class="text-primary mb-2" size={24} />
 							<span class="text-xl font-bold">{convStateData?.volume_sizes?.length ?? 0}</span>
 							<span class="text-sm">{$t`Volumes`}</span>
 						</div>
-						<div class="bg-secondary/20 flex flex-col items-center rounded-lg p-3">
+						<div class="bg-secondary flex flex-col items-center rounded-lg p-3">
 							<IconVocabulary class="text-primary mb-2" size={24} />
 							<span class="text-xl font-bold">{convStateData?.data?.length ?? 0}</span>
 							<span class="text-sm">{$t`Chapters`}</span>
 						</div>
-						<div class="bg-primary/20 flex flex-col items-center rounded-lg p-3">
+						<div class="bg-primary flex flex-col items-center rounded-lg p-3">
 							<IconPhoto class="text-primary mb-2" size={24} />
 							<span class="text-xl font-bold">{totalImages - (convState.excludedImages || 0)}</span>
 							<span class="text-sm">{$t`Images`}</span>
@@ -351,6 +351,13 @@
 </div>
 
 <style>
+	/* Remove focus indicators while preserving accessibility */
+	div[tabindex='0']:focus {
+		outline: none;
+		box-shadow: none;
+		border-color: transparent;
+	}
+
 	/* Smooth scrolling */
 	.overflow-y-auto {
 		scroll-behavior: smooth;

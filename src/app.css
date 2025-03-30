@@ -1,81 +1,103 @@
+/* Import Tailwind layers */
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(base);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
+/* Dark mode variant definition */
 @custom-variant dark (&:is(.dark *));
 
+/* Theme definition with improved organization */
 @theme {
-	--color-background: rgb(255 255 255);
-	--color-background-secondary: rgb(242 242 242);
-	--color-background-tertiary: rgb(232 232 232);
-	--color-background-dark: rgb(26 26 26);
-	--color-background-dark-secondary: rgb(42 42 42);
-	--color-background-dark-tertiary: rgb(51 51 51);
+	/* ===== COLOR SYSTEM ===== */
+	/* Base/Background Colors */
+	--color-background: rgb(250 250 252);
+	--color-background-secondary: rgb(240 240 245);
+	--color-background-tertiary: rgb(230 230 235);
 
-	--color-content: rgb(26 26 26);
-	--color-content-secondary: rgb(85 85 85);
-	--color-content-tertiary: rgb(138 138 138);
-	--color-content-dark: rgb(255 255 255);
-	--color-content-dark-secondary: rgb(204 204 204);
-	--color-content-dark-tertiary: rgb(153 153 153);
+	/* Dark Background Colors */
+	--color-background-dark: rgb(40 44 52); /* #282C34 - Atom One Dark */
+	--color-background-dark-secondary: rgb(45 49 57);
+	--color-background-dark-tertiary: rgb(52 56 64);
 
-	/* Primary: Soft Blue */
-	--color-primary: rgb(112, 155, 218); /* #709BDA */
-	--color-primary-hover: rgb(100, 139, 196);
-	--color-primary-active: rgb(89, 124, 174);
-	--color-primary-light: rgb(229, 238, 252);
-	--color-primary-dark-light: rgb(38, 51, 73);
+	/* Content/Text Colors */
+	--color-content: rgb(40 44 52);
+	--color-content-secondary: rgb(92 99 112);
+	--color-content-tertiary: rgb(140 145 155);
 
-	/* Secondary: Cream */
-	--color-secondary: rgb(242, 230, 194); /* #F2E6C2 */
-	--color-secondary-hover: rgb(218, 207, 175);
-	--color-secondary-active: rgb(193, 184, 155);
-	--color-secondary-light: rgb(250, 248, 240);
-	--color-secondary-dark-light: rgb(60, 58, 50);
+	/* Dark Content/Text Colors */
+	--color-content-dark: rgb(171 178 191); /* Atom One Dark text */
+	--color-content-dark-secondary: rgb(145 150 160);
+	--color-content-dark-tertiary: rgb(120 125 135);
 
-	/* Accent colors */
-	--color-success: rgb(75, 175, 125); /* Subdued green */
-	--color-success-light: rgb(218, 239, 228);
-	--color-success-dark-light: rgb(30, 54, 40);
+	/* ===== ACCENT COLORS ===== */
+	/* Primary: Atom Blue */
+	--color-primary: rgb(97, 175, 239); /* #61afef */
+	--color-primary-hover: rgb(87, 155, 214);
+	--color-primary-active: rgb(77, 140, 199);
+	--color-primary-light: rgb(225, 240, 250);
+	--color-primary-dark-light: rgb(35, 50, 70);
 
-	--color-warning: rgb(221, 170, 85); /* Subdued yellow/gold */
-	--color-warning-light: rgb(246, 236, 210);
-	--color-warning-dark-light: rgb(56, 47, 30);
+	/* Secondary: Atom Purple */
+	--color-secondary: rgb(198, 120, 221); /* #c678dd */
+	--color-secondary-hover: rgb(180, 110, 200);
+	--color-secondary-active: rgb(160, 100, 180);
+	--color-secondary-light: rgb(245, 230, 250);
+	--color-secondary-dark-light: rgb(60, 40, 65);
 
-	--color-error: rgb(205, 92, 92); /* Subdued red */
-	--color-error-light: rgb(245, 220, 220);
-	--color-error-dark-light: rgb(56, 35, 35);
+	/* Success: Atom Green */
+	--color-success: rgb(152, 195, 121); /* #98c379 */
+	--color-success-light: rgb(230, 245, 225);
+	--color-success-dark-light: rgb(40, 60, 35);
 
-	--color-info: rgb(90, 150, 200); /* Subdued blue */
-	--color-info-light: rgb(220, 235, 245);
-	--color-info-dark-light: rgb(30, 45, 60);
+	/* Warning: Atom Yellow */
+	--color-warning: rgb(229, 192, 123); /* #e5c07b */
+	--color-warning-light: rgb(250, 240, 220);
+	--color-warning-dark-light: rgb(60, 50, 30);
 
+	/* Error: Atom Red */
+	--color-error: rgb(224, 108, 117); /* #e06c75 */
+	--color-error-light: rgb(250, 225, 230);
+	--color-error-dark-light: rgb(60, 35, 40);
+
+	/* Info: Atom Cyan */
+	--color-info: rgb(86, 182, 194); /* #56b6c2 */
+	--color-info-light: rgb(220, 245, 250);
+	--color-info-dark-light: rgb(30, 60, 65);
+
+	/* ===== DESIGN TOKENS ===== */
+	/* Border Radius */
 	--radius-sm: 0.25rem;
 	--radius: 0.375rem;
 	--radius-md: 0.5rem;
 	--radius-lg: 0.75rem;
 	--radius-xl: 1rem;
 
+	/* Shadows */
 	--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 	--shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px 0 rgb(0 0 0 / 0.06);
 	--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
 	--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+
+	/* Dark Shadows */
 	--shadow-dark-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
 	--shadow-dark: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px 0 rgb(0 0 0 / 0.4);
 	--shadow-dark-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -1px rgb(0 0 0 / 0.4);
 	--shadow-dark-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -2px rgb(0 0 0 / 0.4);
 
+	/* Typography */
 	--font-sans:
 		Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
 		Helvetica Neue, Arial, sans-serif;
 	--font-mono: JetBrains Mono, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
 
+	/* ===== ANIMATIONS ===== */
 	--animate-fade-in: fade-in 0.3s ease-out;
 	--animate-slide-up: slide-up 0.2s ease-out;
 	--animate-slide-down: slide-down 0.2s ease-out;
 	--animate-slide-left: slide-left 0.2s ease-out;
 	--animate-slide-right: slide-right 0.2s ease-out;
 
+	/* Animation Keyframes */
 	@keyframes fade-in {
 		0% {
 			opacity: 0;
@@ -84,6 +106,7 @@
 			opacity: 1;
 		}
 	}
+
 	@keyframes slide-up {
 		0% {
 			transform: translateY(10px);
@@ -94,6 +117,7 @@
 			opacity: 1;
 		}
 	}
+
 	@keyframes slide-down {
 		0% {
 			transform: translateY(-10px);
@@ -104,6 +128,7 @@
 			opacity: 1;
 		}
 	}
+
 	@keyframes slide-left {
 		0% {
 			transform: translateX(10px);
@@ -114,6 +139,7 @@
 			opacity: 1;
 		}
 	}
+
 	@keyframes slide-right {
 		0% {
 			transform: translateX(-10px);
@@ -124,25 +150,29 @@
 			opacity: 1;
 		}
 	}
+
+	@keyframes progress-loading {
+		0% {
+			background-position: 200% 0;
+		}
+		100% {
+			background-position: -200% 0;
+		}
+	}
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
+/* Base Layer - Core HTML Element Styling */
 @layer base {
+	/* Border color compatibility with Tailwind v4 */
 	*,
 	::after,
 	::before,
 	::backdrop,
 	::file-selector-button {
-		border-color: var(--color-gray-200, currentColor);
+		border-color: var(--color-content, currentColor);
 	}
 
+	/* Base HTML styling */
 	html {
 		@apply bg-background antialiased;
 	}
@@ -151,7 +181,7 @@
 		@apply text-content dark:text-content-dark;
 	}
 
-	/* Responsive Typography */
+	/* Typography Scale */
 	h1 {
 		@apply text-xl font-bold sm:text-xl md:text-2xl lg:text-3xl;
 	}
@@ -184,8 +214,10 @@
 	}
 }
 
+/* Components Layer - Reusable UI Elements */
 @layer components {
-	/* Button styles */
+	/* ===== BUTTONS ===== */
+	/* Base Button Styles */
 	.btn {
 		@apply focus:ring-primary dark:focus:ring-offset-background-dark flex cursor-pointer items-center justify-center rounded px-4 py-2 text-sm font-medium transition-colors duration-150 ease-in-out focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
 	}
@@ -194,6 +226,32 @@
 		@apply flex items-center justify-center rounded px-4 py-2 text-sm font-medium transition-colors duration-150 ease-in-out disabled:cursor-not-allowed disabled:opacity-50;
 	}
 
+	/* Button Color Variants */
+	.btn-primary {
+		@apply bg-primary hover:bg-primary-hover active:bg-primary-active;
+	}
+
+	.btn-secondary {
+		@apply bg-secondary hover:bg-secondary-hover active:bg-secondary-active;
+	}
+
+	.btn-success {
+		@apply bg-success hover:bg-success/90 active:bg-success/80;
+	}
+
+	.btn-error {
+		@apply bg-error hover:bg-error/90 active:bg-error/80;
+	}
+
+	.btn-warning {
+		@apply bg-warning hover:bg-warning/90 active:bg-warning/80;
+	}
+
+	.btn-info {
+		@apply bg-info hover:bg-info/90 active:bg-info/80;
+	}
+
+	/* Neutral Button Variants */
 	.btn-soft {
 		@apply bg-background-secondary dark:bg-background-dark-secondary hover:bg-background-tertiary dark:hover:bg-background-dark-tertiary;
 	}
@@ -202,74 +260,88 @@
 		@apply bg-background-tertiary dark:bg-background-dark-tertiary hover:bg-background-secondary dark:hover:bg-background-dark-secondary;
 	}
 
-	.btn-primary {
-		@apply bg-primary hover:bg-primary-hover active:bg-primary-active text-white;
-	}
-
-	.btn-primary-soft {
-		@apply bg-primary/70 hover:bg-primary-hover/70 active:bg-primary-active/70 text-white;
-	}
-
-	.btn-secondary {
-		@apply bg-secondary hover:bg-secondary-hover active:bg-secondary-active text-white;
-	}
-
-	.btn-outline {
-		@apply border-content-tertiary dark:border-content-dark-tertiary hover:bg-background-secondary dark:hover:bg-background-dark-secondary border bg-transparent;
-	}
-
 	.btn-ghost {
 		@apply hover:bg-background-secondary dark:hover:bg-background-dark-secondary bg-transparent;
 	}
 
-	.btn-success {
-		@apply bg-success hover:bg-success/90 active:bg-success/80 text-white;
+	/* Combined Color & Soft Styles */
+	.btn.btn-soft.btn-primary {
+		@apply bg-primary/70 hover:bg-primary-hover/70 active:bg-primary-active/70;
 	}
 
-	.btn-error {
-		@apply bg-error hover:bg-error/90 active:bg-error/80 text-white;
+	.btn.btn-soft.btn-secondary {
+		@apply bg-secondary/70 hover:bg-secondary-hover/70 active:bg-secondary-active/70;
 	}
 
-	.btn-warning {
-		@apply bg-warning hover:bg-warning/90 active:bg-warning/80 text-white;
+	.btn.btn-soft.btn-success {
+		@apply bg-success/70 hover:bg-success/90 active:bg-success/80;
 	}
 
-	.btn-info {
-		@apply bg-info hover:bg-info/90 active:bg-info/80 text-white;
+	.btn.btn-soft.btn-error {
+		@apply bg-error/70 hover:bg-error/90 active:bg-error/80;
 	}
 
-	.btn-xs {
-		@apply px-1.5 py-0.5 text-xs;
+	.btn.btn-soft.btn-warning {
+		@apply bg-warning/70 hover:bg-warning/90 active:bg-warning/80;
 	}
 
-	.btn-sm {
-		@apply px-3 py-1 text-xs;
+	.btn.btn-soft.btn-info {
+		@apply bg-info/70 hover:bg-info/90 active:bg-info/80;
 	}
 
-	.btn-lg {
-		@apply px-6 py-3 text-base;
+	/* Outline Button Styles */
+	.btn-outline {
+		@apply border bg-transparent;
 	}
 
-	/* Form elements */
+	.btn-outline.btn-primary {
+		@apply border-primary text-primary hover:bg-primary/10 active:bg-primary/20;
+	}
+
+	.btn-outline.btn-secondary {
+		@apply border-secondary text-secondary hover:bg-secondary/10 active:bg-secondary/20;
+	}
+
+	.btn-outline.btn-success {
+		@apply border-success text-success hover:bg-success/10 active:bg-success/20;
+	}
+
+	.btn-outline.btn-error {
+		@apply border-error text-error hover:bg-error/10 active:bg-error/20;
+	}
+
+	.btn-outline.btn-warning {
+		@apply border-warning text-warning hover:bg-warning/10 active:bg-warning/20;
+	}
+
+	.btn-outline.btn-info {
+		@apply border-info text-info hover:bg-info/10 active:bg-info/20;
+	}
+
+	.btn-outline.btn-soft {
+		@apply border-content-tertiary dark:border-content-dark-tertiary hover:bg-background-secondary dark:hover:bg-background-dark-secondary;
+	}
+
+	/* ===== FORM ELEMENTS ===== */
 	.input {
-		@apply bg-background dark:bg-background-dark-secondary border-background-tertiary dark:border-background-dark-tertiary focus:ring-primary focus:border-primary block w-full rounded-md border px-3 py-2 focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+		@apply bg-background dark:bg-background-dark-secondary border-background-tertiary dark:border-background-dark-tertiary focus:border-primary focus:ring-primary block w-full rounded-md border px-3 py-2 focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
 	}
 
 	.select {
-		@apply bg-background dark:bg-background-dark-secondary border-background-tertiary dark:border-background-dark-tertiary focus:ring-primary focus:border-primary block w-full appearance-none rounded-md border bg-[size:1.5em_1.5em] bg-right bg-no-repeat px-3 py-2 focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+		@apply bg-background dark:bg-background-dark-secondary border-background-tertiary dark:border-background-dark-tertiary focus:border-primary focus:ring-primary block w-full appearance-none rounded-md border bg-[size:1.5em_1.5em] bg-right bg-no-repeat px-3 py-2 focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
 	}
 
 	.checkbox {
 		@apply border-background-tertiary dark:border-background-dark-tertiary text-primary focus:ring-primary dark:focus:ring-offset-background-dark h-4 w-4 rounded focus:ring-2 focus:ring-offset-2;
 	}
 
-	/* Card styles */
+	/* ===== CARDS ===== */
 	.card {
 		@apply bg-background dark:bg-background-dark-secondary dark:shadow-dark overflow-hidden rounded-lg shadow;
 	}
 
 	.card-header {
-		@apply border-background-tertiary dark:border-background-dark-tertiary bg-primary/20 border-b px-4 py-3;
+		@apply border-background-tertiary dark:border-background-dark-tertiary bg-secondary/20 border-b px-4 py-3;
 	}
 
 	.card-body {
@@ -280,16 +352,7 @@
 		@apply border-background-tertiary dark:border-background-dark-tertiary border-t px-4 py-3;
 	}
 
-	/* Surface (replacement for glass-surface) */
-	.surface {
-		@apply bg-background/95 dark:bg-background-dark-secondary/95 border-background-tertiary dark:border-background-dark-tertiary dark:shadow-dark rounded-lg border p-4 shadow backdrop-blur-md transition-transform duration-200;
-	}
-
-	.surface-hover {
-		@apply hover:scale-[1.01];
-	}
-
-	/* Badge styles */
+	/* ===== BADGES ===== */
 	.badge {
 		@apply inline-flex items-center rounded-full px-2 py-1 text-xs font-medium;
 	}
@@ -318,28 +381,28 @@
 		@apply bg-info-light dark:bg-info-dark-light text-info;
 	}
 
-	/* Alert styles */
+	/* ===== ALERTS ===== */
 	.alert {
 		@apply min-w-40 rounded-lg border-0 border-l-4 p-4;
 	}
 
 	.alert-success {
-		@apply bg-success-light dark:bg-success-dark-light border-success;
+		@apply border-success bg-success-light dark:bg-success-dark-light;
 	}
 
 	.alert-error {
-		@apply bg-error-light dark:bg-error-dark-light border-error;
+		@apply border-error bg-error-light dark:bg-error-dark-light;
 	}
 
 	.alert-warning {
-		@apply bg-warning-light dark:bg-warning-dark-light border-warning;
+		@apply border-warning bg-warning-light dark:bg-warning-dark-light;
 	}
 
 	.alert-info {
-		@apply bg-info-light dark:bg-info-dark-light border-info;
+		@apply border-info bg-info-light dark:bg-info-dark-light;
 	}
 
-	/* Divider */
+	/* ===== DIVIDERS ===== */
 	.divider {
 		@apply bg-background-tertiary dark:bg-background-dark-tertiary my-4 h-px w-full;
 	}
@@ -348,10 +411,7 @@
 		@apply bg-background-tertiary dark:bg-background-dark-tertiary mx-4 h-full w-px;
 	}
 
-	/* System info table styles */
-	.table {
-	}
-
+	/* ===== TABLES ===== */
 	.table tbody {
 		@apply divide-background-tertiary dark:divide-background-dark-tertiary divide-y;
 	}
@@ -364,7 +424,7 @@
 		@apply bg-background-tertiary/50 dark:bg-background-dark-tertiary/50 px-4 py-3;
 	}
 
-	/* Special styling for tables inside dialogs */
+	/* Dialog Table Styling */
 	[role='dialog'] .table tr td:first-child {
 		@apply bg-background-tertiary dark:bg-background-dark-tertiary px-4 py-3 font-medium;
 	}
@@ -373,6 +433,7 @@
 		@apply bg-background-tertiary/90 dark:bg-background-dark/90 px-4 py-3;
 	}
 
+	/* Table Corner Rounding */
 	.table tr:first-child td:first-child {
 		@apply rounded-tl-md;
 	}
@@ -389,9 +450,9 @@
 		@apply rounded-br-md;
 	}
 
-	/* Keyboard key styles */
+	/* ===== KEYBOARD KEYS ===== */
 	.kbd {
-		@apply bg-background-secondary dark:bg-background-dark-tertiary border-background-tertiary dark:border-background-dark-secondary text-content dark:text-content-dark dark:shadow-dark-sm inline-flex min-w-[1.5rem] items-center justify-center rounded border px-1.5 py-0.5 text-center font-mono font-medium shadow-sm;
+		@apply dark:shadow-dark-sm bg-background-secondary dark:bg-background-dark-tertiary border-background-tertiary dark:border-background-dark-secondary text-content dark:text-content-dark inline-flex min-w-[1.5rem] items-center justify-center rounded border px-1.5 py-0.5 text-center font-mono font-medium shadow-sm;
 	}
 
 	.kbd-sm {
@@ -406,7 +467,7 @@
 		@apply min-w-[2rem] px-2.5 py-1.5 text-base;
 	}
 
-	/* Progress bars */
+	/* ===== PROGRESS BARS ===== */
 	.progress {
 		@apply bg-background-tertiary w-full appearance-none overflow-hidden;
 	}
@@ -428,7 +489,7 @@
 		@apply transition-all duration-300;
 	}
 
-	/* Progress variants */
+	/* Progress Color Variants */
 	.progress-primary::-webkit-progress-value,
 	.progress-primary::-moz-progress-bar {
 		@apply bg-primary;
@@ -459,7 +520,7 @@
 		@apply bg-info;
 	}
 
-	/* Size variants */
+	/* Progress Size Variants */
 	.progress-xs {
 		height: 0.25rem;
 	}
@@ -476,7 +537,7 @@
 		height: 0.875rem;
 	}
 
-	/* Indeterminate progress animation */
+	/* Indeterminate Progress Animation */
 	.progress-indeterminate::-webkit-progress-value {
 		@apply animate-[progress-loading_2s_infinite_ease];
 		background-size: 200% 200%;
@@ -489,30 +550,7 @@
 		background-position: left -30% top 0;
 	}
 
-	@keyframes progress-loading {
-		0% {
-			background-position: 200% 0;
-		}
-		100% {
-			background-position: -200% 0;
-		}
-	}
-
-	/* Fieldset and Legend styles */
-	.fieldset {
-		@apply border-background-tertiary dark:border-background-dark-tertiary bg-background dark:bg-background-dark-secondary min-w-0 rounded-lg border p-4;
-	}
-
-	/* Special styling for fieldsets inside dialogs */
-	[role='dialog'] .fieldset {
-		@apply bg-background-secondary dark:bg-background-dark-tertiary;
-	}
-
-	.fieldset-legend {
-		@apply text-content-secondary dark:text-content-dark-secondary px-2 text-sm font-medium;
-	}
-
-	/* Toggle Switch */
+	/* ===== TOGGLE SWITCHES ===== */
 	.toggle {
 		@apply relative inline-flex cursor-pointer items-center select-none;
 	}
@@ -526,21 +564,12 @@
 		@apply bg-background-tertiary dark:bg-background-dark-tertiary border-background-tertiary dark:border-background-dark-tertiary h-5 w-10 rounded-full border transition-colors duration-200 ease-in-out;
 	}
 
-	/* Special styling for toggles inside dialogs */
-	[role='dialog'] .fieldset .toggle-track {
-		@apply bg-background-tertiary/70 dark:bg-background-dark-secondary/70;
-	}
-
-	[role='dialog'] .fieldset .toggle-input:checked + .toggle-track {
-		@apply bg-primary border-primary;
-	}
-
 	.toggle-input:checked + .toggle-track {
 		@apply bg-primary border-primary;
 	}
 
 	.toggle-thumb {
-		@apply bg-background dark:bg-content-dark dark:shadow-dark-sm absolute top-0.5 left-0.5 h-4 w-4 transform rounded-full shadow-sm transition-transform duration-200 ease-in-out;
+		@apply bg-background dark:bg-background-secondary dark:shadow-dark-sm absolute top-0.5 left-0.5 h-4 w-4 transform rounded-full shadow-sm transition-transform duration-200 ease-in-out;
 	}
 
 	.toggle-input:checked + .toggle-track .toggle-thumb {
@@ -557,7 +586,7 @@
 		@apply cursor-not-allowed opacity-50;
 	}
 
-	/* Size variants */
+	/* Toggle Size Variants */
 	.toggle-sm .toggle-track {
 		@apply h-4 w-8;
 	}
@@ -595,32 +624,59 @@
 	}
 }
 
+/* Utilities Layer - Text contrast helpers */
 @layer utilities {
-	/* Custom scrollbar styling */
-	::-webkit-scrollbar {
-		width: 6px;
-		height: 6px;
+	.text-auto-contrast {
+		@apply text-content stroke-content dark:text-content-dark dark:stroke-content;
 	}
 
-	::-webkit-scrollbar-track {
-		@apply bg-transparent;
+	/* Text on colored backgrounds - Apply to both element and its children */
+
+	/* Primary */
+	.bg-primary,
+	.bg-primary *,
+	.btn-primary,
+	.btn-primary * {
+		@apply stroke-white text-white;
 	}
 
-	::-webkit-scrollbar-thumb {
-		@apply bg-content-tertiary/50 hover:bg-content-tertiary/70 dark:bg-content-dark-tertiary/50 dark:hover:bg-content-dark-tertiary/70 rounded-full transition-colors;
+	/* Secondary */
+	.bg-secondary,
+	.bg-secondary *,
+	.btn-secondary,
+	.btn-secondary * {
+		@apply stroke-white text-white;
 	}
 
-	::-webkit-scrollbar-corner {
-		@apply bg-transparent;
+	/* Success */
+	.bg-success,
+	.bg-success *,
+	.btn-success,
+	.btn-success * {
+		@apply stroke-white text-white;
 	}
 
-	/* Apply nicer scrolling behavior globally */
-	* {
-		scrollbar-width: thin;
-		scrollbar-color: var(--color-content-tertiary) transparent;
+	/* Error */
+	.bg-error,
+	.bg-error *,
+	.btn-error,
+	.btn-error * {
+		@apply stroke-white text-white;
 	}
 
-	.dark * {
-		scrollbar-color: var(--color-content-dark-tertiary) transparent;
+	/* Warning */
+	.bg-warning,
+	.bg-warning *,
+	.btn-warning,
+	.btn-warning * {
+		@apply stroke-black text-black;
+	}
+
+	/* Info */
+	.bg-info,
+	.bg-info *,
+	.btn-info,
+	.btn-info * {
+		@apply stroke-white text-white;
 	}
 }

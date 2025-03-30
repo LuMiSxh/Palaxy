@@ -1,79 +1,9 @@
+import type { SingleKey, KeyCombination } from '$types/keys';
+
 type KeyHandler = {
 	id: string;
 	callback: (event: KeyboardEvent) => void | boolean;
-	scope?: string;
 };
-
-// Define modifiers once
-type Modifier = 'ctrl' | 'alt' | 'shift' | 'meta';
-// Alphabetic keys (a-z)
-type AlphaKey =
-	| 'a'
-	| 'b'
-	| 'c'
-	| 'd'
-	| 'e'
-	| 'f'
-	| 'g'
-	| 'h'
-	| 'i'
-	| 'j'
-	| 'k'
-	| 'l'
-	| 'm'
-	| 'n'
-	| 'o'
-	| 'p'
-	| 'q'
-	| 'r'
-	| 's'
-	| 't'
-	| 'u'
-	| 'v'
-	| 'w'
-	| 'x'
-	| 'y'
-	| 'z';
-// Numeric keys (0-9)
-type NumericKey = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
-// Function keys (F1-F24)
-type FunctionKey =
-	`f${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24}`;
-// Navigation keys
-type NavigationKey = 'home' | 'end' | `arrow${'up' | 'down' | 'left' | 'right'}`;
-// Lock keys
-type LockKey = `${'num' | 'caps' | 'scroll' | ''}lock`;
-// Special character keys
-type SpecialCharKey =
-	| 'semicolon'
-	| 'equals'
-	| 'comma'
-	| 'dash'
-	| 'period'
-	| 'slash'
-	| 'backquote'
-	| 'openbracket'
-	| 'backslash'
-	| 'closebracket'
-	| 'quote'
-	| 'plus'
-	| 'minus';
-// Action keys
-type ActionKey = 'escape' | 'tab' | 'space' | 'enter' | 'backspace' | 'delete' | 'pause';
-// All base keys combined
-type BaseKey =
-	| AlphaKey
-	| NumericKey
-	| FunctionKey
-	| NavigationKey
-	| LockKey
-	| SpecialCharKey
-	| ActionKey;
-// Key combination types
-type SingleKey = Modifier | BaseKey;
-type ModifierCombo = `${Modifier}+${BaseKey}` | `${Modifier}+${Modifier}+${BaseKey}`;
-// Final type that can be used
-type KeyCombination = SingleKey | ModifierCombo;
 
 // Convert a key combination string to lowercase for consistent matching
 function normalizeKeyCombo(combo: KeyCombination | string): Lowercase<KeyCombination> {
@@ -94,14 +24,12 @@ class KeyboardManager {
 	 * Register a key or key combination with a handler function
 	 * @param keyCombo String like "ctrl+k" or "shift+alt+a"
 	 * @param callback Function to execute when key combo is pressed
-	 * @param scope Optional scope to make removing certain handlers easier
 	 * @param id Optional ID to identify the handler. If not provided, a random ID is generated
 	 * @returns The ID of the registered handler
 	 */
 	register(
 		keyCombo: KeyCombination,
 		callback: (event: KeyboardEvent) => void,
-		scope: string | undefined = undefined,
 		id: string | undefined = undefined
 	): string {
 		// Normalize the key combo string
@@ -118,7 +46,7 @@ class KeyboardManager {
 			throw new Error(`Handler with ID "${id}" already exists`);
 		}
 
-		const handler: KeyHandler = { id, callback, scope };
+		const handler: KeyHandler = { id, callback };
 
 		const handlers = this.handlers.get(keyCombo)!;
 		handlers.push(handler);
@@ -130,13 +58,11 @@ class KeyboardManager {
 	 * Register a key handler that excludes certain keys and calls the callback for all others
 	 * @param excludedKeys Array of keys to exclude
 	 * @param callback Function to execute when a non-excluded key is pressed
-	 * @param scope Optional scope to make removing certain handlers easier
 	 * @param id Optional ID to identify the handler. If not provided, a random ID is generated
 	 */
 	registerExcept(
 		excludedKeys: SingleKey[],
 		callback: (event: KeyboardEvent) => void,
-		scope: string | undefined = undefined,
 		id: string | undefined = undefined
 	): string {
 		id = this.generateIdIfNotProvided(id);
@@ -156,8 +82,7 @@ class KeyboardManager {
 		// Store the handler function so we can remove it later
 		this.excludeHandlers.set(id, {
 			id,
-			callback: wrappedCallback,
-			scope
+			callback: wrappedCallback
 		});
 
 		// Add the event listener
@@ -200,32 +125,6 @@ class KeyboardManager {
 	}
 
 	/**
-	 * Unregister all handlers in a certain scope
-	 * @param scope
-	 */
-	unregisterScope(scope: string): void {
-		// Remove all handlers with the given scope
-		for (const [key, handlers] of this.handlers.entries()) {
-			const filteredHandlers = handlers.filter((h) => h.scope !== scope);
-			if (filteredHandlers.length === 0) {
-				this.handlers.delete(key);
-			} else {
-				this.handlers.set(key, filteredHandlers);
-			}
-		}
-
-		// Remove all except handlers with the given scope
-		for (const handler of this.excludeHandlers.values()) {
-			if (handler.scope === scope) {
-				if (typeof window !== 'undefined') {
-					window.removeEventListener('keydown', handler.callback);
-				}
-				this.excludeHandlers.delete(handler.id);
-			}
-		}
-	}
-
-	/**
 	 * Register and unregister multiple handlers at once.
 	 * For it to work, this function has to be called and its valued return in the mount of a component.
 	 * @param handlers List of tuples with the parameters for the register function
@@ -254,20 +153,6 @@ class KeyboardManager {
 			ids.forEach((id) => this.unregister(id));
 		};
 	};
-
-	/**
-	 * Enable the keyboard manager
-	 */
-	enable(): void {
-		this.enabled = true;
-	}
-
-	/**
-	 * Disable the keyboard manager
-	 */
-	disable(): void {
-		this.enabled = false;
-	}
 
 	/**
 	 * Generate a random (unique) ID if not provided
@@ -358,6 +243,3 @@ class KeyboardManager {
 
 // Create and export a singleton instance
 export const keyboard = new KeyboardManager();
-
-// Export the types
-export type { KeyCombination };

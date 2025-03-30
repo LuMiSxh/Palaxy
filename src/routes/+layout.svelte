@@ -271,6 +271,7 @@
 	{#if $appData.showKeyHints || $appData.mouseSupport}
 		<div
 			class="bg-background-secondary dark:bg-background-dark-secondary z-50 flex h-8 items-center justify-center px-2"
+			draggable="false"
 		>
 			{#if $appData.showKeyHints}
 				<KeyHint />

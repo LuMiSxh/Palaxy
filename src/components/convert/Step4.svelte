@@ -41,7 +41,7 @@
 	}
 
 	onMount(async () => {
-		unregisterKeyHint = keyHint.smartAdd([['tab', $t`Navigate between fields`]]);
+		unregisterKeyHint = keyHint.smartAdd([['tab', $t`Navigate fields`]]);
 
 		// Run bundler on mount
 		await runBundler();

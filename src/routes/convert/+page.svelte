@@ -7,7 +7,7 @@
 		IconLineScan,
 		IconPencil
 	} from '@tabler/icons-svelte';
-	import { Step1, Step2, Step3, Step4, Step5, Step7 } from '$components/convert';
+	import { Step1, Step2, Step3, Step4, Step5, Step6, Step7 } from '$components/convert';
 	import { stepState } from '$states/converter.svelte';
 	import { t } from 'svelte-i18n-lingui';
 	import { onMount, type Snippet, untrack } from 'svelte';
@@ -25,43 +25,44 @@
 				title: $t`Choose Source Material Directory`,
 				description: $t`Select the directory where the source material is located.`,
 				icon: IconFolder,
-				cmp: Step1,
-				hidden: false
+				cmp: Step1
 			},
 			{
 				title: $t`Analysis`,
 				description: $t`Analyze the source material for potential conversion issues and improvements.`,
 				icon: IconLineScan,
-				cmp: Step2,
-				hidden: false
+				cmp: Step2
 			},
 			{
 				title: $t`Set Metadata`,
 				description: $t`Set the metadata for the to be converted material.`,
 				icon: IconAdjustments,
-				cmp: Step3,
-				hidden: false
+				cmp: Step3
 			},
 			{
 				title: $t`Bundling`,
 				description: $t`Set the volume sizes for the conversion.`,
 				Icon: IconHandStop,
-				cmp: Step4,
-				hidden: true
+				cmp: Step4
 			},
 			{
 				title: $t`Filter Images`,
-				description: $t`Filter out images that are ads / unwanted for the conversion.`,
+				description: $t`Filter out unwanted images, change image order, and set cover images.`,
 				icon: IconFilter,
-				cmp: Step5,
-				hidden: false
+				cmp: Step5
 			},
 			{
 				title: $t`Review`,
-				description: $t`Review the settings and the material before conversion.`,
+				description: $t`Review all your settings before starting the conversion.`,
 				icon: IconPencil,
+				cmp: Step6
+			},
+			{
+				title: $t`Conversion`,
+				description: $t`Palaxy is now converting your material. Please wait.`,
+				icon: IconHandStop,
 				cmp: Step7,
-				hidden: false
+				hidden: true
 			}
 		];
 	}) as {
@@ -69,7 +70,6 @@
 		description: string;
 		icon: any;
 		cmp: Snippet;
-		hidden: boolean;
 	}[];
 
 	let currentStep = $derived(steps[stepState.index]);
@@ -82,7 +82,11 @@
 				(event) => {
 					event.preventDefault();
 					if (stepState.disablePrev) {
-						addToast($t`You cannot return to the previous step.`, 'warning');
+						if (stepState.index === 0) {
+							addToast($t`This is the first step. There are no previous steps.`, 'warning');
+						} else {
+							addToast($t`You cannot return to the previous step.`, 'warning');
+						}
 						return;
 					}
 					stepState.index -= stepState.indexDecrement;
@@ -94,7 +98,11 @@
 				(event) => {
 					event.preventDefault();
 					if (stepState.disableNext) {
-						addToast($t`You cannot proceed the next step.`, 'warning');
+						if (stepState.index === steps.length - 1) {
+							addToast($t`This is the last step. There are no more steps.`, 'warning');
+						} else {
+							addToast($t`You cannot proceed to the next step.`, 'warning');
+						}
 						return;
 					}
 					stepState.index += stepState.indexIncrement;

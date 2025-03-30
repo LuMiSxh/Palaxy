@@ -55,7 +55,7 @@
 		const unregisterKeyHint = keyHint.smartAdd(
 			[
 				['escape', $t`Close`],
-				['tab', $t`Navigate between fields`]
+				['tab', $t`Navigate fields`]
 			],
 			['enter']
 		); // Ignore enter key hint

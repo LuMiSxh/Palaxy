@@ -290,7 +290,7 @@
 
 								<div class="flex-1">
 									<div class="flex items-center">
-										<span class="font-medium">{$t`Volume ` + (i + 1)}</span>
+										<span class="font-medium">{$t`Volume` + ' ' + (i + 1)}</span>
 										<IconChevronRight size={16} class="mx-1 opacity-60" />
 										<span class="">{chapters} {chapters === 1 ? $t`chapter` : $t`chapters`}</span>
 									</div>
@@ -401,7 +401,7 @@
 							bind:value={newVolumeChapters}
 							bind:this={newVolumeInput}
 							onkeydown={handleKeyDown}
-							use:handleKeyHint={{ keys: [['enter', $t`Add volume`]] }}
+							use:handleKeyHint={{ keys: [['enter', $t`Add Volume`]] }}
 						/>
 
 						<button

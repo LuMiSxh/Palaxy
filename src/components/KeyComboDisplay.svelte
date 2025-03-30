@@ -70,4 +70,4 @@
 	});
 </script>
 
-<kbd class="kbd kbd-sm">{formatted}</kbd>
+<kbd class="kbd kbd-sm select-none">{formatted}</kbd>

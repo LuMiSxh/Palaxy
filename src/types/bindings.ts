@@ -45,17 +45,9 @@ export const commands = {
 			else return { status: 'error', error: e as any };
 		}
 	},
-	async convConvert(
-		createDirectory: boolean,
-		target: string,
-		fileFormat: FileFormat,
-		direction: Direction
-	): Promise<Result<BaseResponse<null>, Error>> {
+	async convConvert(): Promise<Result<BaseResponse<null>, Error>> {
 		try {
-			return {
-				status: 'ok',
-				data: await TAURI_INVOKE('conv_convert', { createDirectory, target, fileFormat, direction })
-			};
+			return { status: 'ok', data: await TAURI_INVOKE('conv_convert') };
 		} catch (e) {
 			if (e instanceof Error) throw e;
 			else return { status: 'error', error: e as any };
@@ -106,6 +98,7 @@ export type ConvState = {
 export type ConvStateKey =
 	| { Name: string }
 	| { Source: string }
+	| { Target: string }
 	| { BundleFlag: BundleFlag }
 	| { Direction: Direction }
 	| { Format: FileFormat }

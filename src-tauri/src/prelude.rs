@@ -84,7 +84,7 @@ impl serde::Serialize for Error {
 pub type EResult<T> = Result<T, Error>;
 
 // App states
-#[derive(Serialize, Deserialize, Clone, Default, Type)]
+#[derive(Serialize, Deserialize, Clone, Default, Type, Debug)]
 pub struct ConvState {
     pub name: String,
     pub source: PathBuf,

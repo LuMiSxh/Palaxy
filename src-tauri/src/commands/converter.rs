@@ -35,6 +35,7 @@ pub async fn conv_state_set(
     match input {
         ConvStateKey::Name(value) => state.name = value,
         ConvStateKey::Source(value) => state.source = value,
+        ConvStateKey::Target(value) => state.target = value,
         ConvStateKey::BundleFlag(value) => state.bundle_flag = value,
         ConvStateKey::Direction(value) => state.direction = value,
         ConvStateKey::Format(value) => state.format = value,
@@ -523,21 +524,27 @@ struct SharedData {
 
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn conv_convert(
-    create_directory: bool,
-    target: String,
-    file_format: FileFormat,
-    direction: Direction,
-    state: State<'_, Mutex<ConvState>>,
-) -> EResult<BaseResponse> {
+pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseResponse> {
     let start = std::time::Instant::now();
 
-    let state = state.lock().await;
+    // Extract all needed data while the lock is held
+    let (name, target, create_directory, format, direction, volume_sizes, data, edited_data) = {
+        let state = state.lock().await;
+        (
+            state.name.clone(),
+            state.target.clone(),
+            state.create_directory,
+            state.format,
+            state.direction,
+            state.volume_sizes.clone(),
+            state.data.clone(),
+            state.edited_data.clone(),
+        )
+    }; // Lock is released here
 
-    // Get all the state data needed
     let target_directory_path = match create_directory {
         true => {
-            let path = Path::new(&target).join(&state.name);
+            let path = Path::new(&target).join(&name);
             if !path.exists() {
                 create_dir(&path).await?;
             }
@@ -560,34 +567,33 @@ pub async fn conv_convert(
     .to_string();
 
     // check if we have edited data, otherwise use normal data
-    let pages = match state.edited_data {
-        Some(ref data) => {
-            if data.is_empty() {
-                state.data.clone()
+    let pages = match edited_data {
+        Some(e_data) => {
+            if e_data.is_empty() {
+                data
             } else {
-                data.clone()
+                e_data
             }
         }
-        None => state.data.clone(),
+        None => data,
     };
 
-    let data = Arc::new(SharedData {
-        name: state.name.clone(),
+    let shared_data = Arc::new(SharedData {
+        name,
         target_directory: target_directory_path,
         pages,
-        chapters_per_volume: state.volume_sizes.clone(),
+        chapters_per_volume: volume_sizes.clone(),
     });
 
-    let handles: Vec<JoinHandle<Result<(), Error>>> = state
-        .volume_sizes
+    let handles: Vec<JoinHandle<Result<(), Error>>> = volume_sizes
         .clone()
         .into_iter()
         .enumerate()
         .map(|(i, chapters)| {
-            let data = Arc::clone(&data);
+            let data = Arc::clone(&shared_data);
 
             // Spawn a new thread for each volume but make sure to use the correct spawning method
-            match file_format {
+            match format {
                 FileFormat::Cbz => spawn_blocking(move || {
                     let j: usize = data.chapters_per_volume[0..i].par_iter().sum();
 

@@ -40,11 +40,24 @@ class ConverterState {
 	 * @type {number[]}
 	 */
 	chapterSizes: number[] = $state([]);
+
 	/**
 	 * The number of images that were excluded from the conversion.
 	 * @type {number}
 	 */
 	excludedImages: number = $state(0);
+
+	/**
+	 * If the order of the chapters has changed during conversion.
+	 * @type {number}
+	 */
+	changedOrder: boolean = $state(false);
+
+	/**
+	 * The number of new images generated during the conversion.
+	 * @type {number}
+	 */
+	newImages: number = $state(0);
 
 	/**
 	 * Resets the converter state to default values.

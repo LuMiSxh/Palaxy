@@ -98,3 +98,28 @@ export async function setLocale(lang: SupportedLanguages): Promise<void> {
 	const { messages } = await import(`../locales/${lang}.ts`);
 	locale.set(lang, messages);
 }
+
+/**
+ * Truncates a file path to a specified maximum length.
+ *
+ * @param {string} path - The file path to truncate.
+ * @param {number} maxLength - The maximum length of the truncated path (default is 50).
+ * @returns {string} - The truncated file path.
+ */
+export function truncatePath(path: string, maxLength: number = 50): string {
+	if (!path || path.length <= maxLength) return path;
+
+	const parts = path.split('/');
+	const fileName = parts.pop() || '';
+	const dirName = parts[0] || '';
+
+	// Preserve first directory and filename, truncate the middle
+	if (fileName.length + dirName.length + 5 >= maxLength) {
+		// If filename itself is very long
+		return fileName.length > maxLength - 5
+			? fileName.substring(0, maxLength - 5) + '...'
+			: fileName;
+	}
+
+	return dirName + '/.../' + fileName;
+}

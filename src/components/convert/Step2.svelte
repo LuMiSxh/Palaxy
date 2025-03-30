@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { t } from 'svelte-i18n-lingui';
 	import convState, { stepState } from '$states/converter.svelte';
 	import { IconCircleMinus, IconCirclePlus, IconExclamationCircle } from '@tabler/icons-svelte';
 	import { commands } from '$types';
 	import { wrapper } from '$lib/utils';
-	import { keyboard } from '$lib/keyboard';
 	import { keyHint } from '$states/keyhint.svelte';
 	import LoadingSpinner from '$components/LoadingSpinner.svelte';
 
@@ -14,79 +13,7 @@
 	let warnings: string[] = $state([]);
 	let isLoading: boolean = $state(true);
 	let resultsContainer: HTMLElement | null = $state(null);
-	let allListItems: HTMLElement[] = $state([]);
-	let currentFocusIndex: number = $state(-1);
-	let cleanupKeyboard: (() => void) | null = null;
 	let cleanupKeyHint: (() => void) | null = null;
-
-	// Get all list items and focus the first one
-	function updateListItems() {
-		if (resultsContainer) {
-			allListItems = Array.from(resultsContainer.querySelectorAll('.list-row'));
-
-			// Reset focus index when list changes
-			if (currentFocusIndex >= allListItems.length) {
-				currentFocusIndex = allListItems.length > 0 ? 0 : -1;
-			}
-
-			// Focus the current item if needed
-			if (currentFocusIndex >= 0 && allListItems.length > 0) {
-				focusItem(currentFocusIndex);
-			}
-		}
-	}
-
-	// Focus a specific item and scroll it into view
-	function focusItem(index: number) {
-		if (index >= 0 && index < allListItems.length) {
-			// Remove focus from all items
-			allListItems.forEach((item) => item.classList.remove('focused-item'));
-
-			// Add focus to current item
-			const currentItem = allListItems[index];
-			currentItem.classList.add('focused-item');
-
-			// If this is the first item in a section, try to scroll the heading into view too
-			const isFirstItemInSection =
-				currentItem.previousElementSibling === null ||
-				!currentItem.previousElementSibling.classList.contains('list-row');
-
-			if (
-				isFirstItemInSection &&
-				currentItem.parentElement &&
-				currentItem.parentElement.previousElementSibling
-			) {
-				// This is likely the first item after a heading, so scroll the heading into view
-				currentItem.parentElement.previousElementSibling.scrollIntoView({
-					behavior: 'smooth',
-					block: 'start'
-				});
-			} else {
-				// Otherwise just scroll the item into view
-				currentItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-			}
-
-			currentFocusIndex = index;
-		}
-	}
-
-	// Navigate to the next or previous item
-	function navigateItems(direction: 'next' | 'prev') {
-		if (allListItems.length === 0) return;
-
-		let newIndex = currentFocusIndex;
-
-		if (direction === 'next') {
-			newIndex =
-				currentFocusIndex < allListItems.length - 1 ? currentFocusIndex + 1 : currentFocusIndex;
-		} else {
-			newIndex = currentFocusIndex > 0 ? currentFocusIndex - 1 : currentFocusIndex;
-		}
-
-		if (newIndex !== currentFocusIndex) {
-			focusItem(newIndex);
-		}
-	}
 
 	onMount(async () => {
 		// Disable the next button, enable the previous button
@@ -108,26 +35,9 @@
 			}
 		}
 
-		// Update list items after the content is loaded
-		setTimeout(updateListItems, 100);
-
-		// Register keyboard handlers for navigating between items
-		cleanupKeyboard = keyboard.smartRegister([
-			[
-				'arrowup',
-				(event) => {
-					event.preventDefault();
-					navigateItems('prev');
-				}
-			],
-			[
-				'arrowdown',
-				(event) => {
-					event.preventDefault();
-					navigateItems('next');
-				}
-			]
-		]);
+		// Focus on the results container after ui render pass
+		await tick()
+		resultsContainer?.focus()
 
 		// Show the key hint for navigating
 		cleanupKeyHint = keyHint.smartAdd([
@@ -137,155 +47,139 @@
 	});
 
 	onDestroy(() => {
-		if (cleanupKeyboard) {
-			cleanupKeyboard();
-		}
-
 		if (cleanupKeyHint) {
 			cleanupKeyHint();
 		}
 	});
-
-	// Watch for content changes to update the list items
-	$effect(() => {
-		if (!isLoading && (positives.length || negatives.length || warnings.length)) {
-			setTimeout(updateListItems, 100);
-		}
-	});
 </script>
 
-{#snippet item(message: string, Icon: any, bg: string, txt: string)}
-	<li class="list-row items-center rounded {bg} mb-2 p-3" style="--text-color: {txt}">
-		<Icon class="{txt} icon mr-3" size={24} />
-		<span class="list-col-grow text-md {txt}">
-			{message}
-		</span>
-	</li>
-{/snippet}
-
-<div class="w-full max-w-3xl">
+<div class="flex h-full w-full flex-col p-4" style="max-height: calc(100vh - 8rem)">
 	{#if isLoading}
-		<LoadingSpinner text={$t`Analyzing source material...`} />
+		<div class="flex h-full items-center justify-center">
+			<LoadingSpinner text={$t`Analyzing source material...`} />
+		</div>
 	{:else}
-		<div class="results-container" bind:this={resultsContainer} tabindex="-1">
-			{#if negatives.length > 0}
-				<div class="mb-4">
-					<h3 class="text-error mb-2 flex items-center text-lg font-semibold">
-						{$t`Issues Found`}
-					</h3>
-					<div class="space-y-2">
-						{#each negatives as negative, i (i)}
-							{@render item(negative, IconCircleMinus, 'bg-error/20', 'text-error')}
-						{/each}
-					</div>
-				</div>
-			{/if}
+		<div class="card">
+			<div class="card-header">
+				<h3 class="font-semibold">
+					{$t`Analysis Results`}
+				</h3>
+			</div>
+			<div class="card-body">
+				<div
+					class="results-container !focus:outline-none"
+					bind:this={resultsContainer}
+					tabindex="0"
+					role="tab"
+					style="max-height: calc(100vh - 14rem)"
+				>
+					{#if negatives.length > 0 || warnings.length > 0 || positives.length > 0}
+						<div class="space-y-6">
+							{#if negatives.length > 0}
+								<div>
+									<h3 class="text-error mb-3 flex items-center text-lg font-semibold">
+										<IconCircleMinus size={20} class="mr-2" />
+										{$t`Issues Found`}
+									</h3>
+									<div class="space-y-2">
+										{#each negatives as negative, i (i)}
+											<div
+												class="list-row items-center rounded bg-error/10 px-4 py-3 border-l-3 border-error"
+												style="--index: {i}"
+											>
+												<span class="list-col-grow text-md">{negative}</span>
+											</div>
+										{/each}
+									</div>
+								</div>
+							{/if}
 
-			{#if warnings.length > 0}
-				<div class="mb-4">
-					<h3 class="text-warning mb-2 flex items-center text-lg font-semibold">
-						{$t`Warnings`}
-					</h3>
-					<div class="space-y-2">
-						{#each warnings as warning, i (i)}
-							{@render item(warning, IconExclamationCircle, 'bg-warning/20', 'text-warning')}
-						{/each}
-					</div>
-				</div>
-			{/if}
+							{#if warnings.length > 0}
+								<div>
+									<h3 class="text-warning mb-3 flex items-center text-lg font-semibold">
+										<IconExclamationCircle size={20} class="mr-2" />
+										{$t`Warnings`}
+									</h3>
+									<div class="space-y-2">
+										{#each warnings as warning, i (i)}
+											<div
+												class="list-row items-center rounded bg-warning/10 px-4 py-3 border-l-3 border-warning"
+												style="--index: {i + negatives.length}"
+											>
+												<span class="list-col-grow text-md">{warning}</span>
+											</div>
+										{/each}
+									</div>
+								</div>
+							{/if}
 
-			{#if positives.length > 0}
-				<div>
-					<h3 class="text-success mb-2 flex items-center text-lg font-semibold">
-						{$t`Good Points`}
-					</h3>
-					<div class="space-y-2">
-						{#each positives as positive, i (i)}
-							{@render item(positive, IconCirclePlus, 'bg-success/20', 'text-success')}
-						{/each}
-					</div>
+							{#if positives.length > 0}
+								<div>
+									<h3 class="text-success mb-3 flex items-center text-lg font-semibold">
+										<IconCirclePlus size={20} class="mr-2" />
+										{$t`Good Points`}
+									</h3>
+									<div class="space-y-2">
+										{#each positives as positive, i (i)}
+											<div
+												class="list-row items-center rounded bg-success/10 px-4 py-3 border-l-3 border-success"
+												style="--index: {i + negatives.length + warnings.length}"
+											>
+												<span class="list-col-grow text-md">{positive}</span>
+											</div>
+										{/each}
+									</div>
+								</div>
+							{/if}
+						</div>
+					{:else}
+						<div class="alert alert-info">
+							<p>{$t`No analysis results found. There might be an issue with the source material.`}</p>
+						</div>
+					{/if}
 				</div>
-			{/if}
 
-			{#if positives.length === 0 && negatives.length === 0 && warnings.length === 0}
-				<div class="alert alert-info">
-					<p>{$t`No analysis results found. There might be an issue with the source material.`}</p>
-				</div>
-			{/if}
+				{#if negatives.length > 0}
+					<div class="alert alert-error mt-6">
+						<p class="flex items-center">
+							<IconCircleMinus size={20} class="mr-2" />
+							{$t`Please resolve these issues before continuing.`}
+						</p>
+					</div>
+				{/if}
+			</div>
 		</div>
 	{/if}
 </div>
 
 <style>
 	.results-container {
-		max-height: 70vh;
 		overflow-y: auto;
 		padding-right: 0.5rem;
 		outline: none;
 		scroll-behavior: smooth;
 	}
 
-	.list-row {
+  /* Forcefully remove all focus indicators */
+  .results-container:focus {
+      outline: none !important;
+      box-shadow: none !important;
+      -webkit-box-shadow: none !important;
+      -moz-box-shadow: none !important;
+  }
+
+  .list-row {
 		display: flex;
 		align-items: center;
-		transition: all 0.3s ease;
-		border-left: 3px solid transparent;
-		padding-left: calc(0.75rem - 3px);
-	}
-
-	.list-row:hover {
-		transform: translateX(5px);
-		border-left-color: var(--text-color, currentColor);
-	}
-
-	.list-row.focused-item {
-		transform: translateX(5px);
-		border-left-color: var(--text-color, currentColor);
-		outline: none;
 	}
 
 	.list-col-grow {
 		flex-grow: 1;
 	}
 
-	.icon {
-		transition: transform 0.2s ease;
-	}
-
-	.list-row:hover .icon,
-	.list-row.focused-item .icon {
-		transform: scale(1.15);
-	}
-
-	.list-row {
-		animation: var(--animate-slide-right);
-		opacity: 0;
-		animation-fill-mode: forwards;
-		animation-delay: calc(var(--index, 0) * 0.1s);
-	}
-
-	/* Add staggered animation for multiple items */
-	.space-y-2 > :nth-child(1) {
-		--index: 1;
-	}
-
-	.space-y-2 > :nth-child(2) {
-		--index: 2;
-	}
-
-	.space-y-2 > :nth-child(3) {
-		--index: 3;
-	}
-
-	.space-y-2 > :nth-child(4) {
-		--index: 4;
-	}
-
-	.space-y-2 > :nth-child(5) {
-		--index: 5;
-	}
-
-	.space-y-2 > :nth-child(n + 6) {
-		--index: 6;
+	/* Border color styles */
+	.border-l-3 {
+		border-left-width: 3px;
+		border-left-style: solid;
 	}
 </style>

@@ -269,7 +269,7 @@
 	}
 
 	.card-header {
-		@apply border-background-tertiary dark:border-background-dark-tertiary border-b px-4 py-3;
+		@apply border-background-tertiary dark:border-background-dark-tertiary bg-primary/20 border-b px-4 py-3;
 	}
 
 	.card-body {

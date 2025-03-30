@@ -36,7 +36,7 @@
 	});
 </script>
 
-<ul class="flex h-full w-full gap-2">
+<ul class="flex h-full w-full gap-2" draggable="false">
 	{#each sorted as [key, description], i}
 		<li class="flex items-center gap-1">
 			<KeyComboDisplay keyCombination={key} />

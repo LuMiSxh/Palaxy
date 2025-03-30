@@ -56,6 +56,7 @@ pub enum TagType {
 pub enum ConvStateKey {
     Name(String),
     Source(PathBuf),
+    Target(PathBuf),
     BundleFlag(BundleFlag),
     Direction(Direction),
     Format(FileFormat),

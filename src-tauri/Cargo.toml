@@ -1,6 +1,6 @@
 [package]
 name = "palaxy"
-version = "0.3.0"
+version = "0.3.2"
 description = "The manga converter for the modern age"
 authors = ["LuMiSxh"]
 license = ""

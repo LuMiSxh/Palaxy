@@ -26,7 +26,7 @@
 			{$t`Manga conversion and search at your fingertips.`}
 		</p>
 		<p>
-			{$t`To ge started press`}
+			{$t`To get started press`}
 			<KeyComboDisplay keyCombination="space" />
 			<br />
 			{$t`This will open the ActionHub from where you can access all the features of Palaxy.`}

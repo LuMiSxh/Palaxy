@@ -992,12 +992,12 @@ msgstr "Dies ist der erste Schritt. Es gibt keine vorherigen Schritte."
 msgid "This is the last step. There are no more steps."
 msgstr "Dies ist der letzte Schritt. Es gibt keine weiteren Schritte."
 
-#: src/routes/+page.svelte:31
+#: src/routes/+page.svelte:32
 msgid "This will open the ActionHub from where you can access all the features of Palaxy."
 msgstr "Dies öffnet den ActionHub, von dem aus du auf alle Funktionen von Palaxy zugreifen kannst."
 
 #: src/routes/+page.svelte:29
-msgid "To ge started press"
+msgid "To get started press"
 msgstr "Um loszulegen drücke"
 
 #: src/components/convert/Step3.svelte:217

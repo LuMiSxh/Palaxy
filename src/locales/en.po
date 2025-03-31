@@ -1038,13 +1038,17 @@ msgstr "This is the first step. There are no previous steps."
 msgid "This is the last step. There are no more steps."
 msgstr "This is the last step. There are no more steps."
 
-#: src/routes/+page.svelte:31
+#: src/routes/+page.svelte:32
 msgid "This will open the ActionHub from where you can access all the features of Palaxy."
 msgstr "This will open the ActionHub from where you can access all the features of Palaxy."
 
 #: src/routes/+page.svelte:29
-msgid "To ge started press"
-msgstr "To ge started press"
+#~ msgid "To ge started press"
+#~ msgstr "To ge started press"
+
+#: src/routes/+page.svelte:29
+msgid "To get started press"
+msgstr "To get started press"
 
 #: src/components/convert/Step3.svelte:217
 #: src/components/convert/step5/Chapter.svelte:221

@@ -43,7 +43,7 @@
 <div class="fixed top-4 right-4 z-50 flex w-80 flex-col gap-4">
 	{#each toaster.toasts as toast}
 		<div
-			class="bg-background-tertiary dark:bg-background-dark-tertiary rounded flex items-center gap-4 px-4 py-2 shadow-md"
+			class="bg-background-tertiary dark:bg-background-dark-tertiary flex items-center gap-4 rounded px-4 py-2 shadow-md"
 			in:fly={{ y: -20, duration: 300 }}
 			out:fade={{ duration: 200 }}
 		>

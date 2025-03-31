@@ -6,6 +6,25 @@
 /* Dark mode variant definition */
 @custom-variant dark (&:is(.dark *));
 
+/* Font faces */
+@font-face {
+	font-family: 'Fira Code';
+	font-style: normal;
+	font-weight: 100 900;
+	src: url('/fonts/FiraCode.woff2') format('woff2');
+	font-display: swap;
+	font-variation-settings: 'wght' var(--wght, 400);
+}
+
+@font-face {
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 300 700;
+	src: url('/fonts/Roboto.woff2') format('woff2');
+	font-display: swap;
+	font-variation-settings: 'wght' var(--wght, 400);
+}
+
 /* Theme definition with improved organization */
 @theme {
 	/* ===== COLOR SYSTEM ===== */
@@ -86,9 +105,10 @@
 
 	/* Typography */
 	--font-sans:
-		Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
-		Helvetica Neue, Arial, sans-serif;
-	--font-mono: JetBrains Mono, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+		'Roboto', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica Neue,
+		Arial, sans-serif;
+	--font-mono:
+		'Fira Code', JetBrains Mono, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
 
 	/* ===== ANIMATIONS ===== */
 	--animate-fade-in: fade-in 0.3s ease-out;
@@ -172,6 +192,20 @@
 		border-color: var(--color-content, currentColor);
 	}
 
+	/* Apply font-sans as the default font */
+	html,
+	body {
+		font-family: var(--font-sans), system-ui;
+	}
+
+	/* Apply font-mono to code-related elements */
+	code,
+	pre,
+	kbd,
+	samp {
+		font-family: var(--font-mono), ui-monospace;
+	}
+
 	/* Base HTML styling */
 	html {
 		@apply bg-background antialiased;
@@ -211,6 +245,68 @@
 	/* Focus styles */
 	*:focus-visible {
 		@apply ring-primary dark:ring-offset-background-dark ring-2 ring-offset-2 outline-none;
+	}
+
+	/* Custom Scrollbars (non-macOS only) */
+	@supports (scrollbar-width: thin) and (not (-webkit-hyphens: none)) {
+		* {
+			scrollbar-width: thin;
+			scrollbar-color: var(--color-content-tertiary) var(--color-background-tertiary);
+		}
+
+		.dark * {
+			scrollbar-color: var(--color-content-dark-tertiary) var(--color-background-dark-tertiary);
+		}
+	}
+
+	@supports selector(::-webkit-scrollbar) and (not (-moz-appearance: none)) {
+		/* Exclude macOS with this selector approach */
+		@media not all and (-webkit-min-device-pixel-ratio: 0),
+			not all and (min--moz-device-pixel-ratio: 0) {
+			/* Scrollbar width/height */
+			::-webkit-scrollbar {
+				width: 8px;
+				height: 8px;
+			}
+
+			/* Scrollbar track */
+			::-webkit-scrollbar-track {
+				background: var(--color-background-tertiary);
+				border-radius: var(--radius-sm);
+			}
+
+			.dark ::-webkit-scrollbar-track {
+				background: var(--color-background-dark-tertiary);
+			}
+
+			/* Scrollbar thumb */
+			::-webkit-scrollbar-thumb {
+				background: var(--color-content-tertiary);
+				border-radius: var(--radius-sm);
+				transition: background 0.2s ease;
+			}
+
+			.dark ::-webkit-scrollbar-thumb {
+				background: var(--color-content-dark-tertiary);
+			}
+
+			/* Scrollbar thumb hover */
+			::-webkit-scrollbar-thumb:hover {
+				background: var(--color-content-secondary);
+			}
+
+			.dark ::-webkit-scrollbar-thumb:hover {
+				background: var(--color-content-dark-secondary);
+			}
+		}
+	}
+
+	::selection {
+		@apply bg-secondary/20 text-white;
+	}
+
+	::-moz-selection {
+		@apply bg-secondary/20 text-white;
 	}
 }
 
@@ -631,7 +727,6 @@
 	}
 
 	/* Text on colored backgrounds - Apply to both element and its children */
-
 	/* Primary */
 	.bg-primary,
 	.bg-primary *,

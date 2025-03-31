@@ -39,8 +39,10 @@
 <ul class="flex h-full w-full gap-2" draggable="false">
 	{#each sorted as [key, description], i}
 		<li class="flex items-center gap-1">
-			<KeyComboDisplay keyCombination={key} />
-			<span class="text-sm">{description}</span>
+			<div class="flex items-center">
+				<KeyComboDisplay keyCombination={key} />
+			</div>
+			<span class="flex items-center text-sm">{description}</span>
 		</li>
 		{#if i < sorted.length - 1}
 			<div class="divider-horizontal mx-1!"></div>

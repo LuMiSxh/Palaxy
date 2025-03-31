@@ -19,8 +19,6 @@ pub enum BundleFlag {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Default, Type)]
 pub enum FileFormat {
-    #[serde(rename = "PDF")]
-    Pdf,
     #[serde(rename = "EPUB")]
     Epub,
     #[default]

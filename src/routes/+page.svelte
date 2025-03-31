@@ -1,9 +1,18 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n-lingui';
+	import { onMount } from 'svelte';
+	import { keyHint } from '$states/keyhint.svelte';
+	import KeyComboDisplay from '$components/KeyComboDisplay.svelte';
 
 	let images = ['/holo/watame.png', '/holo/suisei.png', '/holo/towa.png', '/holo/laplus.png'];
 
 	let currentImage = $derived(images[Math.floor(Math.random() * images.length)]);
+
+	// Reset all key hints
+	onMount(() => {
+		keyHint.clear();
+		keyHint.addKey('space', $t`ActionHub`);
+	});
 </script>
 
 <div class="grid h-full w-full grid-cols-2 grid-rows-1 gap-2">
@@ -15,6 +24,12 @@
 		</h1>
 		<p class="pb-2 text-lg">
 			{$t`Manga conversion and search at your fingertips.`}
+		</p>
+		<p>
+			{$t`To get started press`}
+			<KeyComboDisplay keyCombination="space" />
+			<br />
+			{$t`This will open the ActionHub from where you can access all the features of Palaxy.`}
 		</p>
 	</div>
 	<div class="flex items-end justify-end">

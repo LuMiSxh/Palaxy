@@ -1,19 +1,17 @@
 use crate::collector::Collector;
-use crate::generator::{cbz, epub, pdf};
+use crate::generator::cbz::Cbz;
+use crate::generator::epub::EPub;
+use crate::generator::Generator;
 use crate::prelude::*;
-use crate::types::{
-    AnalyzeResponse, BaseResponse, BundleFlag, BundleResponse, CommAnalyzeMeta, CommBundle,
-    ConvStateKey, Direction, FileFormat,
-};
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use tauri::async_runtime::{spawn, spawn_blocking, JoinHandle};
+use tauri::async_runtime::spawn;
 use tauri::State;
 use tokio::fs::create_dir;
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, Semaphore};
 
 lazy_static! {
     static ref REGEX_ANALYZE: Regex = Regex::new(r"\d+-\d+(\.\d+)?").unwrap();
@@ -515,19 +513,12 @@ pub async fn conv_bundle(
     })
 }
 
-struct SharedData {
-    name: String,
-    target_directory: String,
-    pages: Vec<Vec<PathBuf>>,
-    chapters_per_volume: Vec<usize>,
-}
-
 #[tauri::command(async)]
 #[specta::specta]
 pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseResponse> {
     let start = std::time::Instant::now();
 
-    // Extract all needed data while the lock is held
+    // Extract all the needed data while the lock is held
     let (name, target, create_directory, format, direction, volume_sizes, data, edited_data) = {
         let state = state.lock().await;
         (
@@ -578,96 +569,90 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
         None => data,
     };
 
-    let shared_data = Arc::new(SharedData {
-        name,
-        target_directory: target_directory_path,
-        pages,
-        chapters_per_volume: volume_sizes.clone(),
-    });
+    // Create a semaphore to limit concurrent conversions
+    // Use available CPU cores or a reasonable fixed limit
+    let max_concurrent = num_cpus::get().min(10); // Use at most 10 threads or available cores, whichever is smaller
+    let semaphore = Arc::new(Semaphore::new(max_concurrent));
 
-    let handles: Vec<JoinHandle<Result<(), Error>>> = volume_sizes
-        .clone()
-        .into_iter()
-        .enumerate()
-        .map(|(i, chapters)| {
-            let data = Arc::clone(&shared_data);
+    // Create a vector of tasks, each processing one volume
+    let mut tasks = Vec::new();
 
-            // Spawn a new thread for each volume but make sure to use the correct spawning method
-            match format {
-                FileFormat::Cbz => spawn_blocking(move || {
-                    let j: usize = data.chapters_per_volume[0..i].par_iter().sum();
+    for (i, &chapters) in volume_sizes.iter().enumerate() {
+        let j: usize = volume_sizes[0..i].iter().sum();
+        let volume_name = format!("{} | {}", name.clone(), i + 1);
+        let target_dir = target_directory_path.clone();
+        let format_clone = format;
+        let direction_clone = direction;
+        let semaphore_clone = Arc::clone(&semaphore);
 
-                    let volume_name = format!("{} | {}", data.name, i + 1);
+        // Clone the necessary data for this volume
+        let volume_pages = pages[j..(j + chapters)].to_vec();
 
-                    let mut cbz = cbz::Cbz::new(&data.target_directory, &volume_name)?;
+        // Spawn a task for each volume to process them in parallel
+        let task = spawn(async move {
+            // Acquire a permit from the semaphore before starting the conversion
+            let _permit = semaphore_clone.acquire().await.map_err(|e| {
+                Error::AsyncTaskError(format!("Failed to acquire semaphore: {}", e))
+            })?;
 
-                    for k in j..(j + chapters) {
-                        for page in &data.pages[k] {
-                            cbz.add_page(page)?;
+            match format_clone {
+                FileFormat::Cbz => {
+                    // Create a new CBZ generator
+                    let mut generator = Cbz::new(&target_dir, &volume_name)?;
+
+                    // Add all pages from the chapters
+                    for (_, chapter_pages) in volume_pages.iter().enumerate() {
+                        for page in chapter_pages {
+                            generator.add_page(page).await?;
                         }
                     }
 
-                    cbz.set_comicinfo(&volume_name, i + 1)?;
-                    cbz.save()?;
-
-                    Ok(())
-                }),
-                FileFormat::Epub => spawn(async move {
-                    let j: usize = data.chapters_per_volume[0..i].par_iter().sum();
-
-                    let volume_name = format!("{} | {}", data.name, i + 1);
-
-                    let mut epub = epub::EPub::new()?;
-
-                    epub.set_cover(&data.pages[j][0])?
-                        .set_lang("en")?
-                        .set_metadata("title", &volume_name)?
-                        .set_metadata("author", "Manga Bundler")?
-                        .set_metadata(
-                            "direction",
-                            if direction == Direction::Ltr {
-                                "ltr"
-                            } else {
-                                "rtl"
-                            },
-                        )?;
-
-                    for k in j..(j + chapters) {
-                        epub.add_chapter(k + 1, &data.pages[k]).await?;
+                    // Set metadata and save
+                    generator.set_metadata(&volume_name, i + 1).await?;
+                    generator.save().await?;
+                }
+                FileFormat::Epub => {
+                    // Make sure we have pages for the cover
+                    if volume_pages.is_empty() || volume_pages[0].is_empty() {
+                        return Err(Error::Unsupported(
+                            "Cannot create EPUB without cover image".to_string(),
+                        ));
                     }
 
-                    epub.save(&data.target_directory, format!("{}", volume_name).as_str())
-                        .await?;
+                    // Create a new EPUB generator
+                    let mut generator = EPub::new(&target_dir, &volume_name)?;
 
-                    Ok(())
-                }),
-                FileFormat::Pdf => spawn_blocking(move || {
-                    let j: usize = data.chapters_per_volume[0..i].par_iter().sum();
+                    // Set cover, language, and reading direction
+                    generator.set_cover(&volume_pages[0][0])?;
+                    generator.set_lang("en")?;
+                    generator.set_reading_direction(direction_clone);
 
-                    let volume_name = format!("{} | {}", data.name, i + 1);
+                    // Set metadata
+                    generator.set_custom_metadata("title", &volume_name)?;
+                    generator.set_custom_metadata("author", "Manga Bundler")?;
 
-                    let mut pdf = pdf::Pdf::new(&volume_name, &data.pages[j][0])?;
-
-                    for k in (j + 1)..(j + chapters) {
-                        for page in &data.pages[k] {
-                            pdf.add_page(page)?;
-                        }
+                    // Add chapters
+                    for (chapter_idx, chapter_pages) in volume_pages.iter().enumerate() {
+                        generator
+                            .add_chapter(chapter_idx + 1, chapter_pages)
+                            .await?;
                     }
 
-                    pdf.save(&data.target_directory, &volume_name)?;
-
-                    Ok(())
-                }),
+                    // Save the EPUB
+                    generator.save().await?;
+                }
             }
-        })
-        .collect();
 
-    // Wait for all threads to finish
-    for handle in handles {
-        match handle.await {
-            Ok(_) => {}
-            Err(e) => return Err(Error::AsyncTaskError(e.to_string())),
-        }
+            Ok(())
+        });
+
+        tasks.push(task);
+    }
+
+    // Wait for all tasks to complete
+    for task in tasks {
+        task.await
+            .map_err(|e| Error::AsyncTaskError(e.to_string()))??;
     }
 
     Ok(BaseResponse::default_duration(

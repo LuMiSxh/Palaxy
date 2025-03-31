@@ -718,6 +718,11 @@
 	.toggle-xl .toggle-input:checked + .toggle-track .toggle-thumb {
 		@apply translate-x-7;
 	}
+
+	/* ===== BREADCRUMBS ===== */
+	.breadcrumb {
+		@apply flex items-center gap-1.5 overflow-x-auto px-1 py-1.5;
+	}
 }
 
 /* Utilities Layer - Text contrast helpers */

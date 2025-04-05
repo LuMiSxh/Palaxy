@@ -237,10 +237,10 @@
 	<div class="divider"></div>
 
 	{#if commandStack.length > 0}
-		<div class="breadcrumb mb-2 flex gap-2 text-sm text-gray-500">
+		<div class="breadcrumb">
 			{#each commandStack as cmd, i}
 				<button
-					class="btn btn-xs btn-primary-soft cursor-pointer"
+					class="btn btn-secondary btn-soft p-1! text-xs!"
 					onclick={(event) => {
 						event.stopPropagation();
 						goBack();
@@ -248,7 +248,10 @@
 				>
 					{cmd.name}
 				</button>
-				{i < commandStack.length - 1 ? ' > ' : ''}
+
+				{#if i < commandStack.length - 1}
+					<span class="">></span>
+				{/if}
 			{/each}
 		</div>
 	{/if}

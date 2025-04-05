@@ -40,10 +40,10 @@
 	}
 </script>
 
-<div class="fixed top-4 right-4 z-50 flex w-80 flex-col gap-3">
+<div class="fixed top-4 right-4 z-50 flex w-80 flex-col gap-4">
 	{#each toaster.toasts as toast}
 		<div
-			class="surface flex items-center gap-3 p-3 pr-2 shadow-md"
+			class="bg-background-tertiary dark:bg-background-dark-tertiary flex items-center gap-4 rounded px-4 py-2 shadow-md"
 			in:fly={{ y: -20, duration: 300 }}
 			out:fade={{ duration: 200 }}
 		>
@@ -61,7 +61,7 @@
 			</div>
 
 			<button
-				class="btn btn-soft btn-soft text-content-tertiary dark:text-content-dark-tertiary hover:text-content hover:dark:text-content-dark flex-shrink-0 rounded-full p-1 transition-colors"
+				class="btn btn-soft btn-soft flex-shrink-0 rounded-full"
 				on:click={() => toaster.removeToast(toast.id)}
 				aria-label="Close notification"
 			>

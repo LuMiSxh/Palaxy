@@ -3008,7 +3008,7 @@ dependencies = [
 
 [[package]]
 name = "palaxy"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "async-trait",
  "epub-builder",

@@ -9,3 +9,5 @@ build
 .prettierignore
 .eslintignore
 target
+src/types/bindings.ts
+src/locales

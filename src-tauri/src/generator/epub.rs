@@ -8,6 +8,15 @@ use async_trait::async_trait;
 use epub_builder::{EpubBuilder, EpubContent, EpubVersion, ZipLibrary};
 use memmap2::MmapOptions;
 
+/// Generates XHTML content for an image to be included in the EPUB.
+///
+/// # Arguments
+///
+/// * `image_source` - Path to the image file relative to the EPUB root
+///
+/// # Returns
+///
+/// * `EResult<String>` - The generated XHTML content or an error
 fn generate_xhtml(image_source: &str) -> EResult<String> {
     const TEMPLATE: &str = include_str!("../../templates/template.xhtml");
     let xhtml = TEMPLATE
@@ -17,20 +26,46 @@ fn generate_xhtml(image_source: &str) -> EResult<String> {
     Ok(xhtml)
 }
 
+/// A generator for creating EPUB files with images.
+///
+/// This struct wraps the `EpubBuilder` functionality and implements the `Generator` trait
+/// to provide a standardized interface for creating EPUB documents with images.
 pub struct EPub {
+    /// The underlying EPUB builder
     epub: EpubBuilder<ZipLibrary>,
+    /// Directory where the EPUB file will be saved
     output_path: String,
+    /// Name of the output file (without extension)
     filename: String,
+    /// Reading direction for the EPUB content
     reading_direction: Option<Direction>,
 }
 
 impl EPub {
-    // Additional helper methods needed for EPUB
+    /// Sets custom metadata in the EPUB file.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - Metadata key
+    /// * `value` - Metadata value
+    ///
+    /// # Returns
+    ///
+    /// * `EResult<&mut Self>` - Self reference for method chaining or an error
     pub fn set_custom_metadata(&mut self, key: &str, value: &str) -> EResult<&mut Self> {
         self.epub.metadata(key, value)?;
         Ok(self)
     }
 
+    /// Sets the cover image for the EPUB file.
+    ///
+    /// # Arguments
+    ///
+    /// * `cover_image_path` - Path to the cover image file
+    ///
+    /// # Returns
+    ///
+    /// * `EResult<&mut Self>` - Self reference for method chaining or an error
     pub fn set_cover(&mut self, cover_image_path: &PathBuf) -> EResult<&mut Self> {
         let (cover_extension, cover_mime) = get_file_info(cover_image_path)?;
         let cover_file = File::open(cover_image_path)?;
@@ -43,17 +78,44 @@ impl EPub {
         Ok(self)
     }
 
+    /// Sets the language for the EPUB file.
+    ///
+    /// # Arguments
+    ///
+    /// * `lang` - Language code (e.g., "en", "ja")
+    ///
+    /// # Returns
+    ///
+    /// * `EResult<&mut Self>` - Self reference for method chaining or an error
     pub fn set_lang(&mut self, lang: &str) -> EResult<&mut Self> {
         self.epub.set_lang(lang);
         Ok(self)
     }
 
+    /// Sets the reading direction for the EPUB content.
+    ///
+    /// # Arguments
+    ///
+    /// * `direction` - Reading direction (LTR or RTL)
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - Self reference for method chaining
     pub fn set_reading_direction(&mut self, direction: Direction) -> &mut Self {
         self.reading_direction = Some(direction);
         self
     }
 
-    // Add chapter method that wraps multiple pages
+    /// Adds a chapter containing multiple image pages to the EPUB.
+    ///
+    /// # Arguments
+    ///
+    /// * `chapter_count` - Chapter number/index
+    /// * `image_paths` - Vector of paths to the images in this chapter
+    ///
+    /// # Returns
+    ///
+    /// * `EResult<&mut Self>` - Self reference for method chaining or an error
     pub async fn add_chapter(
         &mut self,
         chapter_count: usize,
@@ -77,6 +139,16 @@ impl EPub {
         Ok(self)
     }
 
+    /// Adds a resource to the EPUB using memory mapping for efficient handling of large files.
+    ///
+    /// # Arguments
+    ///
+    /// * `resource_path` - Path where the resource will be stored in the EPUB
+    /// * `image_path` - Path to the image file on the filesystem
+    ///
+    /// # Returns
+    ///
+    /// * `Result<&mut Self, Error>` - Self reference for method chaining or an error
     pub async fn add_resource_mmap(
         &mut self,
         resource_path: &str,
@@ -104,6 +176,16 @@ impl EPub {
 
 #[async_trait]
 impl Generator for EPub {
+    /// Creates a new EPUB generator.
+    ///
+    /// # Arguments
+    ///
+    /// * `output_path` - Directory where the EPUB file will be saved
+    /// * `filename` - Name of the output file (without extension)
+    ///
+    /// # Returns
+    ///
+    /// * `EResult<Self>` - A new EPub instance or an error
     fn new(output_path: &str, filename: &str) -> EResult<Self> {
         let mut epub = EpubBuilder::new(ZipLibrary::new()?)?;
 
@@ -118,6 +200,18 @@ impl Generator for EPub {
         })
     }
 
+    /// Adds a single image page to the EPUB.
+    ///
+    /// Note: This is a simplified interface that treats each page as its own chapter
+    /// for consistency with the Generator trait.
+    ///
+    /// # Arguments
+    ///
+    /// * `image_path` - Path to the image file
+    ///
+    /// # Returns
+    ///
+    /// * `EResult<&mut Self>` - Self reference for method chaining or an error
     async fn add_page(&mut self, image_path: &PathBuf) -> EResult<&mut Self> {
         // In the real implementation we add chapters with multiple images
         // For interface consistency, we'll treat each page as its own chapter
@@ -142,6 +236,16 @@ impl Generator for EPub {
         Ok(self)
     }
 
+    /// Sets metadata for the EPUB file, including title and volume number.
+    ///
+    /// # Arguments
+    ///
+    /// * `title` - Title of the EPUB
+    /// * `volume` - Volume number
+    ///
+    /// # Returns
+    ///
+    /// * `EResult<&mut Self>` - Self reference for method chaining or an error
     async fn set_metadata(&mut self, title: &str, volume: usize) -> EResult<&mut Self> {
         self.epub
             .metadata("title", &format!("{} | {}", title, volume))?;
@@ -158,11 +262,16 @@ impl Generator for EPub {
         Ok(self)
     }
 
+    /// Finalizes and saves the EPUB file to the specified output path.
+    ///
+    /// # Returns
+    ///
+    /// * `EResult<()>` - Success or an error
     async fn save(mut self) -> EResult<()> {
         let output_path = Path::new(&self.output_path);
         let output_file_path = output_path.join(format!("{}.epub", self.filename));
         let file = File::create(&output_file_path)?;
-        
+
         self.epub.generate(file)?;
         Ok(())
     }

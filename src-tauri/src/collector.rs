@@ -1,3 +1,9 @@
+//! Comic/manga image collection and organization module.
+//!
+//! This module provides functionality to collect, organize and analyze image files
+//! from a directory structure, typically representing chapters and pages of comics or manga.
+//! It includes tools for sorting files numerically and detecting chapter boundaries.
+
 use std::cmp::Ordering;
 use std::ffi::OsStr;
 use std::path::PathBuf;
@@ -13,26 +19,45 @@ use tokio::sync::Semaphore;
 
 use crate::prelude::*;
 
-// Constants for performance tuning
-const MAX_CONCURRENT_DIRS: usize = 64; // Limit concurrent directory reads
-const GRAYSCALE_SAMPLE_RATE: u32 = 10; // Sample every Nth pixel (1 = all pixels)
-const GRAYSCALE_MAX_DIMENSION: u32 = 500; // Downsample images larger than this
+/// Limits the number of concurrent directory operations
+const MAX_CONCURRENT_DIRS: usize = 64;
+/// Controls how many pixels to skip when sampling for grayscale detection
+const GRAYSCALE_SAMPLE_RATE: u32 = 10;
+/// Maximum dimension for grayscale detection before downsampling
+const GRAYSCALE_MAX_DIMENSION: u32 = 500;
 
+/// Manages collection and organization of image files in a directory structure
 pub struct Collector {
+    /// Root directory containing chapters or volumes
     base_directory: PathBuf,
 }
 
 lazy_static! {
+    /// Regex pattern for extracting numeric values from filenames
     static ref RE: Regex = Regex::new(r"\d+\.?\d*").unwrap();
 }
 
 impl Collector {
+    /// Creates a new Collector instance for the specified directory
+    ///
+    /// # Arguments
+    ///
+    /// * `base_directory` - Path to the root directory containing chapters/volumes
     pub fn new(base_directory: &PathBuf) -> Self {
         Self {
             base_directory: base_directory.clone(),
         }
     }
 
+    /// Collects chapter directories from the base directory
+    ///
+    /// # Arguments
+    ///
+    /// * `comparator` - Optional function to sort the collected chapters
+    ///
+    /// # Returns
+    ///
+    /// * `EResult<Vec<PathBuf>>` - Vector of paths to chapter directories
     pub async fn collect_chapters(
         &mut self,
         comparator: Option<&'static (dyn Fn(&PathBuf, &PathBuf) -> Ordering + Sync)>,
@@ -46,6 +71,16 @@ impl Collector {
         Ok(chapters)
     }
 
+    /// Collects page images from each chapter directory
+    ///
+    /// # Arguments
+    ///
+    /// * `chapters` - Vector of chapter directory paths
+    /// * `comparator` - Optional function to sort the collected pages
+    ///
+    /// # Returns
+    ///
+    /// * `EResult<Vec<Vec<PathBuf>>>` - Vector of vectors containing page paths for each chapter
     pub async fn collect_pages(
         &self,
         chapters: Vec<PathBuf>,
@@ -95,6 +130,17 @@ impl Collector {
         Ok(pages)
     }
 
+    /// Identifies chapters that are likely to be the start of a new volume
+    /// by analyzing the cover image (first image) of each chapter
+    ///
+    /// # Arguments
+    ///
+    /// * `images_per_chapter` - Nested vector of image paths organized by chapter
+    /// * `sensibility` - Threshold value for grayscale detection sensitivity
+    ///
+    /// # Returns
+    ///
+    /// * `EResult<Vec<usize>>` - Indices of chapters that start new volumes
     pub async fn determine_volume_start_chapters(
         &self,
         images_per_chapter: Vec<Vec<PathBuf>>,
@@ -152,6 +198,16 @@ impl Collector {
         Ok(book_start_chapters)
     }
 
+    /// Calculates how many chapters belong to each volume
+    ///
+    /// # Arguments
+    ///
+    /// * `book_start_chapters` - Vector of chapter indices that start new volumes
+    /// * `total_chapters` - Total number of chapters
+    ///
+    /// # Returns
+    ///
+    /// * `EResult<Vec<usize>>` - Vector of chapter counts for each volume
     pub fn calculate_volume_sizes(
         &self,
         mut book_start_chapters: Vec<usize>,
@@ -180,6 +236,16 @@ impl Collector {
 
     // Helper methods
 
+    /// Determines whether an image is predominantly grayscale
+    ///
+    /// # Arguments
+    ///
+    /// * `img` - Dynamic image to analyze
+    /// * `sensibility` - Threshold value (0.0-1.0) determining how many pixels must be gray
+    ///
+    /// # Returns
+    ///
+    /// * `bool` - True if the image is predominantly grayscale
     pub fn is_grayscale(img: &DynamicImage, sensibility: f64) -> bool {
         // Downsample image if it's too large to improve performance
         let img = if img.width() > GRAYSCALE_MAX_DIMENSION || img.height() > GRAYSCALE_MAX_DIMENSION
@@ -237,7 +303,16 @@ impl Collector {
         estimated_gray_pixels > gray_threshold
     }
 
-    // Parallel directory content collection
+    /// Collects directory contents in parallel with filtering options
+    ///
+    /// # Arguments
+    ///
+    /// * `directory` - Directory to scan
+    /// * `only_dirs` - When true, only directories are collected; when false, only files
+    ///
+    /// # Returns
+    ///
+    /// * `EResult<Vec<PathBuf>>` - Paths meeting the criteria
     pub async fn collect_parallel(directory: &PathBuf, only_dirs: bool) -> EResult<Vec<PathBuf>> {
         let mut entries: Vec<PathBuf> = Vec::new();
 
@@ -273,6 +348,16 @@ impl Collector {
         Ok(entries)
     }
 
+    /// Filters paths based on a test condition
+    ///
+    /// # Arguments
+    ///
+    /// * `paths` - Vector of paths to check
+    /// * `test_case` - Function that returns true if the path passes the test
+    ///
+    /// # Returns
+    ///
+    /// * `EResult<Vec<PathBuf>>` - Paths that failed the test
     pub fn check_path<F>(paths: &Vec<PathBuf>, test_case: F) -> EResult<Vec<PathBuf>>
     where
         F: Fn(&PathBuf) -> bool + Sync + Send,
@@ -286,6 +371,16 @@ impl Collector {
         Ok(invalid_paths)
     }
 
+    /// Sorts paths by numeric values in their file stem
+    ///
+    /// # Arguments
+    ///
+    /// * `a` - First path to compare
+    /// * `b` - Second path to compare
+    ///
+    /// # Returns
+    ///
+    /// * `Ordering` - Ordering based on numeric file stem values
     pub fn sort_by_stem_number(a: &PathBuf, b: &PathBuf) -> Ordering {
         // Cache the parsed numbers for better performance
         fn parse_number(path: &PathBuf) -> Option<usize> {
@@ -295,6 +390,15 @@ impl Collector {
         parse_number(a).cmp(&parse_number(b))
     }
 
+    /// Extracts a numeric value from a path using regex
+    ///
+    /// # Arguments
+    ///
+    /// * `s` - Path to extract number from
+    ///
+    /// # Returns
+    ///
+    /// * `Option<f64>` - Extracted number or None if not found
     fn regex_parser(s: &PathBuf) -> Option<f64> {
         let file_name = s
             .file_name()
@@ -311,6 +415,16 @@ impl Collector {
             .flatten()
     }
 
+    /// Sorts paths by numeric values found in their names
+    ///
+    /// # Arguments
+    ///
+    /// * `a` - First path to compare
+    /// * `b` - Second path to compare
+    ///
+    /// # Returns
+    ///
+    /// * `Ordering` - Ordering based on numeric values in filenames
     pub fn sort_name_by_number(a: &PathBuf, b: &PathBuf) -> Ordering {
         let an = Self::regex_parser(a);
         let bn = Self::regex_parser(b);
@@ -318,6 +432,17 @@ impl Collector {
         an.partial_cmp(&bn).unwrap_or(Ordering::Equal)
     }
 
+    /// Sorts paths by volume and chapter numbers in filenames
+    /// Expects filenames in format "volume-chapter" (e.g., "1-15.jpg")
+    ///
+    /// # Arguments
+    ///
+    /// * `a` - First path to compare
+    /// * `b` - Second path to compare
+    ///
+    /// # Returns
+    ///
+    /// * `Ordering` - Ordering based on volume then chapter
     pub fn sort_by_name_volume_chapter(a: &PathBuf, b: &PathBuf) -> Ordering {
         // Cache the parsed numbers for better performance
         fn parse_numbers(path: &PathBuf) -> (Option<f64>, Option<f64>) {

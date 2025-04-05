@@ -14,11 +14,21 @@ use tokio::fs::create_dir;
 use tokio::sync::{Mutex, Semaphore};
 
 lazy_static! {
+    /// Regular expression for analyzing chapter/volume naming patterns.
+    /// Matches strings in format "digits-digits[.digits]" (e.g. "01-23" or "01-23.5").
     static ref REGEX_ANALYZE: Regex = Regex::new(r"\d+-\d+(\.\d+)?").unwrap();
 }
 
 // ConvState
 
+/// Updates a specific field in the conversion state.
+///
+/// # Arguments
+/// * `input` - Key-value pair specifying which state field to update and its new value
+/// * `state` - Application state containing conversion parameters
+///
+/// # Returns
+/// * `EResult<BaseResponse>` - Success response with execution duration
 #[tauri::command(async)]
 #[specta::specta]
 pub async fn conv_state_set(
@@ -48,6 +58,13 @@ pub async fn conv_state_set(
     ))
 }
 
+/// Retrieves the complete current conversion state.
+///
+/// # Arguments
+/// * `state` - Application state containing conversion parameters
+///
+/// # Returns
+/// * `EResult<BaseResponse<ConvState>>` - Success response containing the current state
 #[tauri::command(async)]
 #[specta::specta]
 pub async fn conv_state_get(
@@ -64,6 +81,13 @@ pub async fn conv_state_get(
     })
 }
 
+/// Resets the conversion state to default values.
+///
+/// # Arguments
+/// * `state` - Application state containing conversion parameters
+///
+/// # Returns
+/// * `EResult<BaseResponse>` - Success response with execution duration
 #[tauri::command(async)]
 #[specta::specta]
 pub async fn conv_state_reset(state: State<'_, Mutex<ConvState>>) -> EResult<BaseResponse> {
@@ -79,6 +103,19 @@ pub async fn conv_state_reset(state: State<'_, Mutex<ConvState>>) -> EResult<Bas
 
 // -- PROCESSES --
 
+/// Analyzes the source directory structure for conversion preparation.
+///
+/// Performs comprehensive validation and analysis of the source directory:
+/// - Checks for proper directory structure and naming conventions
+/// - Validates file formats and permissions
+/// - Detects potential issues with file sizes, naming, and special characters
+/// - Provides guidance on optimal bundling approaches
+///
+/// # Arguments
+/// * `state` - Application state containing conversion parameters
+///
+/// # Returns
+/// * `EResult<CommAnalyzeMeta>` - Analysis results with positive findings, warnings, and errors
 #[tauri::command(async)]
 #[specta::specta]
 pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAnalyzeMeta> {
@@ -184,12 +221,17 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
             .any(char::is_numeric)
     })?;
 
-    dir_lacks_numeric.iter().for_each(|dir| {
-        negative.push(format!(
-            "Directory {:?} lacks numerical identifiers. Remove them for faster bundling.",
-            dir.file_name().unwrap()
-        ));
-    });
+    let numeric_errors: Vec<String> = dir_lacks_numeric
+        .par_iter()
+        .map(|dir| {
+            format!(
+                "Directory {:?} lacks numerical identifiers. Remove them for faster bundling.",
+                dir.file_name().unwrap()
+            )
+        })
+        .collect();
+
+    negative.extend(numeric_errors);
 
     // Image Format Validation
     let unsupported_formats = Collector::check_path(&pages, |path| {
@@ -201,7 +243,7 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
 
     if !unsupported_formats.is_empty() {
         let format_examples: Vec<String> = unsupported_formats
-            .iter()
+            .par_iter()
             .take(3)
             .filter_map(|path| path.file_name().map(|n| n.to_string_lossy().to_string()))
             .collect();
@@ -213,22 +255,22 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
         };
 
         negative.push(format!(
-            "Found {} files with unsupported formats. Only JPG, PNG, and WebP are fully supported.{}",
-            unsupported_formats.len(),
-            example_msg
-        ));
+                    "Found {} files with unsupported formats. Only JPG, PNG, and WebP are fully supported.{}",
+                    unsupported_formats.len(),
+                    example_msg
+                ));
     }
 
     // File Size Consistency Check
     let file_sizes: Vec<u64> = pages
-        .iter()
+        .par_iter()
         .filter_map(|p| p.metadata().ok().map(|m| m.len()))
         .collect();
 
     if !file_sizes.is_empty() {
-        let avg_size = file_sizes.iter().sum::<u64>() / file_sizes.len() as u64;
+        let avg_size = file_sizes.par_iter().sum::<u64>() / file_sizes.len() as u64;
         let outliers: Vec<_> = file_sizes
-            .iter()
+            .par_iter()
             .enumerate()
             .filter(|(_, &size)| size < avg_size / 3 || size > avg_size * 3)
             .collect();
@@ -242,13 +284,13 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
     if !chapters.is_empty() {
         let chapter_pages = collector.collect_pages(chapters.clone(), None).await;
         if let Ok(pages_vec) = chapter_pages {
-            let chapter_file_counts: Vec<usize> = pages_vec.iter().map(|p| p.len()).collect();
+            let chapter_file_counts: Vec<usize> = pages_vec.par_iter().map(|p| p.len()).collect();
 
             if !chapter_file_counts.is_empty() {
                 let avg_count =
                     chapter_file_counts.iter().sum::<usize>() / chapter_file_counts.len();
                 let outliers = chapter_file_counts
-                    .iter()
+                    .par_iter()
                     .filter(|&&count| count < avg_count / 2 || count > avg_count * 2)
                     .count();
 
@@ -261,7 +303,7 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
 
     // Path Length Warning
     let long_paths = pages
-        .iter()
+        .par_iter()
         .filter(|p| p.to_string_lossy().len() > 240)
         .count();
 
@@ -274,7 +316,7 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
 
     // Special Character Check
     let special_chars = chapters
-        .iter()
+        .par_iter()
         .filter(|path| {
             path.to_string_lossy().contains(|c: char| {
                 !(c.is_alphanumeric() || c == '-' || c == '_' || c == ' ' || c == '.' || c == '/')
@@ -289,14 +331,21 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
         );
     }
 
-    chapters.iter().for_each(|chapter| {
-        if !has_perms(chapter) {
-            negative.push(format!(
-                "Directory {:?} lacks write permissions. Required for full functionality.",
-                chapter.file_name().unwrap()
-            ));
-        }
-    });
+    let permission_errors: Vec<String> = chapters
+        .par_iter()
+        .filter_map(|chapter| {
+            if !has_perms(chapter) {
+                Some(format!(
+                    "Directory {:?} lacks write permissions. Required for full functionality.",
+                    chapter.file_name().unwrap()
+                ))
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    negative.extend(permission_errors);
 
     pages.iter().for_each(|page| {
         if !has_perms(page) {
@@ -341,7 +390,7 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
 
     // Check if all images are consistently named
     let consistently_named = pages
-        .iter()
+        .par_iter()
         .map(|path| path.file_stem().and_then(|s| s.to_str()))
         .all(|stem| {
             stem.map(|s| {
@@ -370,7 +419,7 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
 
     // Check if all images are in the same format
     let image_formats = pages
-        .iter()
+        .par_iter()
         .filter_map(|p| p.extension().and_then(|e| e.to_str()))
         .map(|e| e.to_lowercase())
         .collect::<std::collections::HashSet<_>>();
@@ -397,6 +446,20 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
     })
 }
 
+/// Bundles chapters into volumes based on directory structure or image analysis.
+///
+/// This function collects all chapters, sorts them according to the bundling strategy,
+/// and organizes them into volumes. The strategy depends on the `bundle_flag`:
+/// - `Manual`: Basic sorting by numeric values in filenames
+/// - `Name`: Intelligent sorting using volume-chapter naming conventions
+/// - `Image`: Advanced sorting using grayscale detection to identify volume boundaries
+///
+/// # Arguments
+/// * `sensibility` - Optional sensitivity parameter for image analysis (0-100)
+/// * `state` - Application state containing conversion parameters
+///
+/// # Returns
+/// * `EResult<CommBundle>` - Bundle information including chapter counts and volume distribution
 #[tauri::command(async)]
 #[specta::specta]
 pub async fn conv_bundle(
@@ -511,6 +574,17 @@ pub async fn conv_bundle(
     })
 }
 
+/// Converts bundled volumes into the specified output format.
+///
+/// Processes all volumes in parallel, generating output files in either CBZ or EPUB format
+/// according to the configuration. Creates directories as needed and applies appropriate
+/// metadata to the generated files.
+///
+/// # Arguments
+/// * `state` - Application state containing conversion parameters
+///
+/// # Returns
+/// * `EResult<BaseResponse>` - Success response with execution duration
 #[tauri::command(async)]
 #[specta::specta]
 pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseResponse> {
@@ -576,7 +650,7 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
     let mut tasks = Vec::new();
 
     for (i, &chapters) in volume_sizes.iter().enumerate() {
-        let j: usize = volume_sizes[0..i].iter().sum();
+        let j: usize = volume_sizes[0..i].par_iter().sum();
         let volume_name = format!("{} | {}", name.clone(), i + 1);
         let target_dir = target_directory_path.clone();
         let format_clone = format;

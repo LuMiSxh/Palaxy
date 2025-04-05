@@ -18,7 +18,7 @@ msgstr ""
 #~ msgstr "{0}"
 
 #: src/routes/+page.svelte:14
-#: src/routes/+layout.svelte:58
+#: src/routes/+layout.svelte:60
 #: src/components/ActionHub.svelte:95
 msgid "ActionHub"
 msgstr "ActionHub"
@@ -44,7 +44,7 @@ msgstr "Neues Band hinzufügen"
 msgid "Add Volume"
 msgstr "Band hinzufügen"
 
-#: src/routes/+layout.svelte:81
+#: src/routes/+layout.svelte:83
 msgid "Agents"
 msgstr "Agenten"
 
@@ -91,6 +91,14 @@ msgstr "Analysiere das Quellmaterial auf mögliche Konvertierungsprobleme und Ve
 msgid "Application Information"
 msgstr "Anwendungsinformationen"
 
+#: src/components/dialogs/Management.svelte:136
+msgid "Application Logs"
+msgstr "Anwendungsprotokolle"
+
+#: src/components/dialogs/Management.svelte:142
+msgid "Application logs are stored on your device. You can access them through your file explorer."
+msgstr "Anwendungsprotokolle werden auf deinem Gerät gespeichert. Du kannst über deinen Datei-Explorer darauf zugreifen."
+
 #: src/components/dialogs/SystemInfo.svelte:59
 msgid "Application Name"
 msgstr "Anwendungsname"
@@ -103,15 +111,15 @@ msgstr "Anwendungsversion"
 msgid "Architecture"
 msgstr "Architektur"
 
-#: src/routes/+layout.svelte:218
+#: src/routes/+layout.svelte:230
 msgid "Are you sure you want to reset the state of the application?"
 msgstr "Bist du sicher, dass du den Zustand der Anwendung zurücksetzen möchtest?"
 
-#: src/routes/+layout.svelte:153
+#: src/routes/+layout.svelte:155
 msgid "Auto-Populate Fields"
 msgstr "Felder automatisch ausfüllen"
 
-#: src/routes/+layout.svelte:158
+#: src/routes/+layout.svelte:160
 msgid "Auto-Populate Settings"
 msgstr "Automatische Einstellungen"
 
@@ -158,15 +166,15 @@ msgstr "Abbrechen"
 msgid "CBZ"
 msgstr "CBZ"
 
-#: src/routes/+layout.svelte:128
+#: src/routes/+layout.svelte:130
 msgid "Change the language of the application"
 msgstr "Ändere die Sprache der Anwendung"
 
-#: src/routes/+layout.svelte:134
+#: src/routes/+layout.svelte:136
 msgid "Change the language to English"
 msgstr "Ändere die Sprache auf Englisch"
 
-#: src/routes/+layout.svelte:143
+#: src/routes/+layout.svelte:145
 msgid "Change the language to German"
 msgstr "Ändere die Sprache auf Deutsch"
 
@@ -174,23 +182,23 @@ msgstr "Ändere die Sprache auf Deutsch"
 #~ msgid "Change the language to Japanese"
 #~ msgstr "Ändere die Sprache auf Japanisch"
 
-#: src/routes/+layout.svelte:89
+#: src/routes/+layout.svelte:91
 msgid "Change the settings of the application"
 msgstr "Ändere die Einstellungen der Anwendung"
 
-#: src/routes/+layout.svelte:94
+#: src/routes/+layout.svelte:96
 msgid "Change the theme of the application"
 msgstr "Ändere das Design der Anwendung"
 
-#: src/routes/+layout.svelte:108
+#: src/routes/+layout.svelte:110
 msgid "Change the theme to dark"
 msgstr "Ändere das Design auf Dunkel"
 
-#: src/routes/+layout.svelte:99
+#: src/routes/+layout.svelte:101
 msgid "Change the theme to light"
 msgstr "Ändere das Design auf Hell"
 
-#: src/routes/+layout.svelte:117
+#: src/routes/+layout.svelte:119
 msgid "Change the theme to system"
 msgstr "Ändere das Design auf System"
 
@@ -258,7 +266,7 @@ msgstr "Dialog schließen"
 msgid "Confirm"
 msgstr "Bestätigen"
 
-#: src/routes/+layout.svelte:217
+#: src/routes/+layout.svelte:229
 msgid "Confirmation"
 msgstr "Bestätigung"
 
@@ -274,7 +282,7 @@ msgstr "Konvertierung abgeschlossen!"
 msgid "Conversion Summary"
 msgstr "Konvertierungszusammenfassung"
 
-#: src/routes/+layout.svelte:68
+#: src/routes/+layout.svelte:70
 msgid "Convert"
 msgstr "Konvertieren"
 
@@ -283,7 +291,7 @@ msgstr "Konvertieren"
 msgid "Convert another manga"
 msgstr "Einen weiteren Manga konvertieren"
 
-#: src/routes/+layout.svelte:69
+#: src/routes/+layout.svelte:71
 msgid "Convert your manga images into a digital format that can be read on your favorite devices"
 msgstr "Konvertiere deine Manga-Bilder in ein digitales Format, das auf deinen bevorzugten Geräten gelesen werden kann"
 
@@ -323,7 +331,7 @@ msgid "Custom Keybinds"
 msgstr "Benutzerdefinierte Tastenbelegungen"
 
 #: src/types/appdata.ts:29
-#: src/routes/+layout.svelte:107
+#: src/routes/+layout.svelte:109
 msgid "Dark"
 msgstr "Dunkel"
 
@@ -356,7 +364,7 @@ msgstr "Einschalten der automatischen Befüllung"
 msgid "Enable manga search functionality"
 msgstr "Manga-Suchfunktion aktivieren"
 
-#: src/routes/+layout.svelte:176
+#: src/routes/+layout.svelte:178
 msgid "Enable or disable a button to show the ActionHub"
 msgstr "Ein- oder Ausschalten einer Schaltfläche zum Anzeigen des ActionHub"
 
@@ -364,11 +372,11 @@ msgstr "Ein- oder Ausschalten einer Schaltfläche zum Anzeigen des ActionHub"
 msgid "Enable or disable application features"
 msgstr "Anwendungsfunktionen aktivieren oder deaktivieren"
 
-#: src/routes/+layout.svelte:190
+#: src/routes/+layout.svelte:192
 msgid "Enable or disable features of the application"
 msgstr "Aktiviere oder deaktiviere Funktionen der Anwendung"
 
-#: src/routes/+layout.svelte:154
+#: src/routes/+layout.svelte:156
 msgid "Enable or disable the auto-population of fields in the application"
 msgstr "Ein- oder Ausschalten der automatischen Befüllung von Feldern in der Anwendung"
 
@@ -381,7 +389,7 @@ msgid "end"
 msgstr "Ende"
 
 #: src/types/appdata.ts:48
-#: src/routes/+layout.svelte:133
+#: src/routes/+layout.svelte:135
 msgid "English"
 msgstr "Englisch"
 
@@ -423,7 +431,7 @@ msgstr "experimentell"
 msgid "Failed to run bundler. Please try again."
 msgstr "Fehler beim Ausführen des Bundlers. Bitte versuche es erneut."
 
-#: src/routes/+layout.svelte:194
+#: src/routes/+layout.svelte:196
 msgid "Feature Configuration"
 msgstr "Funktionskonfiguration"
 
@@ -435,7 +443,7 @@ msgstr "Funktionsflags werden nicht gespeichert"
 msgid "Feature flags saved"
 msgstr "Funktionsflags gespeichert"
 
-#: src/routes/+layout.svelte:189
+#: src/routes/+layout.svelte:191
 msgid "Features"
 msgstr "Funktionen"
 
@@ -466,7 +474,7 @@ msgid "General Information"
 msgstr "Allgemeine Informationen"
 
 #: src/types/appdata.ts:48
-#: src/routes/+layout.svelte:142
+#: src/routes/+layout.svelte:144
 msgid "German"
 msgstr "Deutsch"
 
@@ -474,7 +482,7 @@ msgstr "Deutsch"
 msgid "Go back"
 msgstr "Gehe zurück"
 
-#: src/routes/+layout.svelte:63
+#: src/routes/+layout.svelte:65
 msgid "Go to the home page"
 msgstr "Gehe zur Startseite"
 
@@ -486,7 +494,7 @@ msgstr "Gute Punkte"
 msgid "Grayscale Sensibility"
 msgstr "Graustufen-Empfindlichkeit"
 
-#: src/routes/+layout.svelte:62
+#: src/routes/+layout.svelte:64
 msgid "Home"
 msgstr "Startseite"
 
@@ -520,16 +528,28 @@ msgstr "Bilder"
 msgid "Images per volume"
 msgstr "Bilder pro Band"
 
+#: src/components/dialogs/Management.svelte:71
+msgid "Imminent"
+msgstr "Bevorstehend"
+
 #: src/components/convert/Step4.svelte:118
 msgid "Increase"
 msgstr "Erhöhen"
 
-#: src/routes/+layout.svelte:205
+#: src/routes/+layout.svelte:218
 msgid "Information"
 msgstr "Information"
 
+#: src/routes/+layout.svelte:202
+#: src/routes/+layout.svelte:207
+msgid "Internal Management"
+msgstr "Internes Management"
+
 #: src/components/DialogContent.svelte:112
 #: src/components/DialogContent.svelte:126
+#: src/components/dialogs/Management.svelte:109
+#: src/components/dialogs/Management.svelte:117
+#: src/components/dialogs/Management.svelte:125
 #: src/components/dialogs/Features.svelte:107
 #: src/components/dialogs/Features.svelte:132
 #: src/components/dialogs/Features.svelte:147
@@ -551,23 +571,23 @@ msgstr "Probleme gefunden"
 #~ msgid "Japanese"
 #~ msgstr "Japanisch"
 
-#: src/routes/+layout.svelte:170
+#: src/routes/+layout.svelte:172
 msgid "KeyHints are now hidden"
 msgstr "Tastenhinweise sind jetzt ausgeblendet"
 
-#: src/routes/+layout.svelte:170
+#: src/routes/+layout.svelte:172
 msgid "KeyHints are now shown"
 msgstr "Tastenhinweise werden jetzt angezeigt"
 
-#: src/routes/+layout.svelte:127
+#: src/routes/+layout.svelte:129
 msgid "Language"
 msgstr "Sprache"
 
-#: src/routes/+layout.svelte:138
+#: src/routes/+layout.svelte:140
 msgid "Language changed to English"
 msgstr "Sprache auf Englisch geändert"
 
-#: src/routes/+layout.svelte:147
+#: src/routes/+layout.svelte:149
 msgid "Language changed to German"
 msgstr "Sprache auf Deutsch geändert"
 
@@ -586,7 +606,7 @@ msgid "Left to Right"
 msgstr "Links nach Rechts"
 
 #: src/types/appdata.ts:29
-#: src/routes/+layout.svelte:98
+#: src/routes/+layout.svelte:100
 msgid "Light"
 msgstr "Hell"
 
@@ -603,7 +623,19 @@ msgstr "Lade Systeminformationen..."
 msgid "Loading..."
 msgstr "Wird geladen..."
 
-#: src/routes/+layout.svelte:82
+#: src/components/dialogs/Management.svelte:147
+msgid "Log Directory:"
+msgstr "Protokollverzeichnis:"
+
+#: src/components/dialogs/Management.svelte:157
+msgid "Log File:"
+msgstr "Protokolldatei:"
+
+#: src/routes/+layout.svelte:203
+msgid "Manage the internal state of the application"
+msgstr "Verwalte den internen Zustand der Anwendung"
+
+#: src/routes/+layout.svelte:84
 msgid "Manage your agents and their settings for better search results"
 msgstr "Verwalte deine Agenten und deren Einstellungen für bessere Suchergebnisse"
 
@@ -627,16 +659,16 @@ msgstr "Minute"
 msgid "minutes"
 msgstr "Minuten"
 
-#: src/routes/+layout.svelte:175
+#: src/routes/+layout.svelte:177
 #: src/components/dialogs/Features.svelte:32
 msgid "Mouse Support"
 msgstr "Mausunterstützung"
 
-#: src/routes/+layout.svelte:184
+#: src/routes/+layout.svelte:186
 msgid "Mouse Support is now disabled"
 msgstr "Mausunterstützung ist jetzt deaktiviert"
 
-#: src/routes/+layout.svelte:183
+#: src/routes/+layout.svelte:185
 msgid "Mouse Support is now enabled"
 msgstr "Mausunterstützung ist jetzt aktiviert"
 
@@ -673,6 +705,10 @@ msgstr "Neue Bilder"
 #: src/routes/convert/+page.svelte:125
 msgid "Next"
 msgstr "Nächster"
+
+#: src/components/dialogs/Management.svelte:98
+msgid "Next sync in:"
+msgstr "Nächste Synchronisation in:"
 
 #: src/components/convert/Step2.svelte:140
 msgid "No analysis results found. There might be an issue with the source material."
@@ -749,6 +785,10 @@ msgstr "Projekteinstellungen"
 msgid "Reading Direction"
 msgstr "Leserichtung"
 
+#: src/components/dialogs/Management.svelte:112
+msgid "Refresh"
+msgstr "Aktualisieren"
+
 #: src/components/convert/step4/ManualBundling.svelte:250
 msgid "Remove selected"
 msgstr "Ausgewähltes entfernen"
@@ -757,19 +797,23 @@ msgstr "Ausgewähltes entfernen"
 msgid "Rerun Bundler"
 msgstr "Bundler erneut ausführen"
 
-#: src/routes/+layout.svelte:212
+#: src/routes/+layout.svelte:224
 msgid "Reset"
 msgstr "Zurücksetzen"
 
-#: src/routes/+layout.svelte:224
+#: src/routes/+layout.svelte:236
 msgid "Reset canceled"
 msgstr "Zurücksetzen abgebrochen"
 
 #: src/routes/+layout.svelte:221
-msgid "Reset successfull"
+#~ msgid "Reset successfull"
+#~ msgstr "Zurücksetzen erfolgreich"
+
+#: src/routes/+layout.svelte:233
+msgid "Reset successfully"
 msgstr "Zurücksetzen erfolgreich"
 
-#: src/routes/+layout.svelte:213
+#: src/routes/+layout.svelte:225
 msgid "Reset the state of the application"
 msgstr "Zustand der Anwendung zurücksetzen"
 
@@ -799,19 +843,21 @@ msgstr "Bundler wird ausgeführt..."
 msgid "Save"
 msgstr "Speichern"
 
+#: src/components/dialogs/Management.svelte:26
 #: src/components/convert/Step6.svelte:77
 #: src/components/convert/Step2.svelte:44
 #: src/components/convert/step4/VolumeVisualisation.svelte:28
 msgid "Scroll down"
 msgstr "Nach unten scrollen"
 
+#: src/components/dialogs/Management.svelte:25
 #: src/components/convert/Step6.svelte:76
 #: src/components/convert/Step2.svelte:45
 #: src/components/convert/step4/VolumeVisualisation.svelte:27
 msgid "Scroll up"
 msgstr "Nach oben scrollen"
 
-#: src/routes/+layout.svelte:74
+#: src/routes/+layout.svelte:76
 msgid "Search"
 msgstr "Suche"
 
@@ -819,7 +865,7 @@ msgstr "Suche"
 msgid "Search commands..."
 msgstr "Suche nach Befehlen..."
 
-#: src/routes/+layout.svelte:75
+#: src/routes/+layout.svelte:77
 msgid "Search for your favorite manga series and chapters from various sources"
 msgstr "Suche nach deinen Lieblings-Manga-Serien und -Kapiteln aus verschiedenen Quellen"
 
@@ -887,7 +933,7 @@ msgstr "Setze die Metadaten für das zu konvertierende Material."
 msgid "Set the volume sizes for the conversion."
 msgstr "Setze die Bandgrößen für die Konvertierung."
 
-#: src/routes/+layout.svelte:88
+#: src/routes/+layout.svelte:90
 msgid "Settings"
 msgstr "Einstellungen"
 
@@ -895,15 +941,15 @@ msgstr "Einstellungen"
 msgid "Shift"
 msgstr "Umschalttaste"
 
-#: src/routes/+layout.svelte:164
+#: src/routes/+layout.svelte:166
 msgid "Show KeyHints"
 msgstr "Zeige Tastenhinweise"
 
-#: src/routes/+layout.svelte:165
+#: src/routes/+layout.svelte:167
 msgid "Show the key hints of the application and their actions in the current context"
 msgstr "Zeige die Tastenhinweise der Anwendung und ihre Aktionen im aktuellen Kontext"
 
-#: src/routes/+layout.svelte:201
+#: src/routes/+layout.svelte:214
 msgid "Show the system information of the application"
 msgstr "Zeige die Systeminformationen der Anwendung"
 
@@ -924,6 +970,14 @@ msgstr "Leertaste"
 msgid "stable"
 msgstr "stabil"
 
+#: src/components/dialogs/Management.svelte:128
+msgid "Start Sync"
+msgstr "Synchronisation starten"
+
+#: src/components/dialogs/Management.svelte:120
+msgid "Stop Sync"
+msgstr "Synchronisation stoppen"
+
 #: src/components/convert/step5/Chapter.svelte:223
 msgid "Swap next"
 msgstr "Mit nächstem tauschen"
@@ -936,8 +990,20 @@ msgstr "Mit vorherigem tauschen"
 msgid "Switch to Manual Bundling"
 msgstr "Zu manueller Bündelung wechseln"
 
+#: src/components/dialogs/Management.svelte:56
+msgid "Sync started"
+msgstr "Synchronisation gestartet"
+
+#: src/components/dialogs/Management.svelte:93
+msgid "Sync Status"
+msgstr "Synchronisationsstatus"
+
+#: src/components/dialogs/Management.svelte:65
+msgid "Sync stopped"
+msgstr "Synchronisation gestoppt"
+
 #: src/types/appdata.ts:29
-#: src/routes/+layout.svelte:116
+#: src/routes/+layout.svelte:118
 msgid "System"
 msgstr "System"
 
@@ -945,7 +1011,7 @@ msgstr "System"
 #~ msgid "System Info"
 #~ msgstr "Systeminformationen"
 
-#: src/routes/+layout.svelte:200
+#: src/routes/+layout.svelte:213
 #: src/components/dialogs/SystemInfo.svelte:88
 msgid "System Information"
 msgstr "Systeminformationen"
@@ -968,19 +1034,19 @@ msgstr "Der Konvertierungsprozess wurde erfolgreich abgeschlossen"
 msgid "The total number of chapters {usedNumber} used exceeds the detected number of chapters {detectedNumber}"
 msgstr "Die Gesamtzahl der verwendeten Kapitel {usedNumber} übersteigt die erkannte Anzahl von Kapiteln {detectedNumber}"
 
-#: src/routes/+layout.svelte:93
+#: src/routes/+layout.svelte:95
 msgid "Theme"
 msgstr "Design"
 
-#: src/routes/+layout.svelte:112
+#: src/routes/+layout.svelte:114
 msgid "Theme changed to dark"
 msgstr "Design auf Dunkel geändert"
 
-#: src/routes/+layout.svelte:103
+#: src/routes/+layout.svelte:105
 msgid "Theme changed to light"
 msgstr "Design auf Hell geändert"
 
-#: src/routes/+layout.svelte:121
+#: src/routes/+layout.svelte:123
 msgid "Theme changed to system"
 msgstr "Design auf System geändert"
 

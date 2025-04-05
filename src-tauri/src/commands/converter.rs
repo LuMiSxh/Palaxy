@@ -408,15 +408,16 @@ pub async fn conv_bundle(
     let mut state = state.lock().await;
     let mut collector = Collector::new(&state.source);
 
-    // Collect all pages and sort based on bundle_flag
-    let mut chapters: Vec<PathBuf> = collector
-        .collect_chapters(if state.bundle_flag == BundleFlag::Image {
-            Some(&Collector::sort_name_by_number)
-        } else {
-            None
+    // Collect all chapter and use a sorting algorithm based on BundleFlag
+    let chapters: Vec<PathBuf> = collector
+        .collect_chapters(match state.bundle_flag {
+            BundleFlag::Manual => Some(&Collector::sort_by_stem_number),
+            BundleFlag::Name => Some(&Collector::sort_by_name_volume_chapter),
+            BundleFlag::Image => Some(&Collector::sort_name_by_number),
         })
         .await?;
 
+    // Collect all pages from the chapters
     let pages: Vec<Vec<PathBuf>> = collector
         .collect_pages(chapters.clone(), Some(&Collector::sort_by_stem_number))
         .await?;
@@ -435,9 +436,6 @@ pub async fn conv_bundle(
         BundleFlag::Name => {
             let mut tmp = Vec::new();
             let mut extra = false;
-
-            // Sort the chapters by their chapter number
-            chapters.par_sort_by(Collector::sort_by_name_volume_chapter);
 
             // Determine the start of each volume
             for (i, chapter) in chapters.iter().enumerate() {
@@ -518,7 +516,7 @@ pub async fn conv_bundle(
 pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseResponse> {
     let start = std::time::Instant::now();
 
-    // Extract all the needed data while the lock is held
+    // Extract all the necessary data while the lock is held
     let (name, target, create_directory, format, direction, volume_sizes, data, edited_data) = {
         let state = state.lock().await;
         (

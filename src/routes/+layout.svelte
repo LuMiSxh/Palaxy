@@ -26,7 +26,8 @@
 		IconSettingsQuestion,
 		IconSun,
 		IconTransform,
-		IconUsers
+		IconUsers,
+		IconLayersIntersect
 	} from '@tabler/icons-svelte';
 	import { addToast } from '$states/toast.svelte';
 	import Dialog from '$components/Dialog.svelte';
@@ -36,6 +37,7 @@
 	import { keyHint } from '$states/keyhint.svelte';
 	import AutoPopulate from '$components/dialogs/AutoPopulate.svelte';
 	import Features from '$components/dialogs/Features.svelte';
+	import Management from '$components/dialogs/Management.svelte';
 
 	let { children } = $props();
 
@@ -175,7 +177,6 @@
 					name: $t`Mouse Support`,
 					description: $t`Enable or disable a button to show the ActionHub`,
 					icon: IconMouse,
-					hidden: !ffIsEnabled($appData, FeatureFlag.MOUSE_SUPPORT),
 					action: () => {
 						$appData.mouseSupport = !$appData.mouseSupport;
 						addToast(
@@ -197,14 +198,25 @@
 					}
 				},
 				{
+					name: $t`Internal Management`,
+					description: $t`Manage the internal state of the application`,
+					icon: IconLayersIntersect,
+					hidden: !ffIsEnabled($appData, FeatureFlag.INTERNAL_MANAGEMENT),
+					action: () => {
+						openDialog({
+							title: $t`Internal Management`,
+							content: Management
+						});
+					}
+				},
+				{
 					name: $t`System Information`,
 					description: $t`Show the system information of the application`,
 					icon: IconSettingsQuestion,
 					action: () => {
 						openDialog({
 							title: $t`Information`,
-							content: SystemInfo,
-							onConfirm: () => {}
+							content: SystemInfo
 						});
 					}
 				},
@@ -218,7 +230,7 @@
 							content: $t`Are you sure you want to reset the state of the application?`,
 							onConfirm: () => {
 								appData.set(defaultAppData);
-								addToast($t`Reset successfull`, 'success');
+								addToast($t`Reset successfully`, 'success');
 							},
 							onCancel: () => {
 								addToast($t`Reset canceled`, 'info');

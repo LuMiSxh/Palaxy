@@ -11,6 +11,7 @@
     "core:menu:default",
     "core:image:default",
     "core:event:default",
-    "core:app:default"
+    "core:app:default",
+    "log:default"
   ]
 }

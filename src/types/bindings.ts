@@ -5,6 +5,16 @@
 
 
 export const commands = {
+/**
+ * Updates a specific field in the conversion state.
+ * 
+ * # Arguments
+ * * `input` - Key-value pair specifying which state field is to update and its new value
+ * * `state` - Application state containing conversion parameters
+ * 
+ * # Returns
+ * * `EResult<BaseResponse>` - Success response with execution duration
+ */
 async convStateSet(input: ConvStateKey) : Promise<Result<BaseResponse<null>, Error>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("conv_state_set", { input }) };
@@ -13,6 +23,15 @@ async convStateSet(input: ConvStateKey) : Promise<Result<BaseResponse<null>, Err
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Retrieves the complete current conversion state.
+ * 
+ * # Arguments
+ * * `state` - Application state containing conversion parameters
+ * 
+ * # Returns
+ * * `EResult<BaseResponse<ConvState>>` - Success response containing the current state
+ */
 async convStateGet() : Promise<Result<BaseResponse<ConvState>, Error>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("conv_state_get") };
@@ -21,6 +40,15 @@ async convStateGet() : Promise<Result<BaseResponse<ConvState>, Error>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Resets the conversion state to default values.
+ * 
+ * # Arguments
+ * * `state` - Application state containing conversion parameters
+ * 
+ * # Returns
+ * * `EResult<BaseResponse>` - Success response with execution duration
+ */
 async convStateReset() : Promise<Result<BaseResponse<null>, Error>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("conv_state_reset") };
@@ -29,6 +57,21 @@ async convStateReset() : Promise<Result<BaseResponse<null>, Error>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Analyzes the source directory structure for conversion preparation.
+ * 
+ * Performs comprehensive validation and analysis of the source directory:
+ * - Checks for proper directory structure and naming conventions
+ * - Validates file formats and permissions
+ * - Detects potential issues with file sizes, naming, and special characters
+ * - Provides guidance on optimal bundling approaches
+ * 
+ * # Arguments
+ * * `state` - Application state containing conversion parameters
+ * 
+ * # Returns
+ * * `EResult<CommAnalyzeMeta>` - Analysis results with positive findings, warnings, and errors
+ */
 async convAnalyze() : Promise<Result<BaseResponse<AnalyzeResponse>, Error>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("conv_analyze") };
@@ -37,6 +80,22 @@ async convAnalyze() : Promise<Result<BaseResponse<AnalyzeResponse>, Error>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Bundles chapters into volumes based on directory structure or image analysis.
+ * 
+ * This function collects all chapters, sorts them according to the bundling strategy,
+ * and organizes them into volumes. The strategy depends on the `bundle_flag`:
+ * - `Manual`: Basic sorting by numeric values in filenames
+ * - `Name`: Intelligent sorting using volume-chapter naming conventions
+ * - `Image`: Advanced sorting using grayscale detection to identify volume boundaries
+ * 
+ * # Arguments
+ * * `sensibility` - Optional sensitivity parameter for image analysis (0-100)
+ * * `state` - Application state containing conversion parameters
+ * 
+ * # Returns
+ * * `EResult<CommBundle>` - Bundle information including chapter counts and volume distribution
+ */
 async convBundle(sensibility: number | null) : Promise<Result<BaseResponse<BundleResponse>, Error>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("conv_bundle", { sensibility }) };
@@ -45,6 +104,19 @@ async convBundle(sensibility: number | null) : Promise<Result<BaseResponse<Bundl
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Converts bundled volumes into the specified output format.
+ * 
+ * Processes all volumes in parallel, generating output files in either CBZ or EPUB format
+ * according to the configuration. Creates directories as needed and applies appropriate
+ * metadata to the generated files.
+ * 
+ * # Arguments
+ * * `state` - Application state containing conversion parameters
+ * 
+ * # Returns
+ * * `EResult<BaseResponse>` - Success response with execution duration
+ */
 async convConvert() : Promise<Result<BaseResponse<null>, Error>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("conv_convert") };
@@ -53,9 +125,71 @@ async convConvert() : Promise<Result<BaseResponse<null>, Error>> {
     else return { status: "error", error: e  as any };
 }
 },
-async getAgentList() : Promise<Result<BaseResponse<AgentMeta[]>, Error>> {
+/**
+ * Starts the database synchronization service.
+ * 
+ * # Arguments
+ * * `interval` - Time interval in minutes between syncs
+ * * `app_handle` - Tauri application handle
+ * * `sync_manager` - State-managed sync manager instance
+ * 
+ * # Returns
+ * * `EResult<BaseResponse>` - Success response or error
+ */
+async mgmtSyncStart(interval: number | null) : Promise<Result<BaseResponse<null>, Error>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("get_agent_list") };
+    return { status: "ok", data: await TAURI_INVOKE("mgmt_sync_start", { interval }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Stops the database synchronization service.
+ * 
+ * # Arguments
+ * * `sync_manager` - State-managed sync manager instance
+ * 
+ * # Returns
+ * * `EResult<BaseResponse>` - Success response or error
+ */
+async mgmtSyncStop() : Promise<Result<BaseResponse<null>, Error>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("mgmt_sync_stop") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Retrieves the current status of the synchronization service.
+ * 
+ * # Arguments
+ * * `sync_manager` - State-managed sync manager instance
+ * 
+ * # Returns
+ * * `EResult<BaseResponse<SyncStatus>>` - Status containing next sync time information
+ */
+async mgmtSyncStatus() : Promise<Result<BaseResponse<SyncStatus>, Error>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("mgmt_sync_status") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Retrieves the path to the application log files.
+ * 
+ * # Arguments
+ * * `app_handle` - Tauri application handle
+ * 
+ * # Returns
+ * * `EResult<BaseResponse<LogPath>>` - Path information for log files
+ */
+async mgmtGetLogsPath() : Promise<Result<BaseResponse<LogPath>, Error>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("mgmt_get_logs_path") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -73,18 +207,193 @@ async getAgentList() : Promise<Result<BaseResponse<AgentMeta[]>, Error>> {
 
 /** user-defined types **/
 
-export type AgentMeta = { name: string; url: string; icon: string | null; tags: TagType[] }
+/**
+ * Response structure containing analysis results
+ * 
+ * * `negative` - List of negative findings
+ * * `positive` - List of positive findings
+ * * `warning` - List of warnings
+ * * `flag` - Recommended bundle flag based on analysis
+ */
 export type AnalyzeResponse = { negative: string[]; positive: string[]; warning: string[]; flag: BundleFlag }
+/**
+ * Base response structure that can contain optional payload data
+ * 
+ * * `duration` - Operation execution time in seconds
+ * * `comment` - Optional comment or message related to the operation
+ * * `payload` - Optional data payload of generic type T
+ */
 export type BaseResponse<T> = { duration: number; comment: string | null; payload: T | null }
+/**
+ * Represents the method used for bundling files
+ * 
+ * * `Name` - Bundle by name
+ * * `Image` - Bundle by image
+ * * `Manual` - Manual bundling (default)
+ */
 export type BundleFlag = "NAME" | "IMAGE" | "MANUAL"
+/**
+ * Response structure containing bundling operation results
+ * 
+ * * `total_chapters` - Total number of chapters processed
+ * * `total_volumes` - Optional total number of volumes created
+ * * `chapter_sizes` - Optional list of chapter sizes in bytes
+ */
 export type BundleResponse = { total_chapters: number; total_volumes: number | null; chapter_sizes: number[] | null }
-export type ConvState = { name: string; source: string; target: string; bundle_flag: BundleFlag; direction: Direction; format: FileFormat; create_directory: boolean; volume_sizes: number[]; data: string[][]; edited_data: string[][] | null }
+/**
+ * Represents the state of a file conversion operation
+ * 
+ * Contains all necessary information about a conversion task including
+ * source and destination paths, format settings, and file organization.
+ */
+export type ConvState = { 
+/**
+ * Name of the conversion task
+ */
+name: string; 
+/**
+ * Source directory or file path
+ */
+source: string; 
+/**
+ * Target directory for output files
+ */
+target: string; 
+/**
+ * Method used for bundling files
+ */
+bundle_flag: BundleFlag; 
+/**
+ * Reading direction (LTR or RTL)
+ */
+direction: Direction; 
+/**
+ * Output file format (EPUB or CBZ)
+ */
+format: FileFormat; 
+/**
+ * Whether to create a new directory for output
+ */
+create_directory: boolean; 
+/**
+ * Sizes for volume splitting
+ */
+volume_sizes: number[]; 
+/**
+ * Collection of file paths organized for processing
+ */
+data: string[][]; 
+/**
+ * Optional edited version of the data collection
+ */
+edited_data: string[][] | null }
+/**
+ * Keys for the conversion state data
+ * 
+ * Represents various properties that can be set during the conversion process
+ */
 export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null }
+/**
+ * Reading direction for content in an ePub file
+ * 
+ * * `Ltr` - Left to Right (default)
+ * * `Rtl` - Right to Left
+ */
 export type Direction = "Left to Right" | "Right to Left"
-export type Error = { type: "Io" } | { type: "Regex" } | { type: "Tauri" } | { type: "Image" } | { type: "Epub" } | { type: "Zip" } | { type: "Reqwest" } | { type: "InvalidPath"; data: [string, string] } | { type: "AsyncTaskError"; data: string } | { type: "Unsupported"; data: string } | { type: "NotFound"; data: string }
+/**
+ * Error types that can occur during application execution
+ * 
+ * Provides a unified error handling system that wraps both standard library
+ * and third-party errors, as well as application-specific errors.
+ */
+export type Error = 
+/**
+ * I/O errors from the standard library
+ */
+{ type: "Io" } | 
+/**
+ * Regular expression parsing errors
+ */
+{ type: "Regex" } | 
+/**
+ * Errors from the Tauri framework
+ */
+{ type: "Tauri" } | 
+/**
+ * Image processing errors
+ */
+{ type: "Image" } | 
+/**
+ * EPUB generation errors
+ */
+{ type: "Epub" } | 
+/**
+ * ZIP file operation errors
+ */
+{ type: "Zip" } | 
+/**
+ * HTTP request errors
+ */
+{ type: "Reqwest" } | 
+/**
+ * Error for invalid file or directory paths
+ */
+{ type: "InvalidPath"; data: [string, string] } | 
+/**
+ * Error for failed asynchronous tasks
+ */
+{ type: "AsyncTaskError"; data: string } | 
+/**
+ * Error for unsupported operations or formats
+ */
+{ type: "Unsupported"; data: string } | 
+/**
+ * Error for resources that couldn't be found
+ */
+{ type: "NotFound"; data: string } | 
+/**
+ * Generic database error
+ */
+{ type: "DatabaseError"; data: string } | 
+/**
+ * SQLx database errors
+ */
+{ type: "SqlxError" } | 
+/**
+ * SQLx migration errors
+ */
+{ type: "SqlxMigrationError" }
+/**
+ * Supported file formats for conversion
+ * 
+ * * `Epub` - Electronic Publication format
+ * * `Cbz` - Comic Book ZIP format (default)
+ */
 export type FileFormat = "EPUB" | "CBZ"
-export type StatusFlag = "Experimental" | "Deprecated" | "Stable"
-export type TagType = { Language: string } | { Status: StatusFlag } | { Other: string }
+/**
+ * Path information for application log files
+ */
+export type LogPath = { 
+/**
+ * Directory where log files are stored
+ */
+directory: string; 
+/**
+ * Full path to the main log file
+ */
+file: string }
+/**
+ * Status information about the synchronization service
+ */
+export type SyncStatus = { 
+/**
+ * Seconds until the next sync operation
+ */
+seconds_until_next_sync: number | null; 
+/**
+ * Minutes until the next sync operation
+ */
+minutes_until_next_sync: number | null }
 
 /** tauri-specta globals **/
 

@@ -211,6 +211,10 @@
 		@apply bg-background antialiased;
 	}
 
+	* {
+		@apply antialiased;
+	}
+
 	*:not(a) {
 		@apply text-content dark:text-content-dark;
 	}

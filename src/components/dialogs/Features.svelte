@@ -16,7 +16,7 @@
 		[FeatureFlag.CHANGE_LANGUAGE]: {
 			name: $t`Language Settings`,
 			description: $t`Allows changing the application language`,
-			type: msg`beta`
+			type: msg`stable`
 		},
 		[FeatureFlag.SEARCH_MANGA]: {
 			name: $t`Manga Search`,
@@ -28,10 +28,10 @@
 			description: $t`Add browsing agents feature`,
 			type: msg`experimental`
 		},
-		[FeatureFlag.MOUSE_SUPPORT]: {
-			name: $t`Mouse Support`,
-			description: $t`Enable the mouse support feature for the application`,
-			type: msg`stable`
+		[FeatureFlag.INTERNAL_MANAGEMENT]: {
+			name: $t`Internal Management`,
+			description: $t`Enable the internal management features like the SyncManager`,
+			type: msg`experimental`
 		},
 		[FeatureFlag.CUSTOM_KEYBINDS]: {
 			name: $t`Custom Keybinds`,

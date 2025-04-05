@@ -16,6 +16,7 @@ use regex::Regex;
 use tauri::async_runtime::{spawn, spawn_blocking, JoinHandle};
 use tokio::fs::{read_dir, ReadDir};
 use tokio::sync::Semaphore;
+use log::{debug, error, info, trace, warn};
 
 use crate::prelude::*;
 
@@ -44,6 +45,7 @@ impl Collector {
     ///
     /// * `base_directory` - Path to the root directory containing chapters/volumes
     pub fn new(base_directory: &PathBuf) -> Self {
+        info!("Creating new Collector for directory: {:?}", base_directory);
         Self {
             base_directory: base_directory.clone(),
         }
@@ -62,12 +64,16 @@ impl Collector {
         &mut self,
         comparator: Option<&'static (dyn Fn(&PathBuf, &PathBuf) -> Ordering + Sync)>,
     ) -> EResult<Vec<PathBuf>> {
+        info!("Collecting chapters from {:?}", self.base_directory);
         let mut chapters = Self::collect_parallel(&self.base_directory, true).await?;
+        debug!("Found {} potential chapter directories", chapters.len());
 
         if let Some(comparator) = comparator {
+            debug!("Sorting chapters using custom comparator");
             chapters.par_sort_by(comparator);
         }
 
+        info!("Collected {} chapters", chapters.len());
         Ok(chapters)
     }
 
@@ -86,8 +92,10 @@ impl Collector {
         chapters: Vec<PathBuf>,
         comparator: Option<&'static (dyn Fn(&PathBuf, &PathBuf) -> Ordering + Sync)>,
     ) -> EResult<Vec<Vec<PathBuf>>> {
+        info!("Collecting pages from {} chapters", chapters.len());
         // Create semaphore to limit concurrent tasks
         let semaphore = Arc::new(Semaphore::new(MAX_CONCURRENT_DIRS));
+        debug!("Using semaphore with {} permits for concurrent operations", MAX_CONCURRENT_DIRS);
 
         // Create a vector to hold EResults, pre-allocate with capacity
         let mut pages = Vec::with_capacity(chapters.len());
@@ -101,16 +109,21 @@ impl Collector {
             .map(|(index, chapter_dir)| {
                 let semaphore = Arc::clone(&semaphore);
                 let chapter_dir = chapter_dir.clone();
+                trace!("Spawning task for chapter directory: {:?}", chapter_dir);
 
                 spawn(async move {
                     // Acquire semaphore permit to limit concurrent directory operations
                     let _permit = semaphore.acquire().await.map_err(|e| {
+                        error!("Failed to acquire semaphore: {}", e);
                         Error::AsyncTaskError(format!("Failed to acquire semaphore: {}", e))
                     })?;
 
+                    debug!("Processing chapter directory {}: {:?}", index, chapter_dir);
                     let mut chapter_images = Self::collect_parallel(&chapter_dir, false).await?;
+                    trace!("Found {} images in chapter {}", chapter_images.len(), index);
 
                     if let Some(comparator) = comparator {
+                        trace!("Sorting images in chapter {}", index);
                         chapter_images.par_sort_by(comparator);
                     }
 
@@ -121,12 +134,22 @@ impl Collector {
 
         for handle in handles {
             match handle.await {
-                Ok(Ok((i, chapter_images))) => pages[i] = chapter_images,
-                Ok(Err(e)) => return Err(e),
-                Err(e) => return Err(Error::AsyncTaskError(e.to_string())),
+                Ok(Ok((i, chapter_images))) => {
+                    trace!("Successfully processed chapter {}: {} images", i, chapter_images.len());
+                    pages[i] = chapter_images;
+                }
+                Ok(Err(e)) => {
+                    error!("Error processing chapter: {}", e);
+                    return Err(e);
+                }
+                Err(e) => {
+                    error!("Async task error: {}", e);
+                    return Err(Error::AsyncTaskError(e.to_string()));
+                }
             }
         }
 
+        info!("Collected pages for {} chapters", pages.len());
         Ok(pages)
     }
 
@@ -146,25 +169,33 @@ impl Collector {
         images_per_chapter: Vec<Vec<PathBuf>>,
         sensibility: f64,
     ) -> EResult<Vec<usize>> {
+        info!(
+            "Determining volume start chapters with sensitivity: {:.2}",
+            sensibility
+        );
         let mut book_start_chapters: Vec<usize> = Vec::new();
 
         // Limit concurrent image processing tasks
         let semaphore = Arc::new(Semaphore::new(num_cpus::get()));
+        debug!("Using {} threads for grayscale analysis", num_cpus::get());
 
         let handles: Vec<JoinHandle<EResult<Option<usize>>>> = images_per_chapter
             .into_par_iter()
             .enumerate()
             .map(|(i, images_per_chapter)| {
                 if images_per_chapter.is_empty() {
+                    trace!("Chapter {} has no images, skipping", i);
                     return spawn_blocking(move || Ok(None));
                 }
 
                 let cover_path = images_per_chapter[0].clone();
                 let semaphore = Arc::clone(&semaphore);
+                trace!("Analyzing cover for chapter {}: {:?}", i, cover_path);
 
                 spawn(async move {
                     // Acquire permit to limit concurrent image processing
                     let _permit = semaphore.acquire().await.map_err(|e| {
+                        error!("Failed to acquire semaphore: {}", e);
                         Error::AsyncTaskError(format!("Failed to acquire semaphore: {}", e))
                     })?;
 
@@ -187,6 +218,7 @@ impl Collector {
         for handle in handles {
             if let Ok(result) = handle.await? {
                 if let Some(i) = result {
+                    debug!("Chapter {} identified as volume start", i);
                     book_start_chapters.push(i);
                 }
             }
@@ -194,6 +226,7 @@ impl Collector {
 
         // Sort the chapters by their starting index.
         book_start_chapters.sort();
+        info!("Identified {} volume start chapters", book_start_chapters.len());
 
         Ok(book_start_chapters)
     }
@@ -213,24 +246,32 @@ impl Collector {
         mut book_start_chapters: Vec<usize>,
         total_chapters: usize,
     ) -> EResult<Vec<usize>> {
+        info!("Calculating volume sizes for {} total chapters", total_chapters);
         let mut book_chapters: Vec<usize> = Vec::new();
 
         // Remove the first chapter because it's always a book start
         if book_start_chapters.len() > 0 {
+            debug!("Removing first chapter {} (always a book start)", book_start_chapters[0]);
             book_start_chapters.remove(0);
         } else {
+            error!("No chapters found for volume size calculation");
             return Err(Error::NotFound("No chapters found".to_string()));
         }
 
         let mut prev_chapter = 0;
         for chapter in book_start_chapters {
-            book_chapters.push(chapter - prev_chapter);
+            let chapter_count = chapter - prev_chapter;
+            debug!("Volume with chapters {}-{}: {} chapters", prev_chapter, chapter-1, chapter_count);
+            book_chapters.push(chapter_count);
             prev_chapter = chapter;
         }
 
         // Add the remaining chapters.
-        book_chapters.push(total_chapters - prev_chapter);
+        let remaining = total_chapters - prev_chapter;
+        debug!("Final volume with chapters {}-{}: {} chapters", prev_chapter, total_chapters-1, remaining);
+        book_chapters.push(remaining);
 
+        info!("Calculated {} volumes with chapter counts: {:?}", book_chapters.len(), book_chapters);
         Ok(book_chapters)
     }
 
@@ -314,17 +355,35 @@ impl Collector {
     ///
     /// * `EResult<Vec<PathBuf>>` - Paths meeting the criteria
     pub async fn collect_parallel(directory: &PathBuf, only_dirs: bool) -> EResult<Vec<PathBuf>> {
+        debug!(
+            "Collecting {} from directory: {:?}",
+            if only_dirs { "directories" } else { "files" },
+            directory
+        );
         let mut entries: Vec<PathBuf> = Vec::new();
 
         // Read directory contents
-        let mut paths: ReadDir = read_dir(directory).await?;
+        let mut paths: ReadDir = match read_dir(directory).await {
+            Ok(paths) => paths,
+            Err(e) => {
+                error!("Failed to read directory {:?}: {}", directory, e);
+                return Err(Error::Io(e));
+            }
+        };
 
-        while let Some(entry) = paths.next_entry().await? {
+        while let Some(entry) = match paths.next_entry().await {
+            Ok(entry) => entry,
+            Err(e) => {
+                error!("Error reading entry in {:?}: {}", directory, e);
+                return Err(Error::Io(e));
+            }
+        } {
             let path = entry.path();
 
             // Skip hidden files
             if let Some(file_name) = path.file_name() {
                 if file_name.to_string_lossy().starts_with(".") {
+                    trace!("Skipping hidden file: {:?}", path);
                     continue;
                 }
             }
@@ -332,6 +391,12 @@ impl Collector {
             // Apply directory/file filter
             let is_dir = path.is_dir();
             if (only_dirs && !is_dir) || (!only_dirs && is_dir) {
+                warn!(
+                    "Expected {}, got {}: {:?}",
+                    if only_dirs { "directory" } else { "file" },
+                    if is_dir { "directory" } else { "file" },
+                    path
+                );
                 return Err(Error::InvalidPath(
                     path.clone(),
                     format!(
@@ -342,9 +407,11 @@ impl Collector {
                 ));
             }
 
+            trace!("Adding path: {:?}", path);
             entries.push(path);
         }
 
+        info!("Collected {} entries from {:?}", entries.len(), directory);
         Ok(entries)
     }
 

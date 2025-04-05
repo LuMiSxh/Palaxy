@@ -9,7 +9,7 @@ export const commands = {
  * Updates a specific field in the conversion state.
  * 
  * # Arguments
- * * `input` - Key-value pair specifying which state field to update and its new value
+ * * `input` - Key-value pair specifying which state field is to update and its new value
  * * `state` - Application state containing conversion parameters
  * 
  * # Returns

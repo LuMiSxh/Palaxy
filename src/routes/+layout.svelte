@@ -177,7 +177,6 @@
 					name: $t`Mouse Support`,
 					description: $t`Enable or disable a button to show the ActionHub`,
 					icon: IconMouse,
-					hidden: !ffIsEnabled($appData, FeatureFlag.MOUSE_SUPPORT),
 					action: () => {
 						$appData.mouseSupport = !$appData.mouseSupport;
 						addToast(
@@ -202,6 +201,7 @@
 					name: $t`Internal Management`,
 					description: $t`Manage the internal state of the application`,
 					icon: IconLayersIntersect,
+					hidden: !ffIsEnabled($appData, FeatureFlag.INTERNAL_MANAGEMENT),
 					action: () => {
 						openDialog({
 							title: $t`Internal Management`,

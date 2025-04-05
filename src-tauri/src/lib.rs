@@ -78,6 +78,7 @@ pub fn run() {
                         file_name: Some("logs".to_string()),
                     },
                 ))
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
                 .level(log::LevelFilter::Info)
                 .format(|out, message, record| {
                     let time = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");

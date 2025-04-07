@@ -5,7 +5,7 @@ description = "The manga converter for the modern age"
 authors = ["LuMiSxh"]
 license = ""
 repository = "https://github.com/LuMiSxh/Palaxy"
-edition = "2021"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -22,7 +22,6 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = ["protocol-asset", "macos-private-api"] }
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
 thiserror = "2.0"
 regex = "1.11"
 image = "0.25"

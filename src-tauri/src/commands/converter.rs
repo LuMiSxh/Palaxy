@@ -350,7 +350,7 @@ pub async fn conv_analyze(state: State<'_, Mutex<ConvState>>) -> EResult<CommAna
         let outliers: Vec<_> = file_sizes
             .par_iter()
             .enumerate()
-            .filter(|(_, &size)| size < avg_size / 3 || size > avg_size * 3)
+            .filter(|&(_, &size)| size < avg_size / 3 || size > avg_size * 3)
             .collect();
 
         if !outliers.is_empty() && outliers.len() < file_sizes.len() / 10 {
@@ -903,7 +903,7 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
                 FileFormat::Cbz => {
                     debug!("Volume {}: creating CBZ file: {}", i + 1, volume_name);
                     let mut generator = match Cbz::new(&target_dir, &volume_name) {
-                        Ok(gen) => gen,
+                        Ok(genr) => genr,
                         Err(e) => {
                             error!("Volume {}: failed to create CBZ generator: {}", i + 1, e);
                             return Err(e);
@@ -958,7 +958,7 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
                     }
 
                     let mut generator = match EPub::new(&target_dir, &volume_name) {
-                        Ok(gen) => gen,
+                        Ok(genr) => genr,
                         Err(e) => {
                             error!("Volume {}: failed to create EPUB generator: {}", i + 1, e);
                             return Err(e);

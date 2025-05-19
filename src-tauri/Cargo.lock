@@ -3433,7 +3433,6 @@ dependencies = [
  "regex",
  "reqwest",
  "serde",
- "serde_json",
  "specta",
  "specta-typescript",
  "sqlx",

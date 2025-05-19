@@ -1,5 +1,7 @@
 ![Palaxy](./assets/palaxy-banner.png)
 
+> A lightweight and fast manga converter for Windows, Linux and MacOS.
+
 # Installation
 
 You can install Palaxy by going to the [releases page](https://github.com/LuMiSxh/Palaxy/releases) and downloading the latest version for your

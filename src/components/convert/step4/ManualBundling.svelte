@@ -5,7 +5,7 @@
 		getTotalChapters,
 		step4State
 	} from '$components/convert/step4/utils.svelte';
-	import convState from '$states/converter.svelte';
+	import convState, { stepState } from '$states/converter.svelte';
 	import { IconChevronRight, IconFileZip, IconPlus, IconX } from '@tabler/icons-svelte';
 	import { t } from 'svelte-i18n-lingui';
 	import { onMount, tick } from 'svelte';
@@ -17,6 +17,10 @@
 	let editingInput: HTMLInputElement | null = $state(null);
 	let newVolumeInput: HTMLInputElement | null = $state(null);
 	let isEditing = $state(false);
+
+	$effect(() => {
+		stepState.disableNext = convState.chapterSizes.length === 0;
+	});
 
 	function addVolume() {
 		if (newVolumeChapters === undefined || newVolumeChapters <= 0) {

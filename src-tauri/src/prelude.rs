@@ -133,6 +133,8 @@ pub struct ConvState {
     pub format: FileFormat,
     /// Whether to create a new directory for output
     pub create_directory: bool,
+    /// Whether to convert images to WebP format
+    pub convert_to_webp: bool,
     /// Sizes for volume splitting
     pub volume_sizes: Vec<usize>,
     /// Collection of file paths organized for processing
@@ -196,4 +198,3 @@ pub struct LogPath {
     /// Full path to the main log file
     pub file: String,
 }
-

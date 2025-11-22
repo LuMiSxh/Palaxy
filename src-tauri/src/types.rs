@@ -82,6 +82,7 @@ pub enum ConvStateKey {
     Direction(Direction),
     Format(FileFormat),
     CreateDirectory(bool),
+    ConvertToWebp(bool),
     VolumeSizes(Vec<usize>),
     Data(Vec<Vec<PathBuf>>),
     EditedData(Option<Vec<Vec<PathBuf>>>),

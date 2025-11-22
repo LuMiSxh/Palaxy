@@ -276,6 +276,10 @@ format: FileFormat;
  */
 create_directory: boolean; 
 /**
+ * Whether to convert images to WebP format
+ */
+convert_to_webp: boolean; 
+/**
  * Sizes for volume splitting
  */
 volume_sizes: number[]; 
@@ -292,7 +296,7 @@ edited_data: string[][] | null }
  * 
  * Represents various properties that can be set during the conversion process
  */
-export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null }
+export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { ConvertToWebp: boolean } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null }
 /**
  * Reading direction for content in an ePub file
  * 

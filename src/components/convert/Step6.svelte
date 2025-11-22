@@ -205,6 +205,29 @@
 							</span>
 						</div>
 					</div>
+
+					<!-- Convert to WebP -->
+					<div>
+						<label for="" class="mb-2 block font-medium">{$t`Convert to WebP`}</label>
+						<div class="flex items-center gap-4">
+							<label class="toggle toggle-lg pointer-events-none cursor-not-allowed opacity-75">
+								<input
+									type="checkbox"
+									class="toggle-input"
+									checked={convStateData?.convert_to_webp}
+									disabled
+								/>
+								<span class="toggle-track">
+									<span class="toggle-thumb"></span>
+								</span>
+							</label>
+							<span class="text-sm">
+								{convStateData?.convert_to_webp
+									? $t`Images will be converted to WebP format`
+									: $t`Images will keep their original format`}
+							</span>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>

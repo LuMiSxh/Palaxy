@@ -28,6 +28,7 @@
 		$appData.autoPop.enabled ? ($appData.autoPop.converter.conversionType ?? 'CBZ') : 'CBZ'
 	);
 	let readingDirection: Direction = $state('Left to Right');
+	let convertToWebp = $state(true);
 	let bundleFlag: BundleFlag = $state(
 		convState.bundle ? convState.bundle : convState.bundleRecommendation
 	);
@@ -56,6 +57,7 @@
 		await wrapper(commands.convStateSet({ Direction: readingDirection }));
 		await wrapper(commands.convStateSet({ Format: fileFormat }));
 		await wrapper(commands.convStateSet({ CreateDirectory: createFolder }));
+		await wrapper(commands.convStateSet({ ConvertToWebp: convertToWebp }));
 		await wrapper(commands.convStateSet({ Target: targetLocation }));
 	});
 
@@ -230,6 +232,35 @@
 							{createFolder
 								? $t`Will create a new folder for output files`
 								: $t`Will save directly in target location`}
+						</span>
+					</div>
+				</div>
+
+				<!-- Convert to WebP -->
+				<div class="">
+					<label for="convert-webp" class="mb-2 block font-medium">{$t`Convert to WebP`}</label>
+					<div class="flex items-center gap-4">
+						<label class="toggle toggle-lg">
+							<input
+								id="convert-webp"
+								type="checkbox"
+								class="toggle-input"
+								use:handleKeyHint={{ keys: [['enter', $t`Toggle`]] }}
+								bind:checked={convertToWebp}
+								onkeydown={(evt) => {
+									if (evt.key === 'Enter') {
+										convertToWebp = !convertToWebp;
+									}
+								}}
+							/>
+							<span class="toggle-track">
+								<span class="toggle-thumb"></span>
+							</span>
+						</label>
+						<span class="text-sm">
+							{convertToWebp
+								? $t`Images will be converted to WebP format`
+								: $t`Images will keep their original format`}
 						</span>
 					</div>
 				</div>

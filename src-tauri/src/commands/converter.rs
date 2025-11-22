@@ -1,23 +1,105 @@
 use crate::collector::Collector;
+use crate::generator::Generator;
 use crate::generator::cbz::Cbz;
 use crate::generator::epub::EPub;
-use crate::generator::Generator;
 use crate::prelude::*;
+use image::ImageFormat;
 use lazy_static::lazy_static;
 use log::{debug, error, info, trace, warn};
 use rayon::prelude::*;
 use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use tauri::async_runtime::spawn;
 use tauri::State;
-use tokio::fs::create_dir;
+use tauri::async_runtime::spawn;
+use tokio::fs::{File, create_dir};
+use tokio::io::AsyncWriteExt;
 use tokio::sync::{Mutex, Semaphore};
+use tokio::task::spawn_blocking;
 
 lazy_static! {
     /// Regular expression for analyzing chapter/volume naming patterns.
     /// Matches strings in format "digits-digits[.digits]" (e.g. "01-23" or "01-23.5").
     static ref REGEX_ANALYZE: Regex = Regex::new(r"\d+-\d+(\.\d+)?").unwrap();
+}
+
+// Helper Functions
+
+/// Converts an image to WebP format if it's not already WebP.
+///
+/// # Arguments
+/// * `image_path` - Path to the source image
+/// * `temp_dir` - Directory to store the converted image
+///
+/// # Returns
+/// * `Result<PathBuf, Error>` - Path to the WebP image (original if already WebP, or newly converted)
+async fn convert_image_to_webp(image_path: &PathBuf, temp_dir: &Path) -> Result<PathBuf, Error> {
+    // Check if already WebP
+    if let Some(ext) = image_path.extension() {
+        if ext == "webp" {
+            trace!(
+                "Image {:?} is already WebP, skipping conversion",
+                image_path
+            );
+            return Ok(image_path.clone());
+        }
+    }
+
+    debug!("Converting image {:?} to WebP format", image_path);
+
+    // Clone the path for use in blocking task
+    let source_path = image_path.clone();
+    let temp_dir = temp_dir.to_path_buf();
+
+    // Perform image conversion in a blocking task
+    let webp_bytes = spawn_blocking(move || {
+        trace!("Loading image from {:?}", source_path);
+        let img = image::open(&source_path).map_err(|e| {
+            error!("Failed to open image {:?}: {}", source_path, e);
+            Error::from(e)
+        })?;
+
+        trace!("Encoding image to WebP format");
+        let mut webp_data = std::io::Cursor::new(Vec::new());
+        img.write_to(&mut webp_data, ImageFormat::WebP)
+            .map_err(|e| {
+                error!("Failed to encode image to WebP: {}", e);
+                Error::from(e)
+            })?;
+
+        Ok::<Vec<u8>, Error>(webp_data.into_inner())
+    })
+    .await
+    .map_err(|e| {
+        error!("Async task failed during image conversion: {}", e);
+        Error::AsyncTaskError(e.to_string())
+    })??;
+
+    // Create output path
+    let filename = image_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("converted");
+    let output_path = temp_dir.join(format!("{}.webp", filename));
+
+    trace!("Writing WebP image to {:?}", output_path);
+    let mut file = File::create(&output_path).await.map_err(|e| {
+        error!("Failed to create output file {:?}: {}", output_path, e);
+        Error::from(e)
+    })?;
+
+    file.write_all(&webp_bytes).await.map_err(|e| {
+        error!("Failed to write WebP data to file: {}", e);
+        Error::from(e)
+    })?;
+
+    file.flush().await.map_err(|e| {
+        error!("Failed to flush file: {}", e);
+        Error::from(e)
+    })?;
+
+    debug!("Successfully converted image to WebP: {:?}", output_path);
+    Ok(output_path)
 }
 
 // ConvState
@@ -70,6 +152,10 @@ pub async fn conv_state_set(
         ConvStateKey::CreateDirectory(value) => {
             debug!("Setting create directory flag to: {}", value);
             state.create_directory = value;
+        }
+        ConvStateKey::ConvertToWebp(value) => {
+            debug!("Setting convert to WebP flag to: {}", value);
+            state.convert_to_webp = value;
         }
         ConvStateKey::VolumeSizes(value) => {
             debug!("Setting volume sizes: {:?}", value);
@@ -771,7 +857,17 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
     let start = std::time::Instant::now();
 
     // Extract all the necessary data while the lock is held
-    let (name, target, create_directory, format, direction, volume_sizes, data, edited_data) = {
+    let (
+        name,
+        target,
+        create_directory,
+        format,
+        direction,
+        convert_to_webp,
+        volume_sizes,
+        data,
+        edited_data,
+    ) = {
         let state = state.lock().await;
         debug!(
             "Converting {} volumes to {:?} format",
@@ -779,10 +875,8 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
             state.format
         );
         trace!(
-            "Conversion parameters: target={:?}, create_directory={:?}, direction={:?}",
-            state.target,
-            state.create_directory,
-            state.direction
+            "Conversion parameters: target={:?}, create_directory={:?}, direction={:?}, convert_to_webp={:?}",
+            state.target, state.create_directory, state.direction, state.convert_to_webp
         );
 
         (
@@ -791,6 +885,7 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
             state.create_directory,
             state.format,
             state.direction,
+            state.convert_to_webp,
             state.volume_sizes.clone(),
             state.data.clone(),
             state.edited_data.clone(),
@@ -850,6 +945,24 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
         }
     };
 
+    // Create a temporary directory for WebP conversions if needed
+    let temp_dir = if convert_to_webp {
+        let temp_path = Path::new(&target_directory_path).join(".palaxy_temp");
+        debug!(
+            "Creating temp directory for WebP conversions: {:?}",
+            temp_path
+        );
+        if !temp_path.exists() {
+            create_dir(&temp_path).await.map_err(|e| {
+                error!("Failed to create temp directory {:?}: {}", temp_path, e);
+                e
+            })?;
+        }
+        Some(temp_path)
+    } else {
+        None
+    };
+
     // Create a semaphore to limit concurrent conversions
     let max_concurrent = num_cpus::get().min(10);
     info!(
@@ -868,6 +981,8 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
         let target_dir = target_directory_path.clone();
         let format_clone = format;
         let direction_clone = direction;
+        let convert_to_webp_clone = convert_to_webp;
+        let temp_dir_clone = temp_dir.clone();
         let semaphore_clone = Arc::clone(&semaphore);
 
         debug!(
@@ -923,7 +1038,28 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
                             chapter_pages.len()
                         );
                         for page in chapter_pages {
-                            if let Err(e) = generator.add_page(page).await {
+                            let page_to_add = if convert_to_webp_clone {
+                                if let Some(ref temp_dir) = temp_dir_clone {
+                                    match convert_image_to_webp(page, temp_dir).await {
+                                        Ok(webp_path) => webp_path,
+                                        Err(e) => {
+                                            error!(
+                                                "Volume {}, Chapter {}: failed to convert image to WebP: {}",
+                                                i + 1,
+                                                chapter_idx + 1,
+                                                e
+                                            );
+                                            return Err(e);
+                                        }
+                                    }
+                                } else {
+                                    page.clone()
+                                }
+                            } else {
+                                page.clone()
+                            };
+
+                            if let Err(e) = generator.add_page(&page_to_add).await {
                                 error!(
                                     "Volume {}, Chapter {}: failed to add page {:?}: {}",
                                     i + 1,
@@ -997,7 +1133,36 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
                             chapter_idx + 1,
                             chapter_pages.len()
                         );
-                        if let Err(e) = generator.add_chapter(chapter_idx + 1, chapter_pages).await
+
+                        // Convert chapter pages to WebP if needed
+                        let chapter_pages_to_add: Vec<PathBuf> = if convert_to_webp_clone {
+                            if let Some(ref temp_dir) = temp_dir_clone {
+                                let mut converted_pages = Vec::new();
+                                for page in chapter_pages {
+                                    match convert_image_to_webp(page, temp_dir).await {
+                                        Ok(webp_path) => converted_pages.push(webp_path),
+                                        Err(e) => {
+                                            error!(
+                                                "Volume {}, Chapter {}: failed to convert image to WebP: {}",
+                                                i + 1,
+                                                chapter_idx + 1,
+                                                e
+                                            );
+                                            return Err(e);
+                                        }
+                                    }
+                                }
+                                converted_pages
+                            } else {
+                                chapter_pages.clone()
+                            }
+                        } else {
+                            chapter_pages.clone()
+                        };
+
+                        if let Err(e) = generator
+                            .add_chapter(chapter_idx + 1, &chapter_pages_to_add)
+                            .await
                         {
                             error!(
                                 "Volume {}: failed to add chapter {}: {}",
@@ -1038,6 +1203,16 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
                 error!("Volume {} task panicked: {}", i + 1, e);
                 return Err(Error::AsyncTaskError(e.to_string()));
             }
+        }
+    }
+
+    // Clean up temporary directory if it was created
+    if let Some(temp_dir) = temp_dir {
+        debug!("Cleaning up temporary directory: {:?}", temp_dir);
+        if let Err(e) = tokio::fs::remove_dir_all(&temp_dir).await {
+            warn!("Failed to remove temporary directory {:?}: {}", temp_dir, e);
+        } else {
+            trace!("Temporary directory removed successfully");
         }
     }
 

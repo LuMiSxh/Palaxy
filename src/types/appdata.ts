@@ -74,7 +74,7 @@ export enum FeatureFlag {
 	/**
 	 * Allows internal management of the application.
 	 */
-	INTERNAL_MANAGEMENT = 16,
+	INTERNAL_MANAGEMENT = 16
 }
 
 /**
@@ -132,6 +132,11 @@ export interface AppData {
 			 * Whether a new folder should be created during conversion.
 			 */
 			createNewFolder: boolean;
+
+			/**
+			 * Image output format for conversion.
+			 */
+			imageFormat: 'None' | 'WebP' | 'AVIF' | null;
 		};
 	};
 }
@@ -150,7 +155,8 @@ export const defaultAppData: AppData = {
 		converter: {
 			conversionType: null,
 			targetLocation: null,
-			createNewFolder: true
+			createNewFolder: true,
+			imageFormat: null
 		}
 	}
 };

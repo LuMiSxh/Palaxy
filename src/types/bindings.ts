@@ -276,9 +276,13 @@ format: FileFormat;
  */
 create_directory: boolean; 
 /**
- * Whether to convert images to WebP format
+ * Whether to convert images to WebP format (deprecated, use image_format instead)
  */
 convert_to_webp: boolean; 
+/**
+ * Image output format for conversion
+ */
+image_format: ImageOutputFormat; 
 /**
  * Sizes for volume splitting
  */
@@ -296,7 +300,7 @@ edited_data: string[][] | null }
  * 
  * Represents various properties that can be set during the conversion process
  */
-export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { ConvertToWebp: boolean } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null }
+export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { ConvertToWebp: boolean } | { ImageFormat: ImageOutputFormat } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null }
 /**
  * Reading direction for content in an ePub file
  * 
@@ -374,6 +378,14 @@ export type Error =
  * * `Cbz` - Comic Book ZIP format (default)
  */
 export type FileFormat = "EPUB" | "CBZ"
+/**
+ * Image output format for conversion
+ * 
+ * * `None` - Keep original image format (default)
+ * * `WebP` - Convert images to WebP format
+ * * `Avif` - Convert images to AVIF format
+ */
+export type ImageOutputFormat = "None" | "WebP" | "AVIF"
 /**
  * Path information for application log files
  */

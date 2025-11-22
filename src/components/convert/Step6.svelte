@@ -206,27 +206,26 @@
 						</div>
 					</div>
 
-					<!-- Convert to WebP -->
+					<!-- Image Output Format -->
 					<div>
-						<label for="" class="mb-2 block font-medium">{$t`Convert to WebP`}</label>
+						<label for="" class="mb-2 block font-medium">{$t`Image Output Format`}</label>
 						<div class="flex items-center gap-4">
-							<label class="toggle toggle-lg pointer-events-none cursor-not-allowed opacity-75">
-								<input
-									type="checkbox"
-									class="toggle-input"
-									checked={convStateData?.convert_to_webp}
-									disabled
-								/>
-								<span class="toggle-track">
-									<span class="toggle-thumb"></span>
-								</span>
-							</label>
-							<span class="text-sm">
-								{convStateData?.convert_to_webp
-									? $t`Images will be converted to WebP format`
-									: $t`Images will keep their original format`}
-							</span>
+							<input
+								type="text"
+								class="input input-primary pointer-events-none cursor-not-allowed opacity-75"
+								value={convStateData?.image_format ?? 'None'}
+								disabled
+							/>
 						</div>
+						<span class="mt-2 block text-sm">
+							{#if convStateData?.image_format === 'None'}
+								{$t`Images will keep their original format`}
+							{:else if convStateData?.image_format === 'WebP'}
+								{$t`Images will be converted to WebP format`}
+							{:else if convStateData?.image_format === 'AVIF'}
+								{$t`Images will be converted to AVIF format (smaller, slower)`}
+							{/if}
+						</span>
 					</div>
 				</div>
 			</div>

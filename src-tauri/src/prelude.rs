@@ -9,7 +9,6 @@ pub use crate::types::*;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::path::PathBuf;
-
 /// Error types that can occur during application execution
 ///
 /// Provides a unified error handling system that wraps both standard library
@@ -133,8 +132,10 @@ pub struct ConvState {
     pub format: FileFormat,
     /// Whether to create a new directory for output
     pub create_directory: bool,
-    /// Whether to convert images to WebP format
+    /// Whether to convert images to WebP format (deprecated, use image_format instead)
     pub convert_to_webp: bool,
+    /// Image output format for conversion
+    pub image_format: ImageOutputFormat,
     /// Sizes for volume splitting
     pub volume_sizes: Vec<usize>,
     /// Collection of file paths organized for processing

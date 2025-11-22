@@ -5,6 +5,7 @@
 		IconFileCode2,
 		IconFileDownload,
 		IconFolder,
+		IconPhoto,
 		IconSettings,
 		IconToggleRight
 	} from '@tabler/icons-svelte';
@@ -20,6 +21,7 @@
 	let convType = $state($appData.autoPop.converter.conversionType);
 	let convLocation = $state($appData.autoPop.converter.targetLocation);
 	let convNewFolder = $state($appData.autoPop.converter.createNewFolder);
+	let convImageFormat = $state($appData.autoPop.converter.imageFormat);
 
 	// set States
 	function save() {
@@ -27,6 +29,7 @@
 		$appData.autoPop.converter.conversionType = convType;
 		$appData.autoPop.converter.targetLocation = convLocation === '' ? null : convLocation;
 		$appData.autoPop.converter.createNewFolder = convNewFolder;
+		$appData.autoPop.converter.imageFormat = convImageFormat;
 		addToast($t`Auto-Populate Settings Saved`, 'info');
 		dialogManager.closeDialog(id);
 	}
@@ -153,6 +156,28 @@
 					: $t`Will save directly in target location`}
 			</span>
 		</div>
+
+		<!-- Image Output Format Card -->
+		<div class="flex items-center">
+			<IconPhoto class="text-primary mr-2" size={20} />
+			<h3 class="font-semibold">{$t`Image Output Format`}</h3>
+		</div>
+		<select
+			class="select select-primary w-full"
+			use:handleKeyHint={{
+				keys: [
+					['arrowup', $t`Select up`],
+					['arrowdown', $t`Select down`],
+					['enter', $t`Select`]
+				]
+			}}
+			bind:value={convImageFormat}
+		>
+			<option value="None">{$t`Original (No Conversion)`}</option>
+			<option value="WebP">WebP</option>
+			<option value="AVIF">AVIF</option>
+			<option value={null}>{$t`None`}</option>
+		</select>
 	</div>
 
 	<div class="mt-4 flex justify-end gap-2">

@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { appData } from '$stores/appdata';
 	import convState, { stepState } from '$states/converter.svelte';
-	import { type BundleFlag, commands, type Direction, type FileFormat } from '$types';
+	import {
+		type BundleFlag,
+		commands,
+		type Direction,
+		type FileFormat,
+		type ImageOutputFormat
+	} from '$types';
 	import { t } from 'svelte-i18n-lingui';
 	import { IconFolder } from '@tabler/icons-svelte';
 	import { open } from '@tauri-apps/plugin-dialog';
@@ -28,7 +34,9 @@
 		$appData.autoPop.enabled ? ($appData.autoPop.converter.conversionType ?? 'CBZ') : 'CBZ'
 	);
 	let readingDirection: Direction = $state('Left to Right');
-	let convertToWebp = $state(true);
+	let imageFormat: ImageOutputFormat = $state(
+		$appData.autoPop.enabled ? ($appData.autoPop.converter.imageFormat ?? 'WebP') : 'WebP'
+	);
 	let bundleFlag: BundleFlag = $state(
 		convState.bundle ? convState.bundle : convState.bundleRecommendation
 	);
@@ -57,7 +65,7 @@
 		await wrapper(commands.convStateSet({ Direction: readingDirection }));
 		await wrapper(commands.convStateSet({ Format: fileFormat }));
 		await wrapper(commands.convStateSet({ CreateDirectory: createFolder }));
-		await wrapper(commands.convStateSet({ ConvertToWebp: convertToWebp }));
+		await wrapper(commands.convStateSet({ ImageFormat: imageFormat }));
 		await wrapper(commands.convStateSet({ Target: targetLocation }));
 	});
 
@@ -236,33 +244,33 @@
 					</div>
 				</div>
 
-				<!-- Convert to WebP -->
+				<!-- Image Output Format -->
 				<div class="">
-					<label for="convert-webp" class="mb-2 block font-medium">{$t`Convert to WebP`}</label>
-					<div class="flex items-center gap-4">
-						<label class="toggle toggle-lg">
-							<input
-								id="convert-webp"
-								type="checkbox"
-								class="toggle-input"
-								use:handleKeyHint={{ keys: [['enter', $t`Toggle`]] }}
-								bind:checked={convertToWebp}
-								onkeydown={(evt) => {
-									if (evt.key === 'Enter') {
-										convertToWebp = !convertToWebp;
-									}
-								}}
-							/>
-							<span class="toggle-track">
-								<span class="toggle-thumb"></span>
-							</span>
-						</label>
-						<span class="text-sm">
-							{convertToWebp
-								? $t`Images will be converted to WebP format`
-								: $t`Images will keep their original format`}
-						</span>
-					</div>
+					<label for="image-format" class="mb-2 block font-medium">{$t`Image Output Format`}</label>
+					<select
+						id="image-format"
+						class="select select-primary"
+						use:handleKeyHint={{
+							keys: [
+								['arrowup', $t`Select up`],
+								['arrowdown', $t`Select down`]
+							]
+						}}
+						bind:value={imageFormat}
+					>
+						<option value="None">{$t`Original (No Conversion)`}</option>
+						<option value="WebP">WebP</option>
+						<option value="AVIF">AVIF</option>
+					</select>
+					<span class="mt-2 block text-sm">
+						{#if imageFormat === 'None'}
+							{$t`Images will keep their original format`}
+						{:else if imageFormat === 'WebP'}
+							{$t`Images will be converted to WebP format`}
+						{:else if imageFormat === 'AVIF'}
+							{$t`Images will be converted to AVIF format (smaller, slower)`}
+						{/if}
+					</span>
 				</div>
 			</div>
 		</div>

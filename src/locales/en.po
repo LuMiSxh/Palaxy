@@ -301,8 +301,14 @@ msgid "Convert another manga"
 msgstr "Convert another manga"
 
 #: src/components/convert/Step3.svelte:241
-msgid "Convert to WebP"
-msgstr "Convert to WebP"
+msgid "Image Output Format"
+msgstr "Image Output Format"
+
+msgid "Original (No Conversion)"
+msgstr "Original (No Conversion)"
+
+msgid "Images will be converted to AVIF format (smaller, slower)"
+msgstr "Images will be converted to AVIF format (smaller, slower)"
 
 #: src/routes/+layout.svelte:71
 msgid "Convert your manga images into a digital format that can be read on your favorite devices"

@@ -25,49 +25,61 @@ lazy_static! {
 
 // Helper Functions
 
-/// Converts an image to WebP format if it's not already WebP.
+/// Converts an image to the specified output format.
 ///
 /// # Arguments
 /// * `image_path` - Path to the source image
 /// * `temp_dir` - Directory to store the converted image
+/// * `format` - Target image format (WebP or AVIF)
 ///
 /// # Returns
-/// * `Result<PathBuf, Error>` - Path to the WebP image (original if already WebP, or newly converted)
-async fn convert_image_to_webp(image_path: &PathBuf, temp_dir: &Path) -> Result<PathBuf, Error> {
-    // Check if already WebP
+/// * `Result<PathBuf, Error>` - Path to the converted image
+async fn convert_image(
+    image_path: &PathBuf,
+    temp_dir: &Path,
+    format: ImageOutputFormat,
+) -> Result<PathBuf, Error> {
+    // Determine target format and extension
+    let (target_format, extension) = match format {
+        ImageOutputFormat::WebP => (ImageFormat::WebP, "webp"),
+        ImageOutputFormat::Avif => (ImageFormat::Avif, "avif"),
+        ImageOutputFormat::None => return Ok(image_path.clone()),
+    };
+
+    // Check if already in target format
     if let Some(ext) = image_path.extension() {
-        if ext == "webp" {
+        if ext == extension {
             trace!(
-                "Image {:?} is already WebP, skipping conversion",
-                image_path
+                "Image {:?} is already in {:?} format, skipping conversion",
+                image_path, format
             );
             return Ok(image_path.clone());
         }
     }
 
-    debug!("Converting image {:?} to WebP format", image_path);
+    debug!("Converting image {:?} to {:?} format", image_path, format);
 
     // Clone the path for use in blocking task
     let source_path = image_path.clone();
     let temp_dir = temp_dir.to_path_buf();
 
     // Perform image conversion in a blocking task
-    let webp_bytes = spawn_blocking(move || {
+    let converted_bytes = spawn_blocking(move || {
         trace!("Loading image from {:?}", source_path);
         let img = image::open(&source_path).map_err(|e| {
             error!("Failed to open image {:?}: {}", source_path, e);
             Error::from(e)
         })?;
 
-        trace!("Encoding image to WebP format");
-        let mut webp_data = std::io::Cursor::new(Vec::new());
-        img.write_to(&mut webp_data, ImageFormat::WebP)
+        trace!("Encoding image to {:?} format", target_format);
+        let mut converted_data = std::io::Cursor::new(Vec::new());
+        img.write_to(&mut converted_data, target_format)
             .map_err(|e| {
-                error!("Failed to encode image to WebP: {}", e);
+                error!("Failed to encode image to {:?}: {}", target_format, e);
                 Error::from(e)
             })?;
 
-        Ok::<Vec<u8>, Error>(webp_data.into_inner())
+        Ok::<Vec<u8>, Error>(converted_data.into_inner())
     })
     .await
     .map_err(|e| {
@@ -80,16 +92,16 @@ async fn convert_image_to_webp(image_path: &PathBuf, temp_dir: &Path) -> Result<
         .file_stem()
         .and_then(|s| s.to_str())
         .unwrap_or("converted");
-    let output_path = temp_dir.join(format!("{}.webp", filename));
+    let output_path = temp_dir.join(format!("{}.{}", filename, extension));
 
-    trace!("Writing WebP image to {:?}", output_path);
+    trace!("Writing {:?} image to {:?}", format, output_path);
     let mut file = File::create(&output_path).await.map_err(|e| {
         error!("Failed to create output file {:?}: {}", output_path, e);
         Error::from(e)
     })?;
 
-    file.write_all(&webp_bytes).await.map_err(|e| {
-        error!("Failed to write WebP data to file: {}", e);
+    file.write_all(&converted_bytes).await.map_err(|e| {
+        error!("Failed to write converted data to file: {}", e);
         Error::from(e)
     })?;
 
@@ -98,7 +110,10 @@ async fn convert_image_to_webp(image_path: &PathBuf, temp_dir: &Path) -> Result<
         Error::from(e)
     })?;
 
-    debug!("Successfully converted image to WebP: {:?}", output_path);
+    debug!(
+        "Successfully converted image to {:?}: {:?}",
+        format, output_path
+    );
     Ok(output_path)
 }
 
@@ -156,6 +171,18 @@ pub async fn conv_state_set(
         ConvStateKey::ConvertToWebp(value) => {
             debug!("Setting convert to WebP flag to: {}", value);
             state.convert_to_webp = value;
+            // Also update image_format for backward compatibility
+            state.image_format = if value {
+                ImageOutputFormat::WebP
+            } else {
+                ImageOutputFormat::None
+            };
+        }
+        ConvStateKey::ImageFormat(value) => {
+            debug!("Setting image format to: {:?}", value);
+            state.image_format = value;
+            // Also update convert_to_webp for backward compatibility
+            state.convert_to_webp = matches!(value, ImageOutputFormat::WebP);
         }
         ConvStateKey::VolumeSizes(value) => {
             debug!("Setting volume sizes: {:?}", value);
@@ -863,7 +890,7 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
         create_directory,
         format,
         direction,
-        convert_to_webp,
+        image_format,
         volume_sizes,
         data,
         edited_data,
@@ -875,8 +902,8 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
             state.format
         );
         trace!(
-            "Conversion parameters: target={:?}, create_directory={:?}, direction={:?}, convert_to_webp={:?}",
-            state.target, state.create_directory, state.direction, state.convert_to_webp
+            "Conversion parameters: target={:?}, create_directory={:?}, direction={:?}, image_format={:?}",
+            state.target, state.create_directory, state.direction, state.image_format
         );
 
         (
@@ -885,7 +912,7 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
             state.create_directory,
             state.format,
             state.direction,
-            state.convert_to_webp,
+            state.image_format,
             state.volume_sizes.clone(),
             state.data.clone(),
             state.edited_data.clone(),
@@ -945,11 +972,11 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
         }
     };
 
-    // Create a temporary directory for WebP conversions if needed
-    let temp_dir = if convert_to_webp {
+    // Create a temporary directory for image conversions if needed
+    let temp_dir = if image_format != ImageOutputFormat::None {
         let temp_path = Path::new(&target_directory_path).join(".palaxy_temp");
         debug!(
-            "Creating temp directory for WebP conversions: {:?}",
+            "Creating temp directory for image conversions: {:?}",
             temp_path
         );
         if !temp_path.exists() {
@@ -981,7 +1008,7 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
         let target_dir = target_directory_path.clone();
         let format_clone = format;
         let direction_clone = direction;
-        let convert_to_webp_clone = convert_to_webp;
+        let image_format_clone = image_format;
         let temp_dir_clone = temp_dir.clone();
         let semaphore_clone = Arc::clone(&semaphore);
 
@@ -1038,18 +1065,19 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
                             chapter_pages.len()
                         );
                         for page in chapter_pages {
-                            let page_to_add = if convert_to_webp_clone {
+                            let page_to_add = if image_format_clone != ImageOutputFormat::None {
                                 if let Some(ref temp_dir) = temp_dir_clone {
-                                    match convert_image_to_webp(page, temp_dir).await {
-                                        Ok(webp_path) => webp_path,
+                                    match convert_image(page, temp_dir, image_format_clone).await {
+                                        Ok(converted_path) => converted_path,
                                         Err(e) => {
                                             error!(
-                                                "Volume {}, Chapter {}: failed to convert image to WebP: {}",
+                                                "Volume {}, Chapter {}: failed to convert image to {:?}: {}",
                                                 i + 1,
                                                 chapter_idx + 1,
+                                                image_format_clone,
                                                 e
                                             );
-                                            return Err(e);
+                                            page.clone()
                                         }
                                     }
                                 } else {
@@ -1134,21 +1162,24 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
                             chapter_pages.len()
                         );
 
-                        // Convert chapter pages to WebP if needed
-                        let chapter_pages_to_add: Vec<PathBuf> = if convert_to_webp_clone {
+                        // Convert chapter pages if needed
+                        let chapter_pages_to_add: Vec<PathBuf> = if image_format_clone
+                            != ImageOutputFormat::None
+                        {
                             if let Some(ref temp_dir) = temp_dir_clone {
                                 let mut converted_pages = Vec::new();
                                 for page in chapter_pages {
-                                    match convert_image_to_webp(page, temp_dir).await {
-                                        Ok(webp_path) => converted_pages.push(webp_path),
+                                    match convert_image(page, temp_dir, image_format_clone).await {
+                                        Ok(converted_path) => converted_pages.push(converted_path),
                                         Err(e) => {
                                             error!(
-                                                "Volume {}, Chapter {}: failed to convert image to WebP: {}",
+                                                "Volume {}, Chapter {}: failed to convert image to {:?}: {}",
                                                 i + 1,
                                                 chapter_idx + 1,
+                                                image_format_clone,
                                                 e
                                             );
-                                            return Err(e);
+                                            converted_pages.push(page.clone());
                                         }
                                     }
                                 }

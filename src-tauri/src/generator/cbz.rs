@@ -18,8 +18,10 @@ use zip::{CompressionMethod, ZipWriter};
 pub struct Cbz {
     /// The ZIP writer for archive creation
     zip: Option<ZipWriter<File>>,
-    /// Options for files added to the ZIP archive
-    options: SimpleFileOptions,
+    /// Options for image files (no compression - images are already compressed)
+    image_options: SimpleFileOptions,
+    /// Options for metadata files (high compression for text)
+    metadata_options: SimpleFileOptions,
     /// Current page index for sequential numbering
     page_index: usize,
 }
@@ -40,10 +42,21 @@ impl Generator for Cbz {
             output_path, filename
         );
 
-        let options: SimpleFileOptions = SimpleFileOptions::default()
-            .compression_method(CompressionMethod::Deflated)
+        // Use Stored (no compression) for images since they're already compressed
+        // This significantly reduces CPU usage and often produces smaller files
+        // because compressed images don't compress further and add overhead
+        let image_options: SimpleFileOptions = SimpleFileOptions::default()
+            .compression_method(CompressionMethod::Stored)
             .unix_permissions(0o755);
-        debug!("CBZ file options: compression=Deflated, permissions=0o755");
+
+        // Use maximum compression for metadata XML files
+        let metadata_options: SimpleFileOptions = SimpleFileOptions::default()
+            .compression_method(CompressionMethod::Deflated)
+            .compression_level(Some(9))
+            .unix_permissions(0o755);
+
+        debug!("CBZ image options: compression=Stored (no recompression), permissions=0o755");
+        debug!("CBZ metadata options: compression=Deflated level 9, permissions=0o755");
 
         let output_file = format!("{}/{}.cbz", output_path, filename);
         debug!("Creating CBZ file at: {}", output_file);
@@ -61,7 +74,8 @@ impl Generator for Cbz {
 
         Ok(Cbz {
             zip: Some(zip),
-            options,
+            image_options,
+            metadata_options,
             page_index: 0,
         })
     }
@@ -99,9 +113,12 @@ impl Generator for Cbz {
         };
 
         let file_std = file.into_std().await;
-        let options = self.options;
+        let options = self.image_options;
         let file_name = format!("page_{:03}.{}", self.page_index + 1, image_extension);
-        debug!("Adding to CBZ as: {}", file_name);
+        debug!(
+            "Adding to CBZ as: {} (stored without recompression)",
+            file_name
+        );
 
         let zip = match self.zip.as_mut() {
             Some(z) => z,
@@ -184,9 +201,9 @@ impl Generator for Cbz {
             }
         };
 
-        // Add the metadata file to zip
-        trace!("Adding ComicInfo.xml to CBZ");
-        if let Err(e) = zip.start_file("ComicInfo.xml", self.options) {
+        // Add the metadata file to zip with high compression
+        trace!("Adding ComicInfo.xml to CBZ with Deflate compression");
+        if let Err(e) = zip.start_file("ComicInfo.xml", self.metadata_options) {
             error!("Failed to start ComicInfo.xml entry: {}", e);
             return Err(Error::from(e));
         }

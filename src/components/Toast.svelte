@@ -40,10 +40,7 @@
 	}
 </script>
 
-<div
-	class="fixed top-4 right-4 flex w-80 flex-col gap-4"
-	style="z-index: 9999 !important"
->
+<div class="fixed top-4 right-4 flex w-80 flex-col gap-4" style="z-index: 9999 !important">
 	{#each toaster.toasts as toast}
 		<div
 			class="bg-background-tertiary dark:bg-background-dark-tertiary flex items-center gap-4 rounded px-4 py-2 shadow-md"

@@ -26,7 +26,7 @@ pub struct Cbz {
     page_index: usize,
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl Generator for Cbz {
     /// Creates a new CBZ generator with the specified output path and filename.
     ///

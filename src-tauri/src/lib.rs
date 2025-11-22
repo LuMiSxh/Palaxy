@@ -7,15 +7,10 @@
 use crate::commands::converter::{
     conv_analyze, conv_bundle, conv_convert, conv_state_get, conv_state_reset, conv_state_set,
 };
-use crate::commands::management::{
-    mgmt_get_logs_path, mgmt_sync_start, mgmt_sync_status, mgmt_sync_stop,
-};
-use crate::db::init_db;
-use crate::db::sync::SyncManager;
+use crate::commands::management::mgmt_get_logs_path;
 use specta_typescript::Typescript;
-use tauri::async_runtime::block_on;
 use tauri::{Builder, Manager};
-use tauri_specta::{collect_commands, Builder as SpectaBuilder};
+use tauri_specta::{Builder as SpectaBuilder, collect_commands};
 use tokio::sync::Mutex;
 
 mod collector;
@@ -25,7 +20,6 @@ mod prelude;
 mod types;
 #[macro_use]
 mod macros;
-mod db;
 
 /// Initializes and runs the Tauri application.
 ///
@@ -45,9 +39,6 @@ pub fn run() {
         conv_analyze,
         conv_bundle,
         conv_convert,
-        mgmt_sync_start,
-        mgmt_sync_stop,
-        mgmt_sync_status,
         mgmt_get_logs_path
     ]);
 
@@ -97,27 +88,7 @@ pub fn run() {
         // Add OS and dialog functionality plugins
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_dialog::init())
-        // Application setup callback
-        .setup(|app| {
-            // Initialize application state
-            app.manage(Mutex::new(prelude::ConvState::default()));
-
-            let handle = app.handle();
-
-            // Configure and start database synchronization
-            let manager = SyncManager::new(60); // Sync every 60 minutes
-            manager.start();
-            app.manage(manager);
-
-            // Initialize the database asynchronously
-            block_on(async move {
-                init_db(handle)
-                    .await
-                    .expect("Failed to initialize database");
-            });
-
-            Ok(())
-        })
+        .manage(Mutex::new(prelude::ConvState::default()))
         .invoke_handler(spectra_builder.invoke_handler())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

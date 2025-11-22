@@ -11,11 +11,10 @@ use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tauri::State;
-use tauri::async_runtime::spawn;
 use tokio::fs::{File, create_dir};
 use tokio::io::AsyncWriteExt;
 use tokio::sync::{Mutex, Semaphore};
-use tokio::task::spawn_blocking;
+use tokio::task::{LocalSet, spawn_blocking, spawn_local};
 
 lazy_static! {
     /// Regular expression for analyzing chapter/volume naming patterns.
@@ -133,7 +132,23 @@ pub async fn conv_state_set(
     input: ConvStateKey,
     state: State<'_, Mutex<ConvState>>,
 ) -> EResult<BaseResponse> {
-    info!("Setting conversion state: {:?}", input);
+    info!(
+        "Setting conversion state key: {}",
+        match &input {
+            ConvStateKey::Name(_) => "Name",
+            ConvStateKey::Source(_) => "Source",
+            ConvStateKey::Target(_) => "Target",
+            ConvStateKey::BundleFlag(_) => "BundleFlag",
+            ConvStateKey::Direction(_) => "Direction",
+            ConvStateKey::Format(_) => "Format",
+            ConvStateKey::CreateDirectory(_) => "CreateDirectory",
+            ConvStateKey::ConvertToWebp(_) => "ConvertToWebp",
+            ConvStateKey::ImageFormat(_) => "ImageFormat",
+            ConvStateKey::VolumeSizes(_) => "VolumeSizes",
+            ConvStateKey::Data(_) => "Data",
+            ConvStateKey::EditedData(_) => "EditedData",
+        }
+    );
     let start = std::time::Instant::now();
 
     let mut state = state.lock().await;
@@ -998,247 +1013,264 @@ pub async fn conv_convert(state: State<'_, Mutex<ConvState>>) -> EResult<BaseRes
     );
     let semaphore = Arc::new(Semaphore::new(max_concurrent));
 
-    // Create a vector of tasks, each processing one volume
-    let mut tasks = Vec::new();
-    debug!("Preparing {} volumes for conversion", volume_sizes.len());
+    // Clone temp_dir before moving into async block so we can clean it up later
+    let temp_dir_cleanup = temp_dir.clone();
 
-    for (i, &chapters) in volume_sizes.iter().enumerate() {
-        let j: usize = volume_sizes[0..i].par_iter().sum();
-        let volume_name = format!("{} | {}", name.clone(), i + 1);
-        let target_dir = target_directory_path.clone();
-        let format_clone = format;
-        let direction_clone = direction;
-        let image_format_clone = image_format;
-        let temp_dir_clone = temp_dir.clone();
-        let semaphore_clone = Arc::clone(&semaphore);
+    // Spawn blocking task that creates its own LocalSet
+    spawn_blocking(move || {
+        let rt = tokio::runtime::Handle::current();
+        rt.block_on(async move {
+            let local = LocalSet::new();
+            local.run_until(async move {
+                // Create a vector of tasks, each processing one volume
+                let mut tasks = Vec::new();
+                debug!("Preparing {} volumes for conversion", volume_sizes.len());
 
-        debug!(
-            "Volume {} ({}) will include {} chapters",
-            i + 1,
-            volume_name,
-            chapters
-        );
-
-        // Clone the necessary data for this volume
-        let volume_pages = pages[j..(j + chapters)].to_vec();
-        trace!(
-            "Volume {} has {} chapter sets with total {} pages",
-            i + 1,
-            volume_pages.len(),
-            volume_pages.iter().map(|c| c.len()).sum::<usize>()
-        );
-
-        // Spawn a task for each volume to process them in parallel
-        let task = spawn(async move {
-            trace!("Volume {}: waiting for available thread", i + 1);
-            let _permit = semaphore_clone.acquire().await.map_err(|e| {
-                error!("Volume {}: failed to acquire semaphore: {}", i + 1, e);
-                Error::AsyncTaskError(format!("Failed to acquire semaphore: {}", e))
-            })?;
-            debug!(
-                "Volume {}: starting conversion to {:?}",
-                i + 1,
-                format_clone
-            );
-
-            match format_clone {
-                FileFormat::Cbz => {
-                    debug!("Volume {}: creating CBZ file: {}", i + 1, volume_name);
-                    let mut generator = match Cbz::new(&target_dir, &volume_name) {
-                        Ok(genr) => genr,
-                        Err(e) => {
-                            error!("Volume {}: failed to create CBZ generator: {}", i + 1, e);
-                            return Err(e);
-                        }
-                    };
-
-                    trace!(
-                        "Volume {}: adding {} chapter sets to CBZ",
-                        i + 1,
-                        volume_pages.len()
-                    );
-                    for (chapter_idx, chapter_pages) in volume_pages.iter().enumerate() {
-                        trace!(
-                            "Volume {}, Chapter {}: adding {} pages",
-                            i + 1,
-                            chapter_idx + 1,
-                            chapter_pages.len()
-                        );
-                        for page in chapter_pages {
-                            let page_to_add = if image_format_clone != ImageOutputFormat::None {
-                                if let Some(ref temp_dir) = temp_dir_clone {
-                                    match convert_image(page, temp_dir, image_format_clone).await {
-                                        Ok(converted_path) => converted_path,
-                                        Err(e) => {
-                                            error!(
-                                                "Volume {}, Chapter {}: failed to convert image to {:?}: {}",
-                                                i + 1,
-                                                chapter_idx + 1,
-                                                image_format_clone,
-                                                e
-                                            );
-                                            page.clone()
-                                        }
-                                    }
-                                } else {
-                                    page.clone()
-                                }
-                            } else {
-                                page.clone()
-                            };
-
-                            if let Err(e) = generator.add_page(&page_to_add).await {
-                                error!(
-                                    "Volume {}, Chapter {}: failed to add page {:?}: {}",
-                                    i + 1,
-                                    chapter_idx + 1,
-                                    page,
-                                    e
-                                );
-                                return Err(e);
-                            }
-                        }
-                    }
-
-                    debug!("Volume {}: setting metadata and saving CBZ", i + 1);
-                    if let Err(e) = generator.set_metadata(&volume_name, i + 1).await {
-                        error!("Volume {}: failed to set metadata: {}", i + 1, e);
-                        return Err(e);
-                    }
-
-                    if let Err(e) = generator.save().await {
-                        error!("Volume {}: failed to save CBZ: {}", i + 1, e);
-                        return Err(e);
-                    }
-                    info!("Volume {}: CBZ file saved successfully", i + 1);
-                }
-                FileFormat::Epub => {
-                    debug!("Volume {}: creating EPUB file: {}", i + 1, volume_name);
-                    if volume_pages.is_empty() || volume_pages[0].is_empty() {
-                        error!("Volume {}: cannot create EPUB without cover image", i + 1);
-                        return Err(Error::Unsupported(
-                            "Cannot create EPUB without cover image".to_string(),
-                        ));
-                    }
-
-                    let mut generator = match EPub::new(&target_dir, &volume_name) {
-                        Ok(genr) => genr,
-                        Err(e) => {
-                            error!("Volume {}: failed to create EPUB generator: {}", i + 1, e);
-                            return Err(e);
-                        }
-                    };
-
-                    debug!("Volume {}: setting EPUB cover and properties", i + 1);
-                    if let Err(e) = generator.set_cover(&volume_pages[0][0]) {
-                        error!("Volume {}: failed to set cover image: {}", i + 1, e);
-                        return Err(e);
-                    }
-
-                    generator.set_lang("en")?;
-                    generator.set_reading_direction(direction_clone);
-
-                    trace!("Volume {}: setting EPUB metadata", i + 1);
-                    if let Err(e) = generator.set_custom_metadata("title", &volume_name) {
-                        error!("Volume {}: failed to set title metadata: {}", i + 1, e);
-                        return Err(e);
-                    }
-
-                    if let Err(e) = generator.set_custom_metadata("author", "Manga Bundler") {
-                        error!("Volume {}: failed to set author metadata: {}", i + 1, e);
-                        return Err(e);
-                    }
+                for (i, &chapters) in volume_sizes.iter().enumerate() {
+                    let j: usize = volume_sizes[0..i].par_iter().sum();
+                    let volume_name = format!("{} | {}", name.clone(), i + 1);
+                    let target_dir = target_directory_path.clone();
+                    let format_clone = format;
+                    let direction_clone = direction;
+                    let image_format_clone = image_format;
+                    let temp_dir_clone = temp_dir.clone();
+                    let semaphore_clone = Arc::clone(&semaphore);
 
                     debug!(
-                        "Volume {}: adding {} chapters to EPUB",
+                        "Volume {} ({}) will include {} chapters",
                         i + 1,
-                        volume_pages.len()
+                        volume_name,
+                        chapters
                     );
-                    for (chapter_idx, chapter_pages) in volume_pages.iter().enumerate() {
-                        trace!(
-                            "Volume {}: adding chapter {} with {} pages",
+
+                    // Clone the necessary data for this volume
+                    let volume_pages = pages[j..(j + chapters)].to_vec();
+                    trace!(
+                        "Volume {} has {} chapter sets with total {} pages",
+                        i + 1,
+                        volume_pages.len(),
+                        volume_pages.iter().map(|c| c.len()).sum::<usize>()
+                    );
+
+                    // Spawn a local task for EPUB
+                    let task = spawn_local(async move {
+                        trace!("Volume {}: waiting for available thread", i + 1);
+                        let _permit = semaphore_clone.acquire().await.map_err(|e| {
+                            error!("Volume {}: failed to acquire semaphore: {}", i + 1, e);
+                            Error::AsyncTaskError(format!("Failed to acquire semaphore: {}", e))
+                        })?;
+                        debug!(
+                            "Volume {}: starting conversion to {:?}",
                             i + 1,
-                            chapter_idx + 1,
-                            chapter_pages.len()
+                            format_clone
                         );
 
-                        // Convert chapter pages if needed
-                        let chapter_pages_to_add: Vec<PathBuf> = if image_format_clone
-                            != ImageOutputFormat::None
-                        {
-                            if let Some(ref temp_dir) = temp_dir_clone {
-                                let mut converted_pages = Vec::new();
-                                for page in chapter_pages {
-                                    match convert_image(page, temp_dir, image_format_clone).await {
-                                        Ok(converted_path) => converted_pages.push(converted_path),
-                                        Err(e) => {
+                        match format_clone {
+                            FileFormat::Cbz => {
+                                debug!("Volume {}: creating CBZ file: {}", i + 1, volume_name);
+                                let mut generator = match Cbz::new(&target_dir, &volume_name) {
+                                    Ok(genr) => genr,
+                                    Err(e) => {
+                                        error!("Volume {}: failed to create CBZ generator: {}", i + 1, e);
+                                        return Err(e);
+                                    }
+                                };
+
+                                trace!(
+                                    "Volume {}: adding {} chapter sets to CBZ",
+                                    i + 1,
+                                    volume_pages.len()
+                                );
+                                for (chapter_idx, chapter_pages) in volume_pages.iter().enumerate() {
+                                    trace!(
+                                        "Volume {}, Chapter {}: adding {} pages",
+                                        i + 1,
+                                        chapter_idx + 1,
+                                        chapter_pages.len()
+                                    );
+                                    for page in chapter_pages {
+                                        let page_to_add = if image_format_clone != ImageOutputFormat::None {
+                                            if let Some(ref temp_dir) = temp_dir_clone {
+                                                match convert_image(page, temp_dir, image_format_clone).await {
+                                                    Ok(converted_path) => converted_path,
+                                                    Err(e) => {
+                                                        error!(
+                                                            "Volume {}, Chapter {}: failed to convert image to {:?}: {}",
+                                                            i + 1,
+                                                            chapter_idx + 1,
+                                                            image_format_clone,
+                                                            e
+                                                        );
+                                                        page.clone()
+                                                    }
+                                                }
+                                            } else {
+                                                page.clone()
+                                            }
+                                        } else {
+                                            page.clone()
+                                        };
+
+                                        if let Err(e) = generator.add_page(&page_to_add).await {
                                             error!(
-                                                "Volume {}, Chapter {}: failed to convert image to {:?}: {}",
+                                                "Volume {}, Chapter {}: failed to add page {:?}: {}",
                                                 i + 1,
                                                 chapter_idx + 1,
-                                                image_format_clone,
+                                                page,
                                                 e
                                             );
-                                            converted_pages.push(page.clone());
+                                            return Err(e);
                                         }
                                     }
                                 }
-                                converted_pages
-                            } else {
-                                chapter_pages.clone()
-                            }
-                        } else {
-                            chapter_pages.clone()
-                        };
 
-                        if let Err(e) = generator
-                            .add_chapter(chapter_idx + 1, &chapter_pages_to_add)
-                            .await
-                        {
-                            error!(
-                                "Volume {}: failed to add chapter {}: {}",
-                                i + 1,
-                                chapter_idx + 1,
-                                e
-                            );
-                            return Err(e);
+                                debug!("Volume {}: setting metadata and saving CBZ", i + 1);
+                                if let Err(e) = generator.set_metadata(&volume_name, i + 1).await {
+                                    error!("Volume {}: failed to set metadata: {}", i + 1, e);
+                                    return Err(e);
+                                }
+
+                                if let Err(e) = generator.save().await {
+                                    error!("Volume {}: failed to save CBZ: {}", i + 1, e);
+                                    return Err(e);
+                                }
+                                info!("Volume {}: CBZ file saved successfully", i + 1);
+                            }
+                            FileFormat::Epub => {
+                                debug!("Volume {}: creating EPUB file: {}", i + 1, volume_name);
+                                if volume_pages.is_empty() || volume_pages[0].is_empty() {
+                                    error!("Volume {}: cannot create EPUB without cover image", i + 1);
+                                    return Err(Error::Unsupported(
+                                        "Cannot create EPUB without cover image".to_string(),
+                                    ));
+                                }
+
+                                let mut generator = match EPub::new(&target_dir, &volume_name) {
+                                    Ok(genr) => genr,
+                                    Err(e) => {
+                                        error!("Volume {}: failed to create EPUB generator: {}", i + 1, e);
+                                        return Err(e);
+                                    }
+                                };
+
+                                debug!("Volume {}: setting EPUB cover and properties", i + 1);
+                                if let Err(e) = generator.set_cover(&volume_pages[0][0]) {
+                                    error!("Volume {}: failed to set cover image: {}", i + 1, e);
+                                    return Err(e);
+                                }
+
+                                generator.set_lang("en")?;
+                                generator.set_reading_direction(direction_clone);
+
+                                trace!("Volume {}: setting EPUB metadata", i + 1);
+                                if let Err(e) = generator.set_custom_metadata("title", &volume_name) {
+                                    error!("Volume {}: failed to set title metadata: {}", i + 1, e);
+                                    return Err(e);
+                                }
+
+                                if let Err(e) = generator.set_custom_metadata("author", "Manga Bundler") {
+                                    error!("Volume {}: failed to set author metadata: {}", i + 1, e);
+                                    return Err(e);
+                                }
+
+                                debug!(
+                                    "Volume {}: adding {} chapters to EPUB",
+                                    i + 1,
+                                    volume_pages.len()
+                                );
+                                for (chapter_idx, chapter_pages) in volume_pages.iter().enumerate() {
+                                    trace!(
+                                        "Volume {}: adding chapter {} with {} pages",
+                                        i + 1,
+                                        chapter_idx + 1,
+                                        chapter_pages.len()
+                                    );
+
+                                    // Convert chapter pages if needed
+                                    let chapter_pages_to_add: Vec<PathBuf> = if image_format_clone
+                                        != ImageOutputFormat::None
+                                    {
+                                        if let Some(ref temp_dir) = temp_dir_clone {
+                                            let mut converted_pages = Vec::new();
+                                            for page in chapter_pages {
+                                                match convert_image(page, temp_dir, image_format_clone).await {
+                                                    Ok(converted_path) => converted_pages.push(converted_path),
+                                                    Err(e) => {
+                                                        error!(
+                                                            "Volume {}, Chapter {}: failed to convert image to {:?}: {}",
+                                                            i + 1,
+                                                            chapter_idx + 1,
+                                                            image_format_clone,
+                                                            e
+                                                        );
+                                                        converted_pages.push(page.clone());
+                                                    }
+                                                }
+                                            }
+                                            converted_pages
+                                        } else {
+                                            chapter_pages.clone()
+                                        }
+                                    } else {
+                                        chapter_pages.clone()
+                                    };
+
+                                    if let Err(e) = generator
+                                        .add_chapter(chapter_idx + 1, &chapter_pages_to_add)
+                                        .await
+                                    {
+                                        error!(
+                                            "Volume {}: failed to add chapter {}: {}",
+                                            i + 1,
+                                            chapter_idx + 1,
+                                            e
+                                        );
+                                        return Err(e);
+                                    }
+                                }
+
+                                debug!("Volume {}: saving EPUB file", i + 1);
+                                if let Err(e) = generator.save().await {
+                                    error!("Volume {}: failed to save EPUB: {}", i + 1, e);
+                                    return Err(e);
+                                }
+                                info!("Volume {}: EPUB file saved successfully", i + 1);
+                            }
+                        }
+
+                        Ok(())
+                    });
+
+                    tasks.push(task);
+                }
+
+                info!("Waiting for {} conversion tasks to complete", tasks.len());
+                for (i, task) in tasks.into_iter().enumerate() {
+                    match task.await {
+                        Ok(result) => match result {
+                            Ok(_) => debug!("Volume {} conversion completed successfully", i + 1),
+                            Err(e) => {
+                                error!("Volume {} conversion failed: {}", i + 1, e);
+                                return Err(e);
+                            }
+                        },
+                        Err(e) => {
+                            error!("Volume {} task panicked: {}", i + 1, e);
+                            return Err(Error::AsyncTaskError(e.to_string()));
                         }
                     }
-
-                    debug!("Volume {}: saving EPUB file", i + 1);
-                    if let Err(e) = generator.save().await {
-                        error!("Volume {}: failed to save EPUB: {}", i + 1, e);
-                        return Err(e);
-                    }
-                    info!("Volume {}: EPUB file saved successfully", i + 1);
                 }
-            }
 
-            Ok(())
-        });
-
-        tasks.push(task);
-    }
-
-    info!("Waiting for {} conversion tasks to complete", tasks.len());
-    for (i, task) in tasks.into_iter().enumerate() {
-        match task.await {
-            Ok(result) => match result {
-                Ok(_) => debug!("Volume {} conversion completed successfully", i + 1),
-                Err(e) => {
-                    error!("Volume {} conversion failed: {}", i + 1, e);
-                    return Err(e);
-                }
-            },
-            Err(e) => {
-                error!("Volume {} task panicked: {}", i + 1, e);
-                return Err(Error::AsyncTaskError(e.to_string()));
-            }
-        }
-    }
+                Ok::<(), Error>(())
+            }).await
+        })
+    }).await.map_err(|e| {
+        error!("Blocking task panicked: {}", e);
+        Error::AsyncTaskError(format!("Blocking task panicked: {}", e))
+    })??;
 
     // Clean up temporary directory if it was created
-    if let Some(temp_dir) = temp_dir {
+    if let Some(temp_dir) = temp_dir_cleanup {
         debug!("Cleaning up temporary directory: {:?}", temp_dir);
         if let Err(e) = tokio::fs::remove_dir_all(&temp_dir).await {
             warn!("Failed to remove temporary directory {:?}: {}", temp_dir, e);

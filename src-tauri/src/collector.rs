@@ -11,12 +11,12 @@ use std::sync::Arc;
 
 use image::{DynamicImage, GenericImageView, Pixel};
 use lazy_static::lazy_static;
+use log::{debug, error, info, trace, warn};
 use rayon::prelude::*;
 use regex::Regex;
-use tauri::async_runtime::{spawn, spawn_blocking, JoinHandle};
-use tokio::fs::{read_dir, ReadDir};
+use tauri::async_runtime::{JoinHandle, spawn, spawn_blocking};
+use tokio::fs::{ReadDir, read_dir};
 use tokio::sync::Semaphore;
-use log::{debug, error, info, trace, warn};
 
 use crate::prelude::*;
 
@@ -95,7 +95,10 @@ impl Collector {
         info!("Collecting pages from {} chapters", chapters.len());
         // Create semaphore to limit concurrent tasks
         let semaphore = Arc::new(Semaphore::new(MAX_CONCURRENT_DIRS));
-        debug!("Using semaphore with {} permits for concurrent operations", MAX_CONCURRENT_DIRS);
+        debug!(
+            "Using semaphore with {} permits for concurrent operations",
+            MAX_CONCURRENT_DIRS
+        );
 
         // Create a vector to hold EResults, pre-allocate with capacity
         let mut pages = Vec::with_capacity(chapters.len());
@@ -135,7 +138,11 @@ impl Collector {
         for handle in handles {
             match handle.await {
                 Ok(Ok((i, chapter_images))) => {
-                    trace!("Successfully processed chapter {}: {} images", i, chapter_images.len());
+                    trace!(
+                        "Successfully processed chapter {}: {} images",
+                        i,
+                        chapter_images.len()
+                    );
                     pages[i] = chapter_images;
                 }
                 Ok(Err(e)) => {
@@ -226,7 +233,10 @@ impl Collector {
 
         // Sort the chapters by their starting index.
         book_start_chapters.sort();
-        info!("Identified {} volume start chapters", book_start_chapters.len());
+        info!(
+            "Identified {} volume start chapters",
+            book_start_chapters.len()
+        );
 
         Ok(book_start_chapters)
     }
@@ -246,12 +256,18 @@ impl Collector {
         mut book_start_chapters: Vec<usize>,
         total_chapters: usize,
     ) -> EResult<Vec<usize>> {
-        info!("Calculating volume sizes for {} total chapters", total_chapters);
+        info!(
+            "Calculating volume sizes for {} total chapters",
+            total_chapters
+        );
         let mut book_chapters: Vec<usize> = Vec::new();
 
         // Remove the first chapter because it's always a book start
         if book_start_chapters.len() > 0 {
-            debug!("Removing first chapter {} (always a book start)", book_start_chapters[0]);
+            debug!(
+                "Removing first chapter {} (always a book start)",
+                book_start_chapters[0]
+            );
             book_start_chapters.remove(0);
         } else {
             error!("No chapters found for volume size calculation");
@@ -261,17 +277,31 @@ impl Collector {
         let mut prev_chapter = 0;
         for chapter in book_start_chapters {
             let chapter_count = chapter - prev_chapter;
-            debug!("Volume with chapters {}-{}: {} chapters", prev_chapter, chapter-1, chapter_count);
+            debug!(
+                "Volume with chapters {}-{}: {} chapters",
+                prev_chapter,
+                chapter - 1,
+                chapter_count
+            );
             book_chapters.push(chapter_count);
             prev_chapter = chapter;
         }
 
         // Add the remaining chapters.
         let remaining = total_chapters - prev_chapter;
-        debug!("Final volume with chapters {}-{}: {} chapters", prev_chapter, total_chapters-1, remaining);
+        debug!(
+            "Final volume with chapters {}-{}: {} chapters",
+            prev_chapter,
+            total_chapters - 1,
+            remaining
+        );
         book_chapters.push(remaining);
 
-        info!("Calculated {} volumes with chapter counts: {:?}", book_chapters.len(), book_chapters);
+        info!(
+            "Calculated {} volumes with chapter counts: {:?}",
+            book_chapters.len(),
+            book_chapters
+        );
         Ok(book_chapters)
     }
 

@@ -1,4 +1,4 @@
-import { type AppData, FeatureFlag, SupportedLanguages, Theme } from '$types/appdata';
+import { type AppData, SupportedLanguages, Theme } from '$types/appdata';
 import { browser } from '$app/environment';
 import type { Error, Result } from '$types';
 import { addToast } from '$states/toast.svelte';
@@ -47,17 +47,6 @@ export function convertToTitleCase(str: string): string {
 		return '';
 	}
 	return str.toLowerCase().replace(/\b\w/g, (s) => s.toUpperCase());
-}
-
-/**
- * Checks if a feature flag is enabled in the application data.
- *
- * @param {AppData} appData - The application data containing feature flags.
- * @param {FeatureFlag} flag - The feature flag to check.
- * @returns {boolean} - True if the feature flag is enabled, false otherwise.
- */
-export function ffIsEnabled(appData: AppData, flag: FeatureFlag): boolean {
-	return appData.featureFlags.includes(flag);
 }
 
 /**

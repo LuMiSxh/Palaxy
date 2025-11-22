@@ -266,7 +266,7 @@ impl EPub {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl Generator for EPub {
     /// Creates a new EPUB generator.
     ///

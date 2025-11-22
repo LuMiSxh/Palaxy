@@ -126,59 +126,6 @@ async convConvert() : Promise<Result<BaseResponse<null>, Error>> {
 }
 },
 /**
- * Starts the database synchronization service.
- * 
- * # Arguments
- * * `interval` - Time interval in minutes between syncs
- * * `app_handle` - Tauri application handle
- * * `sync_manager` - State-managed sync manager instance
- * 
- * # Returns
- * * `EResult<BaseResponse>` - Success response or error
- */
-async mgmtSyncStart(interval: number | null) : Promise<Result<BaseResponse<null>, Error>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("mgmt_sync_start", { interval }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-/**
- * Stops the database synchronization service.
- * 
- * # Arguments
- * * `sync_manager` - State-managed sync manager instance
- * 
- * # Returns
- * * `EResult<BaseResponse>` - Success response or error
- */
-async mgmtSyncStop() : Promise<Result<BaseResponse<null>, Error>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("mgmt_sync_stop") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-/**
- * Retrieves the current status of the synchronization service.
- * 
- * # Arguments
- * * `sync_manager` - State-managed sync manager instance
- * 
- * # Returns
- * * `EResult<BaseResponse<SyncStatus>>` - Status containing next sync time information
- */
-async mgmtSyncStatus() : Promise<Result<BaseResponse<SyncStatus>, Error>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("mgmt_sync_status") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-/**
  * Retrieves the path to the application log files.
  * 
  * # Arguments
@@ -358,19 +305,7 @@ export type Error =
 /**
  * Error for resources that couldn't be found
  */
-{ type: "NotFound"; data: string } | 
-/**
- * Generic database error
- */
-{ type: "DatabaseError"; data: string } | 
-/**
- * SQLx database errors
- */
-{ type: "SqlxError" } | 
-/**
- * SQLx migration errors
- */
-{ type: "SqlxMigrationError" }
+{ type: "NotFound"; data: string }
 /**
  * Supported file formats for conversion
  * 
@@ -398,18 +333,6 @@ directory: string;
  * Full path to the main log file
  */
 file: string }
-/**
- * Status information about the synchronization service
- */
-export type SyncStatus = { 
-/**
- * Seconds until the next sync operation
- */
-seconds_until_next_sync: number | null; 
-/**
- * Minutes until the next sync operation
- */
-minutes_until_next_sync: number | null }
 
 /** tauri-specta globals **/
 

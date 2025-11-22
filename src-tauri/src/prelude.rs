@@ -77,23 +77,6 @@ pub enum Error {
     /// Error for resources that couldn't be found
     #[error("Not found: {0}")]
     NotFound(String),
-    /// Generic database error
-    #[error("Database error: {0}")]
-    DatabaseError(String),
-    /// SQLx database errors
-    #[error(transparent)]
-    SqlxError(
-        #[from]
-        #[serde(skip)]
-        sqlx::Error,
-    ),
-    /// SQLx migration errors
-    #[error(transparent)]
-    SqlxMigrationError(
-        #[from]
-        #[serde(skip)]
-        sqlx::migrate::MigrateError,
-    ),
 }
 
 /// Implementation for serializing Error types to strings

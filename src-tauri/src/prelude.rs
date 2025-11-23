@@ -161,6 +161,7 @@ pub fn get_file_info(image_path: &PathBuf) -> Result<(&'static str, &'static str
         Some("jpg") | Some("jpeg") => Ok(("jpg", "image/jpeg")),
         Some("png") => Ok(("png", "image/png")),
         Some("webp") => Ok(("webp", "image/webp")),
+        Some("avif") => Ok(("avif", "image/avif")),
         _ => Err(Error::Unsupported(format!("Image format {:#?}", path))),
     }
 }

@@ -14,8 +14,8 @@ msgstr ""
 "Plural-Forms: \n"
 
 #: src/components/convert/Step7.svelte:218
-msgid "{cur}/{tot} images"
-msgstr "{cur}/{tot} images"
+#~ msgid "{cur}/{tot} images"
+#~ msgstr "{cur}/{tot} images"
 
 #: src/components/convert/step4/VolumeVisualisation.svelte:45
 msgid "{num, plural, one {# chapter} other {# chapters}}"
@@ -35,6 +35,14 @@ msgstr "{tot} successfull"
 msgid "ActionHub"
 msgstr "ActionHub"
 
+#: src/components/convert/Step7.svelte:197
+msgid "Active Conversions"
+msgstr "Active Conversions"
+
+#: src/components/convert/Step7.svelte:173
+msgid "active threads"
+msgstr "active threads"
+
 #: src/components/convert/step5/Chapter.svelte:275
 msgid "Add Image"
 msgstr "Add Image"
@@ -48,15 +56,15 @@ msgstr "Add new volume"
 msgid "Add Volume"
 msgstr "Add Volume"
 
-#: src/components/convert/Step7.svelte:118
+#: src/components/convert/Step7.svelte:112
 msgid "Adding page {pageNum} of {pageTot} to Volume {volIdx}"
 msgstr "Adding page {pageNum} of {pageTot} to Volume {volIdx}"
 
 #: src/components/convert/Step7.svelte:234
-msgid "All Volumes"
-msgstr "All Volumes"
+#~ msgid "All Volumes"
+#~ msgstr "All Volumes"
 
-#: src/components/convert/Step7.svelte:327
+#: src/components/convert/Step7.svelte:317
 msgid "All volumes converted successfully!"
 msgstr "All volumes converted successfully!"
 
@@ -240,15 +248,15 @@ msgstr "Confirmation"
 msgid "Conversion"
 msgstr "Conversion"
 
-#: src/components/convert/Step7.svelte:321
+#: src/components/convert/Step7.svelte:311
 msgid "Conversion Complete!"
 msgstr "Conversion Complete!"
 
-#: src/components/convert/Step7.svelte:329
+#: src/components/convert/Step7.svelte:319
 msgid "Conversion completed with errors"
 msgstr "Conversion completed with errors"
 
-#: src/components/convert/Step7.svelte:331
+#: src/components/convert/Step7.svelte:321
 msgid "Conversion completed with some errors"
 msgstr "Conversion completed with some errors"
 
@@ -260,8 +268,8 @@ msgstr "Conversion Summary"
 msgid "Convert"
 msgstr "Convert"
 
-#: src/components/convert/Step7.svelte:394
-#: src/components/convert/Step7.svelte:65
+#: src/components/convert/Step7.svelte:384
+#: src/components/convert/Step7.svelte:67
 msgid "Convert another manga"
 msgstr "Convert another manga"
 
@@ -269,7 +277,7 @@ msgstr "Convert another manga"
 msgid "Convert your manga images into a digital format that can be read on your favorite devices"
 msgstr "Convert your manga images into a digital format that can be read on your favorite devices"
 
-#: src/components/convert/Step7.svelte:160
+#: src/components/convert/Step7.svelte:154
 msgid "Converting Volumes..."
 msgstr "Converting Volumes..."
 
@@ -293,8 +301,8 @@ msgid "Ctrl"
 msgstr "Ctrl"
 
 #: src/components/convert/Step7.svelte:197
-msgid "Current Volume"
-msgstr "Current Volume"
+#~ msgid "Current Volume"
+#~ msgstr "Current Volume"
 
 #: src/components/convert/step4/ManualBundling.svelte:185
 msgid "Current Volumes"
@@ -367,8 +375,8 @@ msgid "EPUB only"
 msgstr "EPUB only"
 
 #: src/components/convert/Step7.svelte:294
-msgid "Errors"
-msgstr "Errors"
+#~ msgid "Errors"
+#~ msgstr "Errors"
 
 #: src/components/KeyComboDisplay.svelte:27
 #: src/components/KeyComboDisplay.svelte:49
@@ -379,7 +387,7 @@ msgstr "Esc"
 msgid "Excluded"
 msgstr "Excluded"
 
-#: src/components/convert/Step7.svelte:354
+#: src/components/convert/Step7.svelte:344
 msgid "Failed"
 msgstr "Failed"
 
@@ -387,11 +395,11 @@ msgstr "Failed"
 msgid "Failed to run bundler. Please try again."
 msgstr "Failed to run bundler. Please try again."
 
-#: src/components/convert/Step7.svelte:133
+#: src/components/convert/Step7.svelte:127
 msgid "Failed Volume {volIdx}: {volName}"
 msgstr "Failed Volume {volIdx}: {volName}"
 
-#: src/components/convert/Step7.svelte:378
+#: src/components/convert/Step7.svelte:368
 msgid "Failed Volumes"
 msgstr "Failed Volumes"
 
@@ -409,7 +417,7 @@ msgstr "Filter Images"
 msgid "Filter out unwanted images, change image order, and set cover images."
 msgstr "Filter out unwanted images, change image order, and set cover images."
 
-#: src/components/convert/Step7.svelte:128
+#: src/components/convert/Step7.svelte:122
 msgid "Finished Volume {volIdx}: {volName}"
 msgstr "Finished Volume {volIdx}: {volName}"
 
@@ -547,9 +555,13 @@ msgstr "Left to Right"
 msgid "Light"
 msgstr "Light"
 
+#: src/components/convert/Step7.svelte:284
+msgid "Live Log"
+msgstr "Live Log"
+
 #: src/components/convert/Step7.svelte:274
-msgid "Live Status"
-msgstr "Live Status"
+#~ msgid "Live Status"
+#~ msgstr "Live Status"
 
 #: src/components/convert/Step2.svelte:58
 #: src/components/convert/Step5.svelte:132
@@ -572,11 +584,11 @@ msgstr "Manga conversion and search at your fingertips."
 msgid "Manual"
 msgstr "Manual"
 
-#: src/components/convert/Step7.svelte:34
+#: src/components/convert/Step7.svelte:36
 msgid "minute"
 msgstr "minute"
 
-#: src/components/convert/Step7.svelte:34
+#: src/components/convert/Step7.svelte:36
 msgid "minutes"
 msgstr "minutes"
 
@@ -662,7 +674,7 @@ msgstr "OS Version"
 msgid "Output Settings"
 msgstr "Output Settings"
 
-#: src/components/convert/Step7.svelte:168
+#: src/components/convert/Step7.svelte:162
 msgid "Overall Progress"
 msgstr "Overall Progress"
 
@@ -679,7 +691,7 @@ msgstr "Please resolve these issues before continuing."
 msgid "Previous"
 msgstr "Previous"
 
-#: src/components/convert/Step7.svelte:363
+#: src/components/convert/Step7.svelte:353
 msgid "Processing Time"
 msgstr "Processing Time"
 
@@ -758,8 +770,8 @@ msgstr "Scroll up"
 msgid "Search commands..."
 msgstr "Search commands..."
 
-#: src/components/convert/Step7.svelte:30
-#: src/components/convert/Step7.svelte:34
+#: src/components/convert/Step7.svelte:32
+#: src/components/convert/Step7.svelte:36
 msgid "seconds"
 msgstr "seconds"
 
@@ -860,11 +872,11 @@ msgstr "Source Path"
 msgid "Space"
 msgstr "Space"
 
-#: src/components/convert/Step7.svelte:113
+#: src/components/convert/Step7.svelte:107
 msgid "Starting Volume {volumeIdx}: {volName}"
 msgstr "Starting Volume {volumeIdx}: {volName}"
 
-#: src/components/convert/Step7.svelte:344
+#: src/components/convert/Step7.svelte:334
 msgid "Successful"
 msgstr "Successful"
 
@@ -963,13 +975,13 @@ msgstr "Vol"
 
 #: src/components/convert/step4/ManualBundling.svelte:300
 #: src/components/convert/Step5.svelte:145
-#: src/components/convert/Step7.svelte:252
+#: src/components/convert/Step7.svelte:260
 msgid "Volume"
 msgstr "Volume"
 
 #: src/components/convert/step4/ManualBundling.svelte:230
 #: src/components/convert/step4/VolumeVisualisation.svelte:42
-#: src/components/convert/Step7.svelte:199
+#: src/components/convert/Step7.svelte:206
 msgid "Volume {vol}"
 msgstr "Volume {vol}"
 
@@ -981,6 +993,10 @@ msgstr "Volume Distribution"
 #: src/components/convert/step4/ManualBundling.svelte:243
 msgid "Volume Management"
 msgstr "Volume Management"
+
+#: src/components/convert/Step7.svelte:233
+msgid "Volume Status"
+msgstr "Volume Status"
 
 #: src/components/convert/Step6.svelte:249
 msgid "Volumes"

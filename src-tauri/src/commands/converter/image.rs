@@ -4,106 +4,176 @@
 //! particularly using ravif for AVIF encoding with parallel batch processing.
 
 use crate::prelude::*;
-use image::ImageFormat;
-use log::{debug, error, trace, warn};
+use image::{GenericImageView, ImageFormat, Pixel};
+use log::{error, trace};
+use memmap2::Mmap;
 use rayon::prelude::*;
-use std::path::{Path, PathBuf};
+use std::fs::File;
+use std::path::PathBuf;
 
-/// Synchronous image conversion (called from spawn_blocking)
-fn convert_image_sync(source_path: &PathBuf, format: ImageOutputFormat) -> Result<Vec<u8>, Error> {
-    // Early return: Check if image is already in target format
-    if let Some(ext) = source_path.extension().and_then(|e| e.to_str()) {
-        let already_converted = match format {
-            ImageOutputFormat::Avif => ext.eq_ignore_ascii_case("avif"),
-            ImageOutputFormat::WebP => ext.eq_ignore_ascii_case("webp"),
-            ImageOutputFormat::None => true,
+pub struct ProcessedPage {
+    pub data: Vec<u8>,
+    pub extension: String,
+}
+
+/// Batch convert images in memory
+pub fn process_images_to_memory<F>(
+    images: &[PathBuf],
+    format: ImageOutputFormat,
+    on_progress: Option<&F>,
+) -> Result<Vec<ProcessedPage>, Error>
+where
+    F: Fn() + Sync + Send,
+{
+    let num_threads = rayon::current_num_threads();
+    let chunk_size = (images.len() / num_threads).max(1);
+
+    let results: Vec<_> = images
+        .par_iter()
+        .with_min_len(chunk_size)
+        .map(|img_path| {
+            // 1. Determine if we convert or passthrough
+            let result = process_single_image(img_path, format);
+
+            // 2. Trigger Progress
+            if let Some(cb) = on_progress {
+                cb();
+            }
+            result
+        })
+        .collect();
+
+    // Unwrap results
+    let mut pages = Vec::with_capacity(images.len());
+    for res in results {
+        pages.push(res?);
+    }
+    Ok(pages)
+}
+
+fn process_single_image(path: &PathBuf, format: ImageOutputFormat) -> Result<ProcessedPage, Error> {
+    let file = File::open(path).map_err(Error::from)?;
+
+    // Memory map the input file
+    // This avoids a heap allocation and copy for the initial read
+    let mmap = unsafe { Mmap::map(&file).map_err(Error::from)? };
+
+    // Handle "None" (Original) Case
+    if format == ImageOutputFormat::None {
+        let extension = path
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("jpg")
+            .to_string();
+
+        return Ok(ProcessedPage {
+            data: mmap.to_vec(), // Efficient copy from memory map
+            extension,
+        });
+    }
+
+    // Check if target is same as source (e.g. source is webp, target is webp)
+    if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+        let target_ext = match format {
+            ImageOutputFormat::Avif => "avif",
+            ImageOutputFormat::WebP => "webp",
+            _ => "",
         };
 
-        if already_converted {
+        if ext.eq_ignore_ascii_case(target_ext) {
             trace!(
-                "Image {:?} already in target format, reading directly",
-                source_path
+                "Source matches target format ({}), skipping conversion",
+                ext
             );
-            return std::fs::read(source_path).map_err(Error::from);
+            return Ok(ProcessedPage {
+                data: mmap.to_vec(),
+                extension: target_ext.to_string(),
+            });
         }
     }
 
-    trace!("Loading image from {:?}", source_path);
-    let img = image::open(source_path).map_err(|e| {
-        error!("Failed to open image {:?}: {}", source_path, e);
-        Error::from(e)
-    })?;
+    // Handle Conversion Case
+    // image::load_from_memory is efficient with slices (uses the mmap directly)
+    let img = image::load_from_memory(&mmap).map_err(Error::from)?;
 
-    match format {
-        ImageOutputFormat::Avif => convert_to_avif_optimized(&img),
-        ImageOutputFormat::WebP => convert_to_webp(&img),
+    // Perform Conversion
+    let (data, extension) = match format {
+        ImageOutputFormat::Avif => (convert_to_avif(&img)?, "avif".to_string()),
+        ImageOutputFormat::WebP => (convert_to_webp(&img)?, "webp".to_string()),
         ImageOutputFormat::None => unreachable!(),
-    }
+    };
+
+    Ok(ProcessedPage { data, extension })
 }
 
 /// Auto-tune AVIF encoding parameters based on image characteristics
 ///
 /// Returns (quality, speed) tuple optimized for the given image:
-/// - Small images (< 800x600): Use faster encoding (speed 8)
-/// - Medium images (800x600 - 2000x1500): Balanced (speed 6)
-/// - Large images (> 2000x1500): Slower for better compression (speed 4)
-/// - Grayscale images: Slightly lower quality since compression is easier
-/// - Color images: Standard quality settings
-///
-/// Expected performance gain: 15-25% faster encoding with comparable quality
+/// - Small images (< 480k pixels): Speed 8 (Fastest)
+/// - Medium images (< 3M pixels): Speed 7 (Balanced)
+/// - Large images (> 3M pixels): Speed 6 (Better compression, but avoids Speed 4 cliff)
 fn auto_tune_avif_params(img: &image::DynamicImage) -> (f32, u8) {
     let width = img.width();
     let height = img.height();
-    let pixel_count = width * height;
+    let pixel_count = width as u64 * height as u64;
 
-    // Detect if image is grayscale
+    // Zero-allocation grayscale detection
+    // We sample a fixed number of pixels instead of converting the whole image
     let is_grayscale = match img {
         image::DynamicImage::ImageLuma8(_) | image::DynamicImage::ImageLuma16(_) => true,
         _ => {
-            // Sample pixels to check if effectively grayscale
-            let rgb = img.to_rgb8();
-            let samples = (pixel_count / 100).max(100).min(1000); // Sample 1% of pixels, min 100, max 1000
+            // Sample ~500 pixels distributed across the image
+            let samples = 500;
             let step = (pixel_count / samples).max(1);
 
-            let mut grayscale_count = 0;
-            for i in (0..pixel_count).step_by(step as usize) {
-                let x = (i % width) as u32;
-                let y = (i / width) as u32;
+            let mut grayscale_samples = 0;
+            let mut total_sampled = 0;
 
-                if let Some(pixel) = rgb.get_pixel_checked(x, y) {
-                    let r = pixel[0];
-                    let g = pixel[1];
-                    let b = pixel[2];
-                    // Allow small deviation for compression artifacts
-                    if (r as i16 - g as i16).abs() <= 2 && (g as i16 - b as i16).abs() <= 2 {
-                        grayscale_count += 1;
+            // Use GenericImageView to avoid allocation
+            // We simulate a flat iteration
+            for i in (0..pixel_count).step_by(step as usize) {
+                let x = (i % width as u64) as u32;
+                let y = (i / width as u64) as u32;
+
+                let pixel = img.get_pixel(x, y);
+                let channels = pixel.channels();
+
+                if channels.len() >= 3 {
+                    let r = channels[0];
+                    let g = channels[1];
+                    let b = channels[2];
+
+                    // Allow small compression artifact deviation
+                    // Using u8 comparison (casts happen implicitly for diff)
+                    if r.abs_diff(g) <= 3 && g.abs_diff(b) <= 3 {
+                        grayscale_samples += 1;
                     }
+                    total_sampled += 1;
                 }
             }
 
-            // Consider grayscale if > 95% of sampled pixels are grayscale
-            (grayscale_count as f32 / samples as f32) > 0.95
+            // If > 95% of sampled pixels are grayscale, treat as grayscale
+            total_sampled > 0 && (grayscale_samples as f32 / total_sampled as f32) > 0.95
         }
     };
 
     // Auto-tune based on image size
+    // Note: Speed 4 is exponentially slower than Speed 6.
+    // We cap minimum speed at 6 to maintain responsiveness.
     let (base_quality, speed) = if pixel_count < 480_000 {
-        // Small images (< 800x600): Use fast encoding
-        // Small files compress quickly, prioritize speed
+        // Small images (< 800x600)
         (82.0, 8)
     } else if pixel_count < 3_000_000 {
-        // Medium images (800x600 - 2000x1500): Balanced
-        // Most manga pages fall here
-        (80.0, 6)
+        // Medium images (Standard Manga Page)
+        (80.0, 7)
     } else {
-        // Large images (> 2000x1500): Slower encoding for better compression
-        // Large files benefit more from better compression
-        (78.0, 4)
+        // Large images (Double spreads / High Res)
+        // Speed 6 is the sweet spot for rav1e. Speed 4 is too slow for batching.
+        (78.0, 6)
     };
 
-    // Adjust quality for grayscale
+    // Adjust quality for grayscale (it compresses cleaner)
     let quality = if is_grayscale {
-        // Grayscale compresses better, can use slightly lower quality
         base_quality - 2.0
     } else {
         base_quality
@@ -122,7 +192,7 @@ fn auto_tune_avif_params(img: &image::DynamicImage) -> (f32, u8) {
 }
 
 /// Convert image to AVIF using optimized ravif encoder with auto-tuning
-fn convert_to_avif_optimized(img: &image::DynamicImage) -> Result<Vec<u8>, Error> {
+fn convert_to_avif(img: &image::DynamicImage) -> Result<Vec<u8>, Error> {
     use ravif::{Encoder, Img, RGB8};
 
     trace!("Converting to AVIF using ravif encoder with auto-tuning");
@@ -130,22 +200,23 @@ fn convert_to_avif_optimized(img: &image::DynamicImage) -> Result<Vec<u8>, Error
     let width = img.width() as usize;
     let height = img.height() as usize;
 
-    // Auto-tune encoding parameters based on image characteristics
+    // Auto-tune encoding parameters based on the original image
     let (quality, speed) = auto_tune_avif_params(img);
 
-    let rgb_data = img.to_rgb8();
+    let rgb_cow = if let Some(rgb_ref) = img.as_rgb8() {
+        std::borrow::Cow::Borrowed(rgb_ref)
+    } else {
+        // Only allocate if conversion (e.g. from RGBA -> RGB) is strictly necessary
+        std::borrow::Cow::Owned(img.to_rgb8())
+    };
 
-    // Convert to RGB8 slice for ravif
     let rgb_slice: &[RGB8] = unsafe {
-        std::slice::from_raw_parts(rgb_data.as_raw().as_ptr() as *const RGB8, width * height)
+        std::slice::from_raw_parts(rgb_cow.as_raw().as_ptr() as *const RGB8, width * height)
     };
 
     let img_ref = Img::new(rgb_slice, width, height);
 
-    // Configure AVIF encoder with auto-tuned settings
-    // Quality and speed are dynamically adjusted based on image characteristics
-    // Performance note: rav1e automatically uses SIMD (SSE2/AVX2) when available
-    // Combined with rayon parallel processing, this maximizes CPU utilization
+    // Configure AVIF encoder
     let encoder = Encoder::new()
         .with_quality(quality)
         .with_speed(speed)
@@ -177,120 +248,4 @@ fn convert_to_webp(img: &image::DynamicImage) -> Result<Vec<u8>, Error> {
     let bytes = converted_data.into_inner();
     trace!("WebP encoding completed, size: {} bytes", bytes.len());
     Ok(bytes)
-}
-
-/// Batch convert multiple images in parallel using rayon
-///
-/// # Arguments
-/// * `images` - Slice of image paths to convert
-/// * `temp_dir` - Directory to store converted images
-/// * `format` - Target image format
-/// * `on_progress` - Callback function executed when an image finishes converting
-pub fn convert_images_batch<F>(
-    images: &[PathBuf],
-    temp_dir: &Path,
-    format: ImageOutputFormat,
-    on_progress: Option<&F>,
-) -> Result<Vec<PathBuf>, Error>
-where
-    F: Fn() + Sync + Send,
-{
-    if format == ImageOutputFormat::None {
-        // Even if no conversion, we should trigger progress for the UI
-        if let Some(cb) = on_progress {
-            // Trigger callback for every image "processed"
-            images.iter().for_each(|_| cb());
-        }
-        return Ok(images.to_vec());
-    }
-
-    let num_threads = rayon::current_num_threads();
-    debug!(
-        "Batch converting {} images to {:?} using {} threads",
-        images.len(),
-        format,
-        num_threads
-    );
-
-    let temp_dir = temp_dir.to_path_buf();
-    let chunk_size = (images.len() / num_threads).max(1);
-
-    let results: Vec<_> = images
-        .par_iter()
-        .with_min_len(chunk_size)
-        .map(|img_path| {
-            let res = convert_image_sync_to_file(img_path, &temp_dir, format);
-            // Signal progress immediately after this specific image is done
-            if let Some(cb) = on_progress {
-                cb();
-            }
-            res
-        })
-        .collect();
-
-    // Collect results and check for errors
-    let mut converted = Vec::with_capacity(images.len());
-    let mut error_count = 0;
-
-    for result in results {
-        match result {
-            Ok(path) => converted.push(path),
-            Err(e) => {
-                error_count += 1;
-                if error_count == 1 {
-                    return Err(e);
-                }
-            }
-        }
-    }
-
-    if error_count > 0 {
-        warn!("Batch conversion completed with {} errors", error_count);
-    }
-
-    Ok(converted)
-}
-
-/// Synchronous conversion that writes directly to file
-///
-/// This function is called in parallel by rayon threadpool for batch conversions.
-/// Each thread handles one image independently for maximum parallelism.
-/// Converts a single image file synchronously.
-/// Called in parallel by rayon for batch conversions.
-fn convert_image_sync_to_file(
-    source: &PathBuf,
-    temp_dir: &Path,
-    format: ImageOutputFormat,
-) -> Result<PathBuf, Error> {
-    let extension = match format {
-        ImageOutputFormat::WebP => "webp",
-        ImageOutputFormat::Avif => "avif",
-        ImageOutputFormat::None => return Ok(source.clone()),
-    };
-
-    // Check if already in target format (avoids unnecessary conversion)
-    if let Some(ext) = source.extension() {
-        if ext == extension {
-            // to_path_buf() is cheaper than converting the image
-            return Ok(source.to_path_buf());
-        }
-    }
-
-    let converted_bytes = convert_image_sync(source, format)?;
-
-    let filename = source
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("converted");
-    let output_path = temp_dir.join(format!("{}.{}", filename, extension));
-
-    std::fs::write(&output_path, converted_bytes).map_err(|e| {
-        error!(
-            "Failed to write converted image to {:?}: {}",
-            output_path, e
-        );
-        Error::from(e)
-    })?;
-
-    Ok(output_path)
 }

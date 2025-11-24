@@ -1,10 +1,8 @@
 use crate::generator::Generator;
 use crate::prelude::*;
 use log::{debug, error, info, trace};
-use memmap2::MmapOptions;
 use std::fs::File;
-use std::io::Write;
-use std::path::PathBuf;
+use std::io::{BufWriter, Write};
 use zip::write::SimpleFileOptions;
 use zip::{CompressionMethod, ZipWriter};
 
@@ -14,7 +12,7 @@ use zip::{CompressionMethod, ZipWriter};
 /// a properly formatted CBZ archive with optional metadata.
 pub struct Cbz {
     /// The ZIP writer for archive creation
-    zip: Option<ZipWriter<File>>,
+    zip: Option<ZipWriter<BufWriter<File>>>,
     /// Options for image files (no compression - images are already compressed)
     image_options: SimpleFileOptions,
     /// Options for metadata files (high compression for text)
@@ -65,7 +63,8 @@ impl Generator for Cbz {
             }
         };
 
-        let zip = ZipWriter::new(file);
+        let buf_writer = BufWriter::with_capacity(64 * 1024, file);
+        let zip = ZipWriter::new(buf_writer);
         debug!("ZipWriter initialized successfully");
 
         Ok(Cbz {
@@ -76,88 +75,46 @@ impl Generator for Cbz {
         })
     }
 
-    /// Adds an image to the CBZ file as a sequentially numbered page.
+    /// Adds an image to the CBZ file from in-memory data.
     ///
     /// Images are added with filenames like "page_001.ext", "page_002.ext", etc.
-    /// Uses memory mapping for efficient file handling.
     ///
     /// # Parameters
-    /// * `image_path` - Path to the image file to add
-    ///
+    /// * `data` - Byte slice containing the image data
+    /// * `extension` - File extension indicating the image format (e.g., "jpg", "png")
     /// # Returns
     /// A Result containing a reference to self for method chaining or an Error.
-    fn add_page(&mut self, image_path: &PathBuf) -> Result<&mut Self, Error> {
-        info!("Adding page {} from: {:?}", self.page_index + 1, image_path);
-
-        let (image_extension, _) = match get_file_info(image_path) {
-            Ok(info) => info,
-            Err(e) => {
-                error!("Failed to get file info for image {:?}: {}", image_path, e);
-                return Err(e);
-            }
-        };
-        trace!("Image extension: {}", image_extension);
-
-        // Open the file
-        trace!("Opening image file: {:?}", image_path);
-        let file_std = match File::open(image_path) {
-            Ok(f) => f,
-            Err(e) => {
-                error!("Failed to open image file {:?}: {}", image_path, e);
-                return Err(Error::from(e));
-            }
-        };
-        let options = self.image_options;
-        // Pre-allocate string capacity to avoid reallocations (page_XXX.ext ~= 12-15 chars)
+    fn add_page_from_memory(&mut self, data: &[u8], extension: &str) -> Result<&mut Self, Error> {
+        // Pre-allocate to avoid allocation on every page
         let mut file_name = String::with_capacity(16);
         use std::fmt::Write;
         write!(
             &mut file_name,
             "page_{:03}.{}",
             self.page_index + 1,
-            image_extension
+            extension
         )
         .expect("String write cannot fail");
-        debug!(
-            "Adding to CBZ as: {} (stored without recompression)",
-            file_name
-        );
 
         let zip = match self.zip.as_mut() {
             Some(z) => z,
-            None => {
-                error!("Zip writer not available");
-                return Err(Error::Unsupported("Zip writer not available".into()));
-            }
+            None => return Err(Error::Unsupported("Zip writer not available".into())),
         };
 
-        // Create the read-only memory map
-        trace!("Creating memory map for: {:?}", image_path);
-        let mmap = match unsafe { MmapOptions::new().map(&file_std) } {
-            Ok(map) => map,
-            Err(e) => {
-                error!("Memory mapping failed for {:?}: {}", image_path, e);
-                return Err(Error::from(e));
-            }
-        };
-
-        // Add to zip
-        trace!("Starting file entry in ZIP: {}", file_name);
-        if let Err(e) = zip.start_file(file_name.clone(), options) {
-            error!("Failed to start file entry {}: {}", file_name, e);
+        // We use Stored (no compression) because images (AVIF/WebP/JPEG) are already compressed.
+        // Re-compressing them is a waste of CPU cycles.
+        if let Err(e) = zip.start_file(file_name, self.image_options) {
+            error!("Failed to start file entry: {}", e);
             return Err(Error::from(e));
         }
 
-        trace!("Writing {} bytes to ZIP", mmap.len());
-        if let Err(e) = zip.write_all(&mmap[..]) {
-            error!("Failed to write file data for {}: {}", file_name, e);
+        // 3. Write Data
+        if let Err(e) = zip.write_all(data) {
+            error!("Failed to write file data: {}", e);
             return Err(Error::from(e));
         }
 
-        // Increment page index
         self.page_index += 1;
-        debug!("Page added successfully. Total pages: {}", self.page_index);
-
         Ok(self)
     }
 

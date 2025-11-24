@@ -33,7 +33,7 @@ thiserror = "2.0"
 tokio = { version = "1.48", features = ["fs"] }
 async-trait = "0.1"
 futures = "0.3.31"
-image = { version = "0.25", features = ["avif"] }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "avif"] }
 epub-builder = "0.8"
 zip = "6.0.0"
 regex = "1.12"

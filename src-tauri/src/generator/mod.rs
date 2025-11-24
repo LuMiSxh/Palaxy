@@ -4,7 +4,6 @@
 //! implementations for different file formats.
 
 use crate::prelude::*;
-use std::path::PathBuf;
 
 pub mod cbz;
 pub mod epub;
@@ -27,14 +26,15 @@ pub trait Generator {
     where
         Self: Sized;
 
-    /// Adds a page to the generated document.
+    /// Adds a page to the generated document from in-memory data.
     ///
     /// # Parameters
-    /// * `image_path` - Path to the image file to add as a page
+    /// * `data` - Byte slice containing the image data
+    /// * `extension` - File extension indicating the image format (e.g., "jpg", "png")
     ///
     /// # Returns
     /// * `EResult<&mut Self>` - Self reference for method chaining, or an error if failed
-    fn add_page(&mut self, image_path: &PathBuf) -> EResult<&mut Self>
+    fn add_page_from_memory(&mut self, data: &[u8], extension: &str) -> EResult<&mut Self>
     where
         Self: Sized;
 

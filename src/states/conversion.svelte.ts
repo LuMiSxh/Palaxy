@@ -1,8 +1,3 @@
-/**
- * Conversion state management using Svelte 5 runes
- * Tracks conversion progress and events in real-time
- */
-
 import type {
 	ConversionStartEvent,
 	VolumeStartEvent,
@@ -12,7 +7,7 @@ import type {
 	StatusMessageEvent,
 } from '$types/bindings';
 
-interface VolumeProgress {
+export interface VolumeProgress {
 	index: number;
 	name: string;
 	progress: number; // 0-100
@@ -35,8 +30,6 @@ export interface StatusMessage {
 class ConversionState {
 	isConverting = $state(false);
 	totalVolumes = $state(0);
-	currentVolumeIndex = $state<number | null>(null);
-	currentVolume = $state<VolumeProgress | null>(null);
 	volumes = $state<VolumeProgress[]>([]);
 	completed = $state({ successful: 0, failed: 0 });
 	errors = $state<Array<{ volumeName: string; error: string }>>([]);
@@ -46,14 +39,31 @@ class ConversionState {
 	durationSeconds = $state<number | null>(null);
 
 	/**
+	 * Calculates the global progress percentage (0-100)
+	 * based on the average progress of all volumes.
+	 */
+	get globalProgress(): number {
+		if (this.totalVolumes === 0) return 0;
+		// Sum of all volume progresses
+		const totalProgressSum = this.volumes.reduce((sum, vol) => sum + vol.progress, 0);
+		// Average it out
+		return totalProgressSum / this.totalVolumes;
+	}
+
+	/**
+	 * Returns a list of volumes currently being processed
+	 */
+	get activeVolumes(): VolumeProgress[] {
+		return this.volumes.filter((v) => v.status === 'processing');
+	}
+
+	/**
 	 * Handle conversion start event
 	 */
 	handleConversionStart(event: ConversionStartEvent) {
 		this.isConverting = true;
 		this.totalVolumes = event.total_volumes;
 		this.startTime = Date.now();
-		this.currentVolumeIndex = null;
-		this.currentVolume = null;
 		this.completed = { successful: 0, failed: 0 };
 		this.errors = [];
 		this.statusMessages = [];
@@ -82,10 +92,7 @@ class ConversionState {
 			status: 'processing',
 		};
 
-		this.currentVolumeIndex = event.volume_index;
-		this.currentVolume = volume;
-
-		// Update volumes array
+		// We update the specific volume in the array
 		if (this.volumes[event.volume_index]) {
 			this.volumes[event.volume_index] = volume;
 		}
@@ -105,8 +112,6 @@ class ConversionState {
 			totalImages: event.total_images,
 			status: 'processing',
 		};
-
-		this.currentVolume = updatedVolume;
 
 		// Update volumes array
 		if (this.volumes[event.volume_index]) {
@@ -156,8 +161,6 @@ class ConversionState {
 	 */
 	handleConversionComplete(event: ConversionCompleteEvent) {
 		this.isConverting = false;
-		this.currentVolume = null;
-		this.currentVolumeIndex = null;
 		this.endTime = Date.now();
 		this.durationSeconds = event.duration_seconds;
 
@@ -198,8 +201,6 @@ class ConversionState {
 	reset() {
 		this.isConverting = false;
 		this.totalVolumes = 0;
-		this.currentVolumeIndex = null;
-		this.currentVolume = null;
 		this.volumes = [];
 		this.completed = { successful: 0, failed: 0 };
 		this.errors = [];

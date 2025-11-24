@@ -4,13 +4,12 @@
 //! into CBZ or EPUB format with parallel processing and progress events.
 
 use super::events::*;
-use super::image::convert_images_batch;
+use super::image::process_images_to_memory;
 use crate::generator::Generator;
 use crate::generator::cbz::Cbz;
 use crate::generator::epub::EPub;
 use crate::prelude::*;
 use log::{debug, error, info, trace, warn};
-use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex as StdMutex};
@@ -174,7 +173,7 @@ pub async fn conv_convert(
 
     // Use for_each instead of map/collect to emit events in real-time
     volume_sizes
-        .par_iter()
+        .iter() // <- NOTE: iter(), not par_iter()
         .enumerate()
         .for_each(|(i, &chapters)| {
             let j = cumulative_indices[i];
@@ -213,24 +212,22 @@ pub async fn conv_convert(
 
             // PERFORM CONVERSION
             let result = match format {
-                FileFormat::Cbz => convert_cbz_volume_sync(
+                FileFormat::Cbz => convert_cbz_volume(
                     i,
                     &volume_name,
                     &target_directory_path,
                     &volume_pages,
                     image_format,
-                    temp_dir.as_ref(),
                     &app,
                     total_volumes,
                 ),
-                FileFormat::Epub => convert_epub_volume_sync(
+                FileFormat::Epub => convert_epub_volume(
                     i,
                     &volume_name,
                     &target_directory_path,
                     &volume_pages,
                     direction,
                     image_format,
-                    temp_dir.as_ref(),
                     &app,
                     total_volumes,
                 ),
@@ -349,13 +346,12 @@ pub async fn conv_convert(
 }
 
 /// Convert a single volume to CBZ format
-fn convert_cbz_volume_sync(
+fn convert_cbz_volume(
     volume_index: usize,
     volume_name: &str,
     target_dir: &str,
     volume_pages: &[Vec<PathBuf>],
     image_format: ImageOutputFormat,
-    temp_dir: Option<&PathBuf>,
     app: &AppHandle,
     _total_volumes: usize,
 ) -> EResult<()> {
@@ -412,53 +408,22 @@ fn convert_cbz_volume_sync(
     );
 
     for (chapter_idx, chapter_pages) in volume_pages.iter().enumerate() {
-        // 1. CONVERT
-        // We convert one chapter batch at a time.
-        // Events are emitted INSIDE here now.
-        let converted_pages = if image_format != ImageOutputFormat::None {
-            if let Some(temp_dir) = temp_dir {
-                match convert_images_batch(
-                    chapter_pages,
-                    temp_dir,
-                    image_format,
-                    Some(&progress_callback),
-                ) {
-                    Ok(cp) => cp,
-                    Err(e) => {
-                        error!(
-                            "Chapter {} conversion failed: {}, using originals",
-                            chapter_idx, e
-                        );
-                        // Fallback: Manually trigger progress for these images so bar doesn't stall
-                        for _ in 0..chapter_pages.len() {
-                            progress_callback();
-                        }
-                        chapter_pages.to_vec()
-                    }
+        let processed_pages =
+            match process_images_to_memory(chapter_pages, image_format, Some(&progress_callback)) {
+                Ok(pages) => pages,
+                Err(e) => {
+                    error!("Chapter {} failed: {}, trying passthrough", chapter_idx, e);
+                    process_images_to_memory::<fn()>(
+                        chapter_pages,
+                        ImageOutputFormat::None, // Force original
+                        None,                    // Don't double count progress
+                    )?
                 }
-            } else {
-                // No temp dir? Should generally not happen based on logic
-                for _ in 0..chapter_pages.len() {
-                    progress_callback();
-                }
-                chapter_pages.to_vec()
-            }
-        } else {
-            // No conversion needed, just trigger progress
-            for _ in 0..chapter_pages.len() {
-                progress_callback();
-            }
-            chapter_pages.to_vec()
-        };
+            };
 
-        // 2. ARCHIVE (ZIP)
-        // This is fast, so we don't need to emit events here (we already did during conversion)
-        for page in converted_pages {
-            generator.add_page(&page)?;
+        for page in processed_pages {
+            generator.add_page_from_memory(&page.data, &page.extension)?;
         }
-
-        // Optional: Clean up temp files for this chapter immediately to save disk space?
-        // Currently we rely on the massive cleanup at the end.
     }
 
     debug!(
@@ -473,14 +438,13 @@ fn convert_cbz_volume_sync(
 }
 
 /// Convert a single volume to EPUB format
-fn convert_epub_volume_sync(
+fn convert_epub_volume(
     volume_index: usize,
     volume_name: &str,
     target_dir: &str,
     volume_pages: &[Vec<PathBuf>],
     direction: Direction,
     image_format: ImageOutputFormat,
-    temp_dir: Option<&PathBuf>,
     app: &AppHandle,
     _total_volumes: usize,
 ) -> EResult<()> {
@@ -502,21 +466,22 @@ fn convert_epub_volume_sync(
     let app_arc = Arc::new(app.clone());
 
     let mut generator = EPub::new(target_dir, volume_name)?;
-    // Note: Cover needs to be handled carefully if it needs conversion
-    // For now, assuming cover is the first image of first chapter
+
     generator.set_cover(&volume_pages[0][0])?;
+
     generator.set_lang("en")?;
     generator.set_reading_direction(direction);
     generator.set_custom_metadata("title", volume_name)?;
     generator.set_custom_metadata("author", "Manga Bundler")?;
 
-    // Progress callback (same as CBZ)
+    // Progress callback (Same as CBZ)
     let progress_callback = {
         let current_image = current_image_atomic.clone();
         let v_name = volume_name_arc.clone();
         let app_ref = app_arc.clone();
         move || {
             let curr = current_image.fetch_add(1, Ordering::Relaxed) + 1;
+
             let _ = emit_status_message(
                 &app_ref,
                 StatusMessageType::PageAdded {
@@ -526,6 +491,7 @@ fn convert_epub_volume_sync(
                     total_pages: total_images,
                 },
             );
+
             if curr % 5 == 0 || curr == total_images {
                 let _ = emit_image_progress(
                     &app_ref,
@@ -539,38 +505,19 @@ fn convert_epub_volume_sync(
     };
 
     for (chapter_idx, chapter_pages) in volume_pages.iter().enumerate() {
-        // 1. CONVERT BATCH
-        let converted_pages = if image_format != ImageOutputFormat::None {
-            if let Some(temp_dir) = temp_dir {
-                match convert_images_batch(
-                    chapter_pages,
-                    temp_dir,
-                    image_format,
-                    Some(&progress_callback),
-                ) {
-                    Ok(cp) => cp,
-                    Err(_) => {
-                        for _ in 0..chapter_pages.len() {
-                            progress_callback();
-                        }
-                        chapter_pages.to_vec()
-                    }
+        // 1. PROCESS TO MEMORY (Parallel)
+        let processed_pages =
+            match process_images_to_memory(chapter_pages, image_format, Some(&progress_callback)) {
+                Ok(pages) => pages,
+                Err(e) => {
+                    error!("Chapter {} failed: {}, trying passthrough", chapter_idx, e);
+                    process_images_to_memory::<fn()>(chapter_pages, ImageOutputFormat::None, None)?
                 }
-            } else {
-                for _ in 0..chapter_pages.len() {
-                    progress_callback();
-                }
-                chapter_pages.to_vec()
-            }
-        } else {
-            for _ in 0..chapter_pages.len() {
-                progress_callback();
-            }
-            chapter_pages.to_vec()
-        };
+            };
 
-        // 2. ADD TO EPUB
-        generator.add_chapter(chapter_idx + 1, &converted_pages)?;
+        for page in processed_pages {
+            generator.add_page_from_memory(&page.data, &page.extension)?;
+        }
     }
 
     generator.save()?;

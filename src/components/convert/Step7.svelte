@@ -8,6 +8,7 @@
 		IconCircleCheck,
 		IconCircleX,
 		IconCircle,
+		IconBolt,
 	} from '@tabler/icons-svelte';
 	import { t } from 'svelte-i18n-lingui';
 	import { wrapper } from '$lib/utils';
@@ -18,6 +19,7 @@
 	import { useConversionProgress } from '$lib/useConversionProgress.svelte';
 	import type { StatusMessage } from '$states/conversion.svelte';
 	import Confetti from '$components/Confetti.svelte';
+	import { fly } from 'svelte/transition';
 
 	const conversionProgress = useConversionProgress();
 
@@ -96,16 +98,8 @@
 		keyHint.removeKey('enter');
 	});
 
-	let overallProgress = $derived.by(() => {
-		if (conversionProgress.totalVolumes === 0) return 0;
-		return (
-			((conversionProgress.completed.successful + conversionProgress.completed.failed) /
-				conversionProgress.totalVolumes) *
-			100
-		);
-	});
-
-	let currentVolumeProgress = $derived(conversionProgress.currentVolume?.progress || 0);
+	// Smoother Global Progress based on image completion across all volumes
+	let overallProgress = $derived(conversionProgress.globalProgress);
 
 	function formatStatusMessage(message: StatusMessage): string {
 		switch (message.type) {
@@ -161,107 +155,123 @@
 				</div>
 			</div>
 
-			<div class="card-body space-y-4">
+			<div class="card-body space-y-6">
 				<!-- Overall Progress -->
 				<div>
 					<div class="mb-2 flex items-center justify-between">
 						<span class="text-sm font-medium">{$t`Overall Progress`}</span>
 						<span class="text-primary text-sm font-medium">
-							{conversionProgress.completed.successful + conversionProgress.completed.failed} / {conversionProgress.totalVolumes}
+							{overallProgress.toFixed(1)}%
 						</span>
 					</div>
 					<progress class="progress progress-primary w-full" max="100" value={overallProgress}
 					></progress>
 					<div class="mt-2 flex items-center justify-between text-xs">
-						<span class="text-success flex items-center gap-1">
-							<IconCircleCheck size={14} />
-							{$t({
-								message: '{tot} successfull',
-								values: { tot: conversionProgress.completed.successful },
-							})}
+						<span class="flex items-center gap-1 opacity-70">
+							<IconBolt size={14} />
+							{conversionProgress.activeVolumes.length}
+							{$t`active threads`}
 						</span>
-						<span class="text-error flex items-center gap-1">
-							<IconCircleX size={14} />
-							{$t({
-								message: '{tot} failed',
-								values: { tot: conversionProgress.completed.failed },
-							})}
-						</span>
-					</div>
-				</div>
-
-				<!-- Current Volume Progress -->
-				{#if conversionProgress.currentVolume}
-					<div class="bg-base-200 rounded-lg p-4">
-						<div class="mb-2 flex items-center justify-between">
-							<span class="text-sm font-semibold">{$t`Current Volume`}</span>
-							<span class="badge badge-primary badge-sm">
+						<div class="flex gap-3">
+							<span class="text-success flex items-center gap-1">
+								<IconCircleCheck size={14} />
 								{$t({
-									message: 'Volume {vol}',
-									values: { vol: conversionProgress.currentVolume.index + 1 },
+									message: '{tot} successfull',
+									values: { tot: conversionProgress.completed.successful },
+								})}
+							</span>
+							<span class="text-error flex items-center gap-1">
+								<IconCircleX size={14} />
+								{$t({
+									message: '{tot} failed',
+									values: { tot: conversionProgress.completed.failed },
 								})}
 							</span>
 						</div>
-						<h4
-							class="text-primary mb-3 truncate font-medium"
-							title={conversionProgress.currentVolume.name}
-						>
-							{conversionProgress.currentVolume.name}
-						</h4>
-						<progress
-							class="progress progress-secondary w-full"
-							max="100"
-							value={currentVolumeProgress}
-						></progress>
-						<div class="mt-2 flex justify-between text-xs">
-							<span>
-								{$t({
-									message: '{cur}/{tot} images',
-									values: {
-										cur: conversionProgress.currentVolume.currentImage,
-										tot: conversionProgress.currentVolume.totalImages,
-									},
-								})}
-							</span>
-							<span>{currentVolumeProgress.toFixed(1)}%</span>
+					</div>
+				</div>
+
+				<!-- Active Conversions Grid -->
+				{#if conversionProgress.activeVolumes.length > 0}
+					<div>
+						<h4 class="mb-2 text-sm font-semibold">{$t`Active Conversions`}</h4>
+						<div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+							{#each conversionProgress.activeVolumes as volume (volume.index)}
+								<div
+									class="bg-background-tertiary dark:bg-background-dark-tertiary rounded-lg p-3 shadow-sm"
+									in:fly={{ y: 10, duration: 300 }}
+								>
+									<div class="mb-2 flex items-center justify-between">
+										<span class="text-xs font-semibold opacity-70">
+											{$t({ message: 'Volume {vol}', values: { vol: volume.index + 1 } })}
+										</span>
+										<span class="text-primary text-xs font-bold">{volume.progress.toFixed(0)}%</span
+										>
+									</div>
+									<div class="mb-2 truncate text-sm font-medium" title={volume.name}>
+										{volume.name}
+									</div>
+									<progress
+										class="progress progress-secondary w-full"
+										max="100"
+										value={volume.progress}
+									></progress>
+									<div class="mt-1 flex justify-end">
+										<span class="text-[10px] opacity-60">
+											{volume.currentImage} / {volume.totalImages}
+										</span>
+									</div>
+								</div>
+							{/each}
 						</div>
 					</div>
 				{/if}
 
-				<!-- Volume List -->
+				<!-- Volume List (Compact) -->
 				{#if conversionProgress.volumes.length > 0}
 					<div>
-						<h4 class="mb-2 text-sm font-semibold">{$t`All Volumes`}</h4>
-						<div class="border-base-300 max-h-60 space-y-1 overflow-y-auto rounded-lg border p-2">
+						<h4 class="mb-2 text-sm font-semibold">{$t`Volume Status`}</h4>
+						<div
+							class="border-background-tertiary dark:border-background-dark-tertiary max-h-48 space-y-1 overflow-y-auto rounded-lg border p-2"
+						>
 							{#each conversionProgress.volumes as volume}
 								<div
-									class="flex items-center justify-between rounded px-3 py-2 text-sm"
-									class:bg-base-200={volume.status === 'processing'}
+									class="hover:bg-background-tertiary dark:hover:bg-background-dark-tertiary flex items-center justify-between rounded px-2 py-1.5 text-sm transition-colors"
 								>
 									<div class="flex min-w-0 flex-1 items-center gap-2">
 										{#if volume.status === 'completed'}
-											<IconCircleCheck size={16} class={getStatusClass(volume.status)} />
+											<IconCircleCheck size={14} class={getStatusClass(volume.status)} />
 										{:else if volume.status === 'failed'}
-											<IconCircleX size={16} class={getStatusClass(volume.status)} />
+											<IconCircleX size={14} class={getStatusClass(volume.status)} />
 										{:else if volume.status === 'processing'}
-											<IconLoader size={16} class="{getStatusClass(volume.status)} animate-spin" />
+											<div class="relative h-3.5 w-3.5">
+												<IconLoader
+													size={14}
+													class="{getStatusClass(volume.status)} absolute animate-spin"
+												/>
+											</div>
 										{:else}
-											<IconCircle size={16} class={getStatusClass(volume.status)} />
+											<IconCircle size={14} class="opacity-20" />
 										{/if}
-										<span class="truncate" title={volume.name}>
+										<span
+											class="truncate {volume.status === 'pending' ? 'opacity-50' : ''}"
+											title={volume.name}
+										>
 											{volume.name || `${$t`Volume`} ${volume.index + 1}`}
 										</span>
 									</div>
-									<div class="flex items-center gap-2">
-										{#if volume.status === 'processing' || volume.status === 'completed'}
-											<span class="text-xs opacity-70">{volume.progress.toFixed(0)}%</span>
-										{/if}
-										{#if volume.errorMessage}
-											<span title={volume.errorMessage}>
-												<IconAlertCircle size={16} class="text-error" />
-											</span>
-										{/if}
-									</div>
+									{#if volume.status !== 'pending'}
+										<div class="flex items-center gap-2">
+											{#if volume.status === 'processing'}
+												<span class="text-xs opacity-70">{volume.progress.toFixed(0)}%</span>
+											{/if}
+											{#if volume.errorMessage}
+												<span title={volume.errorMessage}>
+													<IconAlertCircle size={14} class="text-error" />
+												</span>
+											{/if}
+										</div>
+									{/if}
 								</div>
 							{/each}
 						</div>
@@ -271,36 +281,16 @@
 				<!-- Live Status Messages -->
 				{#if conversionProgress.statusMessages.length > 0}
 					<div>
-						<h4 class="mb-2 text-sm font-semibold">{$t`Live Status`}</h4>
+						<h4 class="mb-2 text-sm font-semibold">{$t`Live Log`}</h4>
 						<div
 							bind:this={messageLogElement}
-							class="bg-base-200 max-h-40 overflow-y-auto rounded p-2 font-mono text-xs"
+							class="bg-background-tertiary dark:bg-background-dark-tertiary max-h-32 overflow-y-auto rounded p-2 font-mono text-[10px] opacity-80"
 						>
 							{#each conversionProgress.statusMessages as message}
-								<div class="border-base-300 border-b py-1 last:border-b-0">
+								<div class="border-background-secondary border-b py-0.5 last:border-b-0">
 									{formatStatusMessage(message)}
 								</div>
 							{/each}
-						</div>
-					</div>
-				{/if}
-
-				<!-- Errors Section -->
-				{#if conversionProgress.errors.length > 0}
-					<div class="alert alert-error">
-						<div class="w-full">
-							<h4 class="mb-2 flex items-center gap-2 font-semibold">
-								<IconAlertCircle size={18} />
-								{$t`Errors`}
-							</h4>
-							<ul class="space-y-1 text-xs">
-								{#each conversionProgress.errors as error}
-									<li class="flex gap-2">
-										<span class="font-medium">{error.volumeName}:</span>
-										<span class="opacity-80">{error.error}</span>
-									</li>
-								{/each}
-							</ul>
 						</div>
 					</div>
 				{/if}

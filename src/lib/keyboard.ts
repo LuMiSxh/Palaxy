@@ -82,7 +82,7 @@ class KeyboardManager {
 		// Store the handler function so we can remove it later
 		this.excludeHandlers.set(id, {
 			id,
-			callback: wrappedCallback
+			callback: wrappedCallback,
 		});
 
 		// Add the event listener
@@ -203,7 +203,7 @@ class KeyboardManager {
 			event.ctrlKey ? 'ctrl' : '',
 			event.altKey ? 'alt' : '',
 			event.shiftKey ? 'shift' : '',
-			event.metaKey ? 'meta' : ''
+			event.metaKey ? 'meta' : '',
 		].filter(Boolean);
 
 		const keyCombo = normalizeKeyCombo(

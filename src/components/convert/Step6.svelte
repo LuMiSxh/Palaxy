@@ -10,7 +10,7 @@
 		IconChartPie,
 		IconCopy,
 		IconPhoto,
-		IconVocabulary
+		IconVocabulary,
 	} from '@tabler/icons-svelte';
 
 	let convStateData: ConvState | null = $state(null);
@@ -74,7 +74,7 @@
 	onMount(async () => {
 		unregisterKeyHint = keyHint.smartAdd([
 			['arrowup', $t`Scroll up`],
-			['arrowdown', $t`Scroll down`]
+			['arrowdown', $t`Scroll down`],
 		]);
 
 		stepState.disablePrev = false;

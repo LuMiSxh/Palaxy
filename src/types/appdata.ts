@@ -21,7 +21,7 @@ export enum Theme {
 	/**
 	 * Theme based on system settings.
 	 */
-	System = -1
+	System = -1,
 }
 
 // Translations for the theme
@@ -40,7 +40,7 @@ export enum SupportedLanguages {
 	/**
 	 * German language support.
 	 */
-	German = 'de'
+	German = 'de',
 }
 
 // Translations for the languages
@@ -120,7 +120,7 @@ export const defaultAppData: AppData = {
 			conversionType: null,
 			targetLocation: null,
 			createNewFolder: true,
-			imageFormat: null
-		}
-	}
+			imageFormat: null,
+		},
+	},
 };

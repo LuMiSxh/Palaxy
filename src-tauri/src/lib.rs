@@ -5,12 +5,14 @@
 //! and application state initialization.
 
 use crate::commands::converter::{
-    conv_analyze, conv_bundle, conv_convert, conv_state_get, conv_state_reset, conv_state_set,
+    ConversionCompleteEvent, ConversionStartEvent, ImageProgressEvent, StatusMessageEvent,
+    VolumeCompleteEvent, VolumeStartEvent, conv_analyze, conv_bundle, conv_convert, conv_state_get,
+    conv_state_reset, conv_state_set,
 };
 use crate::commands::management::mgmt_get_logs_path;
 use specta_typescript::Typescript;
 use tauri::{Builder, Manager};
-use tauri_specta::{Builder as SpectaBuilder, collect_commands};
+use tauri_specta::{Builder as SpectaBuilder, collect_commands, collect_events};
 use tokio::sync::Mutex;
 
 mod collector;
@@ -32,15 +34,24 @@ mod macros;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Register commands for the frontend to call
-    let spectra_builder = SpectaBuilder::<tauri::Wry>::new().commands(collect_commands![
-        conv_state_set,
-        conv_state_get,
-        conv_state_reset,
-        conv_analyze,
-        conv_bundle,
-        conv_convert,
-        mgmt_get_logs_path
-    ]);
+    let spectra_builder = SpectaBuilder::<tauri::Wry>::new()
+        .commands(collect_commands![
+            conv_state_set,
+            conv_state_get,
+            conv_state_reset,
+            conv_analyze,
+            conv_bundle,
+            conv_convert,
+            mgmt_get_logs_path
+        ])
+        .events(collect_events![
+            VolumeStartEvent,
+            VolumeCompleteEvent,
+            ImageProgressEvent,
+            ConversionStartEvent,
+            ConversionCompleteEvent,
+            StatusMessageEvent,
+        ]);
 
     #[cfg(debug_assertions)] // <- Only export on non-release builds
     {
@@ -90,6 +101,10 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .manage(Mutex::new(prelude::ConvState::default()))
         .invoke_handler(spectra_builder.invoke_handler())
+        .setup(move |app| {
+            spectra_builder.mount_events(app);
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

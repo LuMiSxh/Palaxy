@@ -13,9 +13,21 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/routes/settings/+page.svelte:94
-#~ msgid "{0}"
-#~ msgstr "{0}"
+#: src/components/convert/Step7.svelte:218
+msgid "{cur}/{tot} images"
+msgstr "{cur}/{tot} Bilder"
+
+#: src/components/convert/step4/VolumeVisualisation.svelte:45
+msgid "{num, plural, one {# chapter} other {# chapters}}"
+msgstr "{num, plural, one {# Kapitel} other {# Kapitel}}"
+
+#: src/components/convert/Step7.svelte:185
+msgid "{tot} failed"
+msgstr "{tot} fehlgeschlagen"
+
+#: src/components/convert/Step7.svelte:178
+msgid "{tot} successfull"
+msgstr "{tot} erfolgreich"
 
 #: src/components/ActionHub.svelte:95
 #: src/routes/+layout.svelte:54
@@ -23,38 +35,30 @@ msgstr ""
 msgid "ActionHub"
 msgstr "ActionHub"
 
-#: src/components/dialogs/Features.svelte:28
-#~ msgid "Add browsing agents feature"
-#~ msgstr "Browsing-Agenten-Funktion hinzufügen"
-
 #: src/components/convert/step5/Chapter.svelte:275
 msgid "Add Image"
 msgstr "Bild hinzufügen"
 
-#: src/components/convert/step4/ManualBundling.svelte:396
+#: src/components/convert/step4/ManualBundling.svelte:399
 msgid "Add new volume"
 msgstr "Neues Band hinzufügen"
 
-#: src/components/convert/step4/ManualBundling.svelte:404
-#~ msgid "Add volume"
-#~ msgstr "Band hinzufügen"
-
-#: src/components/convert/step4/ManualBundling.svelte:408
-#: src/components/convert/step4/ManualBundling.svelte:417
+#: src/components/convert/step4/ManualBundling.svelte:411
+#: src/components/convert/step4/ManualBundling.svelte:420
 msgid "Add Volume"
 msgstr "Band hinzufügen"
 
-#: src/routes/+layout.svelte:83
-#~ msgid "Agents"
-#~ msgstr "Agenten"
+#: src/components/convert/Step7.svelte:118
+msgid "Adding page {pageNum} of {pageTot} to Volume {volIdx}"
+msgstr "Seite {pageNum} von {pageTot} zu Band {volIdx} wird hinzugefügt"
 
-#: src/components/dialogs/Features.svelte:38
-#~ msgid "Allow setting custom keybinds for the application"
-#~ msgstr "Erlaube das Einrichten von benutzerdefinierten Tastenbindungen für die Anwendung"
+#: src/components/convert/Step7.svelte:234
+msgid "All Volumes"
+msgstr "Alle Bände"
 
-#: src/components/dialogs/Features.svelte:18
-#~ msgid "Allows changing the application language"
-#~ msgstr "Ermöglicht das Ändern der Anwendungssprache"
+#: src/components/convert/Step7.svelte:327
+msgid "All volumes converted successfully!"
+msgstr "Alle Bände erfolgreich konvertiert!"
 
 #: src/components/KeyComboDisplay.svelte:41
 #: src/components/KeyComboDisplay.svelte:42
@@ -77,27 +81,9 @@ msgstr "Analyse Ergebnis"
 msgid "Analyze the source material for potential conversion issues and improvements."
 msgstr "Analysiere das Quellmaterial auf mögliche Konvertierungsprobleme und Verbesserungen."
 
-#: src/components/convert/Step2.svelte:59
-#~ msgid "Analyzing source material..."
-#~ msgstr "Analysiere Quellmaterial..."
-
-#: src/routes/settings/+page.svelte:72
-#: src/routes/settings/+page.svelte:74
-#: src/routes/settings/+page.svelte:76
-#~ msgid "App Version"
-#~ msgstr "App-Version"
-
 #: src/components/dialogs/SystemInfo.svelte:53
 msgid "Application Information"
 msgstr "Anwendungsinformationen"
-
-#: src/components/dialogs/Management.svelte:142
-#~ msgid "Application Logs"
-#~ msgstr "Anwendungsprotokolle"
-
-#: src/components/dialogs/Management.svelte:147
-#~ msgid "Application logs are stored on your device. You can access them through your file explorer."
-#~ msgstr "Anwendungsprotokolle werden auf deinem Gerät gespeichert. Du kannst über deinen Datei-Explorer darauf zugreifen."
 
 #: src/components/dialogs/SystemInfo.svelte:59
 msgid "Application Name"
@@ -130,14 +116,6 @@ msgstr "Automatische Einstellungen gespeichert"
 #: src/components/convert/Step3.svelte:119
 msgid "Automatic"
 msgstr "Automatisch"
-
-#: src/components/dialogs/Features.svelte:19
-#~ msgid "beta"
-#~ msgstr "Beta"
-
-#: src/components/dialogs/Features.svelte:27
-#~ msgid "Browse Agents"
-#~ msgstr "Agenten durchsuchen"
 
 #: src/components/convert/Step4.svelte:136
 msgid "Bundle Options"
@@ -177,10 +155,6 @@ msgstr "Ändere die Sprache auf Englisch"
 msgid "Change the language to German"
 msgstr "Ändere die Sprache auf Deutsch"
 
-#: src/routes/+layout.svelte:148
-#~ msgid "Change the language to Japanese"
-#~ msgstr "Ändere die Sprache auf Japanisch"
-
 #: src/routes/+layout.svelte:71
 msgid "Change the settings of the application"
 msgstr "Ändere die Einstellungen der Anwendung"
@@ -201,8 +175,7 @@ msgstr "Ändere das Design auf Hell"
 msgid "Change the theme to system"
 msgstr "Ändere das Design auf System"
 
-#: src/components/convert/step4/ManualBundling.svelte:299
-#: src/components/convert/step4/VolumeVisualisation.svelte:43
+#: src/components/convert/step4/ManualBundling.svelte:302
 msgid "chapter"
 msgstr "Kapitel"
 
@@ -211,20 +184,19 @@ msgstr "Kapitel"
 msgid "Chapter"
 msgstr "Kapitel"
 
-#: src/components/convert/step4/VolumeVisualisation.svelte:53
-msgid "Chapter {0} of Volume {1}"
-msgstr "Kapitel {0} von Band {1}"
-
 #: src/components/convert/step4/ManualBundling.svelte:228
-msgid "Chapter {0}{1}"
-msgstr "Kapitel {0}{1}"
+msgid "Chapter {chap}"
+msgstr "Kapitel {chap}"
+
+#: src/components/convert/step4/VolumeVisualisation.svelte:58
+msgid "Chapter {chap} of Volume {vol}"
+msgstr "Kapitel {chap} von Band {vol}"
 
 #: src/components/convert/step4/ManualBundling.svelte:211
 msgid "Chapter Distribution"
 msgstr "Kapitelverteilung"
 
-#: src/components/convert/step4/ManualBundling.svelte:299
-#: src/components/convert/step4/VolumeVisualisation.svelte:43
+#: src/components/convert/step4/ManualBundling.svelte:302
 #: src/components/convert/Step6.svelte:321
 msgid "chapters"
 msgstr "Kapitel"
@@ -233,7 +205,7 @@ msgstr "Kapitel"
 msgid "Chapters"
 msgstr "Kapitel"
 
-#: src/components/convert/step4/ManualBundling.svelte:404
+#: src/components/convert/step4/ManualBundling.svelte:407
 msgid "Chapters in volume"
 msgstr "Kapitel im Band"
 
@@ -244,11 +216,6 @@ msgstr "Wähle das Verzeichnis des Quellmaterials"
 #: src/components/dialogs/AutoPopulate.svelte:114
 msgid "Click to select a folder"
 msgstr "Klicke, um einen Ordner auszuwählen"
-
-#: src/components/convert/Step3.svelte:155
-#: src/components/convert/Step1.svelte:96
-#~ msgid "Click to select or drag a folder in"
-#~ msgstr "Klicke, um einen Ordner auszuwählen, oder ziehe ihn hierher"
 
 #: src/components/ActionHub.svelte:132
 #: src/components/ActionHub.svelte:133
@@ -273,9 +240,17 @@ msgstr "Bestätigung"
 msgid "Conversion"
 msgstr "Konvertierung"
 
-#: src/components/convert/Step7.svelte:87
+#: src/components/convert/Step7.svelte:321
 msgid "Conversion Complete!"
 msgstr "Konvertierung abgeschlossen!"
+
+#: src/components/convert/Step7.svelte:329
+msgid "Conversion completed with errors"
+msgstr "Konvertierung mit Fehlern abgeschlossen"
+
+#: src/components/convert/Step7.svelte:331
+msgid "Conversion completed with some errors"
+msgstr "Konvertierung mit einigen Fehlern abgeschlossen"
 
 #: src/components/convert/Step6.svelte:239
 msgid "Conversion Summary"
@@ -285,22 +260,22 @@ msgstr "Konvertierungszusammenfassung"
 msgid "Convert"
 msgstr "Konvertieren"
 
-#: src/components/convert/Step7.svelte:114
-#: src/components/convert/Step7.svelte:30
+#: src/components/convert/Step7.svelte:394
+#: src/components/convert/Step7.svelte:65
 msgid "Convert another manga"
 msgstr "Einen weiteren Manga konvertieren"
 
 #: src/routes/+layout.svelte:65
 msgid "Convert your manga images into a digital format that can be read on your favorite devices"
-msgstr ""
+msgstr "Konvertiere deine Manga-Bilder in ein digitales Format, das auf deinen Lieblingsgeräten gelesen werden kann"
 
-#: src/routes/+layout.svelte:71
-#~ msgid "Convert your manga images into a digital format that can be read on your favorite devices."
-#~ msgstr "Convert your manga images into a digital format that can be read on your favorite devices."
+#: src/components/convert/Step7.svelte:160
+msgid "Converting Volumes..."
+msgstr "Bänder werden konvertiert..."
 
 #: src/components/convert/Step7.svelte:73
-msgid "Converting..."
-msgstr "Konvertiere..."
+#~ msgid "Converting..."
+#~ msgstr "Konvertiere..."
 
 #: src/components/convert/step5/Chapter.svelte:264
 msgid "Cover"
@@ -325,13 +300,13 @@ msgstr "Neuen Ordner erstellen"
 msgid "Ctrl"
 msgstr "Strg"
 
+#: src/components/convert/Step7.svelte:197
+msgid "Current Volume"
+msgstr "Aktuelles Band"
+
 #: src/components/convert/step4/ManualBundling.svelte:185
 msgid "Current Volumes"
 msgstr "Aktuelle Bänder"
-
-#: src/components/dialogs/Features.svelte:37
-#~ msgid "Custom Keybinds"
-#~ msgstr "Benutzerdefinierte Tastenbelegungen"
 
 #: src/routes/+layout.svelte:89
 #: src/types/appdata.ts:29
@@ -363,33 +338,13 @@ msgstr "Erkennungsergebnis"
 msgid "Enable Auto-Population"
 msgstr "Einschalten der automatischen Befüllung"
 
-#: src/components/dialogs/Features.svelte:23
-#~ msgid "Enable manga search functionality"
-#~ msgstr "Manga-Suchfunktion aktivieren"
-
 #: src/routes/+layout.svelte:157
 msgid "Enable or disable a button to show the ActionHub"
 msgstr "Ein- oder Ausschalten einer Schaltfläche zum Anzeigen des ActionHub"
 
-#: src/components/dialogs/Features.svelte:76
-#~ msgid "Enable or disable application features"
-#~ msgstr "Anwendungsfunktionen aktivieren oder deaktivieren"
-
-#: src/routes/+layout.svelte:191
-#~ msgid "Enable or disable features of the application"
-#~ msgstr "Aktiviere oder deaktiviere Funktionen der Anwendung"
-
 #: src/routes/+layout.svelte:135
 msgid "Enable or disable the auto-population of fields in the application"
 msgstr "Ein- oder Ausschalten der automatischen Befüllung von Feldern in der Anwendung"
-
-#: src/components/dialogs/Features.svelte:33
-#~ msgid "Enable the internal management features like the SyncManager"
-#~ msgstr ""
-
-#: src/components/dialogs/Features.svelte:33
-#~ msgid "Enable the mouse support feature for the application"
-#~ msgstr "Aktiviere die Mausunterstützungsfunktion für die Anwendung"
 
 #: src/components/convert/Step6.svelte:351
 msgid "end"
@@ -419,6 +374,10 @@ msgstr "EPUB"
 msgid "EPUB only"
 msgstr "Nur EPUB"
 
+#: src/components/convert/Step7.svelte:294
+msgid "Errors"
+msgstr "Fehler"
+
 #: src/components/KeyComboDisplay.svelte:27
 #: src/components/KeyComboDisplay.svelte:49
 msgid "Esc"
@@ -428,36 +387,21 @@ msgstr "Esc"
 msgid "Excluded"
 msgstr "Ausgeschlossen"
 
-#: src/components/dialogs/Features.svelte:24
-#: src/components/dialogs/Features.svelte:29
-#: src/components/dialogs/Features.svelte:34
-#: src/components/dialogs/Features.svelte:39
-#~ msgid "experimental"
-#~ msgstr "experimentell"
+#: src/components/convert/Step7.svelte:354
+msgid "Failed"
+msgstr "Fehlgeschlagen"
 
 #: src/components/convert/Step4.svelte:36
 msgid "Failed to run bundler. Please try again."
 msgstr "Fehler beim Ausführen des Bundlers. Bitte versuche es erneut."
 
-#: src/routes/+layout.svelte:195
-#~ msgid "Feature Configuration"
-#~ msgstr "Funktionskonfiguration"
+#: src/components/convert/Step7.svelte:133
+msgid "Failed Volume {volIdx}: {volName}"
+msgstr "Fehlgeschlagenes Band {volIdx}: {volName}"
 
-#: src/components/dialogs/Features.svelte:67
-#~ msgid "Feature flags are not saved"
-#~ msgstr "Funktionsflags werden nicht gespeichert"
-
-#: src/components/dialogs/Features.svelte:61
-#~ msgid "Feature flags saved"
-#~ msgstr "Funktionsflags gespeichert"
-
-#: src/routes/+layout.svelte:190
-#~ msgid "Features"
-#~ msgstr "Funktionen"
-
-#: src/components/convert/Step3.svelte:75
-#~ msgid "File Name(s)"
-#~ msgstr "Dateiname(n)"
+#: src/components/convert/Step7.svelte:378
+msgid "Failed Volumes"
+msgstr "Fehlgeschlagene Bände"
 
 #: src/components/convert/Step3.svelte:134
 #: src/components/convert/Step6.svelte:146
@@ -476,6 +420,10 @@ msgstr "Bilder filtern"
 #: src/routes/convert/+page.svelte:50
 msgid "Filter out unwanted images, change image order, and set cover images."
 msgstr "Filtere unerwünschte Bilder, ändere die Bildreihenfolge und setze Coverbilder."
+
+#: src/components/convert/Step7.svelte:128
+msgid "Finished Volume {volIdx}: {volName}"
+msgstr "Band {volIdx} abgeschlossen: {volName}"
 
 #: src/components/convert/Step6.svelte:114
 msgid "General Information"
@@ -569,12 +517,6 @@ msgstr "Erhöhen"
 msgid "Information"
 msgstr "Information"
 
-#: src/components/dialogs/Features.svelte:32
-#: src/routes/+layout.svelte:201
-#: src/routes/+layout.svelte:207
-#~ msgid "Internal Management"
-#~ msgstr "Internes Management"
-
 #: src/components/convert/Step4.svelte:140
 #: src/components/convert/Step4.svelte:150
 #: src/components/DialogContent.svelte:112
@@ -615,10 +557,6 @@ msgstr "Sprache auf Englisch geändert"
 msgid "Language changed to German"
 msgstr "Sprache auf Deutsch geändert"
 
-#: src/routes/+layout.svelte:152
-#~ msgid "Language changed to Japanese"
-#~ msgstr "Sprache auf Japanisch geändert"
-
 #: src/components/dialogs/Features.svelte:17
 #~ msgid "Language Settings"
 #~ msgstr "Spracheinstellungen"
@@ -634,6 +572,10 @@ msgstr "Links nach Rechts"
 msgid "Light"
 msgstr "Hell"
 
+#: src/components/convert/Step7.svelte:274
+msgid "Live Status"
+msgstr "Live-Status"
+
 #: src/components/convert/Step2.svelte:58
 #: src/components/convert/Step5.svelte:132
 msgid "Loading Images..."
@@ -647,22 +589,6 @@ msgstr "Lade Systeminformationen..."
 msgid "Loading..."
 msgstr "Wird geladen..."
 
-#: src/components/dialogs/Management.svelte:152
-#~ msgid "Log Directory:"
-#~ msgstr "Protokollverzeichnis:"
-
-#: src/components/dialogs/Management.svelte:161
-#~ msgid "Log File:"
-#~ msgstr "Protokolldatei:"
-
-#: src/routes/+layout.svelte:202
-#~ msgid "Manage the internal state of the application"
-#~ msgstr "Verwalte den internen Zustand der Anwendung"
-
-#: src/routes/+layout.svelte:84
-#~ msgid "Manage your agents and their settings for better search results"
-#~ msgstr "Verwalte deine Agenten und deren Einstellungen für bessere Suchergebnisse"
-
 #: src/routes/+page.svelte:26
 msgid "Manga conversion and search at your fingertips."
 msgstr "Manga-Konvertierung und -Suche auf Knopfdruck."
@@ -675,11 +601,11 @@ msgstr "Manga-Konvertierung und -Suche auf Knopfdruck."
 msgid "Manual"
 msgstr "Manuell"
 
-#: src/components/convert/Step7.svelte:24
+#: src/components/convert/Step7.svelte:34
 msgid "minute"
 msgstr "Minute"
 
-#: src/components/convert/Step7.svelte:24
+#: src/components/convert/Step7.svelte:34
 msgid "minutes"
 msgstr "Minuten"
 
@@ -695,17 +621,13 @@ msgstr "Mausunterstützung ist jetzt deaktiviert"
 msgid "Mouse Support is now enabled"
 msgstr "Mausunterstützung ist jetzt aktiviert"
 
-#: src/components/convert/Step1.svelte:46
-#~ msgid "Multiple paths dropped, only the first path will be used:"
-#~ msgstr "Meherere Pfade abgelegt, nur der erste Pfad wird verwendet:"
-
 #: src/components/convert/Step5.svelte:69
 #: src/components/convert/Step5.svelte:70
 msgid "Navigate"
 msgstr "Navigieren"
 
 #: src/components/ActionHub.svelte:129
-#: src/components/convert/step4/ManualBundling.svelte:253
+#: src/components/convert/step4/ManualBundling.svelte:256
 msgid "Navigate down"
 msgstr "Navigiere nach unten"
 
@@ -716,7 +638,7 @@ msgid "Navigate fields"
 msgstr "Navigiere zwischen Feldern"
 
 #: src/components/ActionHub.svelte:130
-#: src/components/convert/step4/ManualBundling.svelte:252
+#: src/components/convert/step4/ManualBundling.svelte:255
 msgid "Navigate up"
 msgstr "Navigiere nach oben"
 
@@ -729,19 +651,15 @@ msgstr "Neue Bilder"
 msgid "Next"
 msgstr "Nächster"
 
-#: src/components/dialogs/Management.svelte:104
-#~ msgid "Next sync in:"
-#~ msgstr "Nächste Synchronisation in:"
-
 #: src/components/convert/Step2.svelte:140
 msgid "No analysis results found. There might be an issue with the source material."
 msgstr "Keine Analyseergebnisse gefunden. Es könnte ein Problem mit dem Quellmaterial geben."
 
-#: src/components/convert/step4/ManualBundling.svelte:387
+#: src/components/convert/step4/ManualBundling.svelte:390
 msgid "No volumes added yet. Add your first volume below."
 msgstr "Noch keine Bänder hinzugefügt. Füge deinen ersten Band unten hinzu."
 
-#: src/components/convert/step4/VolumeVisualisation.svelte:65
+#: src/components/convert/step4/VolumeVisualisation.svelte:73
 msgid "No volumes detected. Try running the bundler again."
 msgstr "Keine Bänder erkannt. Versuche den Bundler erneut auszuführen."
 
@@ -749,11 +667,6 @@ msgstr "Keine Bänder erkannt. Versuche den Bundler erneut auszuführen."
 #: src/components/dialogs/AutoPopulate.svelte:179
 msgid "None"
 msgstr "Nichts"
-
-#: src/components/convert/Step3.svelte:159
-#: src/components/convert/Step1.svelte:100
-#~ msgid "None selected"
-#~ msgstr "Nichts ausgewählt"
 
 #: src/components/convert/Step6.svelte:137
 #: src/components/convert/Step6.svelte:150
@@ -778,14 +691,13 @@ msgstr "Betriebssystemversion"
 msgid "Output Settings"
 msgstr "Ausgabeeinstellungen"
 
+#: src/components/convert/Step7.svelte:168
+msgid "Overall Progress"
+msgstr "Gesamtfortschritt"
+
 #: src/routes/convert/+page.svelte:62
 msgid "Palaxy is now converting your material. Please wait."
 msgstr "Palaxy konvertiert nun dein Material. Bitte warte."
-
-#: src/components/dialogs/AutoPopulate.svelte:86
-#: src/components/convert/Step3.svelte:138
-#~ msgid "PDF"
-#~ msgstr "PDF"
 
 #: src/components/convert/Step2.svelte:150
 msgid "Please resolve these issues before continuing."
@@ -796,7 +708,7 @@ msgstr "Bitte behebe diese Probleme, bevor du fortfährst."
 msgid "Previous"
 msgstr "Zurück"
 
-#: src/components/convert/Step7.svelte:99
+#: src/components/convert/Step7.svelte:363
 msgid "Processing Time"
 msgstr "Verarbeitungszeit"
 
@@ -814,11 +726,7 @@ msgstr "Projekteinstellungen"
 msgid "Reading Direction"
 msgstr "Leserichtung"
 
-#: src/components/dialogs/Management.svelte:118
-#~ msgid "Refresh"
-#~ msgstr "Aktualisieren"
-
-#: src/components/convert/step4/ManualBundling.svelte:254
+#: src/components/convert/step4/ManualBundling.svelte:257
 msgid "Remove selected"
 msgstr "Ausgewähltes entfernen"
 
@@ -854,10 +762,6 @@ msgstr "Überprüfung"
 msgid "Review all your settings before starting the conversion."
 msgstr "Überprüfe alle deine Einstellungen, bevor du die Konvertierung startest."
 
-#: src/routes/convert/+page.svelte:61
-#~ msgid "Review the settings and the material before conversion."
-#~ msgstr "Überprüfe die Einstellungen und das Material vor der Konvertierung."
-
 #: src/components/convert/Step3.svelte:181
 #: src/components/convert/Step6.svelte:28
 msgid "Right to Left"
@@ -883,20 +787,12 @@ msgstr "Nach unten scrollen"
 msgid "Scroll up"
 msgstr "Nach oben scrollen"
 
-#: src/routes/+layout.svelte:76
-#~ msgid "Search"
-#~ msgstr "Suche"
-
 #: src/components/ActionHub.svelte:19
 msgid "Search commands..."
 msgstr "Suche nach Befehlen..."
 
-#: src/routes/+layout.svelte:77
-#~ msgid "Search for your favorite manga series and chapters from various sources"
-#~ msgstr "Suche nach deinen Lieblings-Manga-Serien und -Kapiteln aus verschiedenen Quellen"
-
-#: src/components/convert/Step7.svelte:20
-#: src/components/convert/Step7.svelte:24
+#: src/components/convert/Step7.svelte:30
+#: src/components/convert/Step7.svelte:34
 msgid "seconds"
 msgstr "Sekunden"
 
@@ -997,17 +893,13 @@ msgstr "Quellpfad"
 msgid "Space"
 msgstr "Leertaste"
 
-#: src/components/dialogs/Features.svelte:19
-#~ msgid "stable"
-#~ msgstr "stabil"
+#: src/components/convert/Step7.svelte:113
+msgid "Starting Volume {volumeIdx}: {volName}"
+msgstr "Starte Band {volumeIdx}: {volName}"
 
-#: src/components/dialogs/Management.svelte:134
-#~ msgid "Start Sync"
-#~ msgstr "Synchronisation starten"
-
-#: src/components/dialogs/Management.svelte:126
-#~ msgid "Stop Sync"
-#~ msgstr "Synchronisation stoppen"
+#: src/components/convert/Step7.svelte:344
+msgid "Successful"
+msgstr "Erfolgreich"
 
 #: src/components/convert/step5/Chapter.svelte:223
 msgid "Swap next"
@@ -1020,18 +912,6 @@ msgstr "Mit vorherigem tauschen"
 #: src/components/convert/Step4.svelte:145
 msgid "Switch to Manual Bundling"
 msgstr "Zu manueller Bündelung wechseln"
-
-#: src/components/dialogs/Management.svelte:62
-#~ msgid "Sync started"
-#~ msgstr "Synchronisation gestartet"
-
-#: src/components/dialogs/Management.svelte:99
-#~ msgid "Sync Status"
-#~ msgstr "Synchronisationsstatus"
-
-#: src/components/dialogs/Management.svelte:71
-#~ msgid "Sync stopped"
-#~ msgstr "Synchronisation gestoppt"
 
 #: src/routes/+layout.svelte:98
 #: src/types/appdata.ts:29
@@ -1056,10 +936,6 @@ msgstr "Zielort"
 #: src/components/dialogs/SystemInfo.svelte:75
 msgid "Tauri Version"
 msgstr "Tauri-Version"
-
-#: src/components/convert/Step7.svelte:93
-msgid "The conversion process has completed successfully"
-msgstr "Der Konvertierungsprozess wurde erfolgreich abgeschlossen"
 
 #: src/components/convert/step4/utils.svelte.ts:32
 msgid "The total number of chapters {usedNumber} used exceeds the detected number of chapters {detectedNumber}"
@@ -1102,7 +978,7 @@ msgstr "Um loszulegen drücke"
 msgid "Toggle"
 msgstr "Umschalten"
 
-#: src/components/convert/step4/VolumeVisualisation.svelte:75
+#: src/components/convert/step4/VolumeVisualisation.svelte:83
 msgid "Total Chapter Usage"
 msgstr "Gesamte Kapitelnutzung"
 
@@ -1122,26 +998,24 @@ msgstr "Verwendete Kapitel"
 msgid "Vol"
 msgstr "Vol"
 
-#: src/components/convert/step4/ManualBundling.svelte:297
+#: src/components/convert/step4/ManualBundling.svelte:300
 #: src/components/convert/Step5.svelte:145
+#: src/components/convert/Step7.svelte:252
 msgid "Volume"
 msgstr "Band"
 
-#: src/components/convert/step4/ManualBundling.svelte:293
-#~ msgid "Volume "
-#~ msgstr "Band "
-
-#: src/components/convert/step4/ManualBundling.svelte:228
-#: src/components/convert/step4/VolumeVisualisation.svelte:41
-msgid "Volume {0}"
-msgstr "Band {0}"
+#: src/components/convert/step4/ManualBundling.svelte:230
+#: src/components/convert/step4/VolumeVisualisation.svelte:42
+#: src/components/convert/Step7.svelte:199
+msgid "Volume {vol}"
+msgstr "Band {vol}"
 
 #: src/components/convert/step4/VolumeVisualisation.svelte:32
 #: src/components/convert/Step6.svelte:307
 msgid "Volume Distribution"
 msgstr "Band-Verteilung"
 
-#: src/components/convert/step4/ManualBundling.svelte:240
+#: src/components/convert/step4/ManualBundling.svelte:243
 msgid "Volume Management"
 msgstr "Band-Verwaltung"
 
@@ -1173,10 +1047,6 @@ msgstr "Wird direkt im Zielort speichern"
 #: src/components/KeyComboDisplay.svelte:40
 msgid "Win"
 msgstr "Win"
-
-#: src/routes/convert/+page.svelte:97
-#~ msgid "You cannot proceed the next step."
-#~ msgstr "Du kannst nicht zum nächsten Schritt fortfahren."
 
 #: src/routes/convert/+page.svelte:104
 msgid "You cannot proceed to the next step."

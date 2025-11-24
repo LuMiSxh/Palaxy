@@ -7,7 +7,7 @@
 		IconFolder,
 		IconPhoto,
 		IconSettings,
-		IconToggleRight
+		IconToggleRight,
 	} from '@tabler/icons-svelte';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import dialogManager from '$states/dialog.svelte';
@@ -37,7 +37,7 @@
 	async function selectLocation() {
 		const location = await open({
 			directory: true,
-			multiple: false
+			multiple: false,
 		});
 		if (location) {
 			convLocation = location;
@@ -81,8 +81,8 @@
 				keys: [
 					['arrowup', $t`Select up`],
 					['arrowdown', $t`Select down`],
-					['enter', $t`Select`]
-				]
+					['enter', $t`Select`],
+				],
 			}}
 			bind:value={convType}
 		>
@@ -168,8 +168,8 @@
 				keys: [
 					['arrowup', $t`Select up`],
 					['arrowdown', $t`Select down`],
-					['enter', $t`Select`]
-				]
+					['enter', $t`Select`],
+				],
 			}}
 			bind:value={convImageFormat}
 		>

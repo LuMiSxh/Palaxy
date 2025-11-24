@@ -9,7 +9,7 @@ export const commands = {
  * Updates a specific field in the conversion state.
  * 
  * # Arguments
- * * `input` - Key-value pair specifying which state field is to update and its new value
+ * * `input` - Key-value pair specifying which state field to update and its new value
  * * `state` - Application state containing conversion parameters
  * 
  * # Returns
@@ -107,12 +107,12 @@ async convBundle(sensibility: number | null) : Promise<Result<BaseResponse<Bundl
 /**
  * Converts bundled volumes into the specified output format.
  * 
- * Processes all volumes in parallel, generating output files in either CBZ or EPUB format
- * according to the configuration. Creates directories as needed and applies appropriate
- * metadata to the generated files.
+ * Processes volumes with concurrency control, generating output files in either
+ * CBZ or EPUB format. Emits progress events to the frontend for real-time tracking.
  * 
  * # Arguments
  * * `state` - Application state containing conversion parameters
+ * * `app` - Tauri application handle for event emission
  * 
  * # Returns
  * * `EResult<BaseResponse>` - Success response with execution duration
@@ -147,6 +147,21 @@ async mgmtGetLogsPath() : Promise<Result<BaseResponse<LogPath>, Error>> {
 /** user-defined events **/
 
 
+export const events = __makeEvents__<{
+conversionCompleteEvent: ConversionCompleteEvent,
+conversionStartEvent: ConversionStartEvent,
+imageProgressEvent: ImageProgressEvent,
+statusMessageEvent: StatusMessageEvent,
+volumeCompleteEvent: VolumeCompleteEvent,
+volumeStartEvent: VolumeStartEvent
+}>({
+conversionCompleteEvent: "conversion-complete-event",
+conversionStartEvent: "conversion-start-event",
+imageProgressEvent: "image-progress-event",
+statusMessageEvent: "status-message-event",
+volumeCompleteEvent: "volume-complete-event",
+volumeStartEvent: "volume-start-event"
+})
 
 /** user-defined constants **/
 
@@ -249,6 +264,14 @@ edited_data: string[][] | null }
  */
 export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { ConvertToWebp: boolean } | { ImageFormat: ImageOutputFormat } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null }
 /**
+ * Emitted when all conversions complete
+ */
+export type ConversionCompleteEvent = { total_volumes: number; successful: number; failed: number; duration_seconds: number }
+/**
+ * Emitted when conversion batch starts
+ */
+export type ConversionStartEvent = { total_volumes: number }
+/**
  * Reading direction for content in an ePub file
  * 
  * * `Ltr` - Left to Right (default)
@@ -322,6 +345,10 @@ export type FileFormat = "EPUB" | "CBZ"
  */
 export type ImageOutputFormat = "None" | "WebP" | "AVIF"
 /**
+ * Emitted periodically to show image processing progress
+ */
+export type ImageProgressEvent = { volume_index: number; volume_name: string; current_image: number; total_images: number }
+/**
  * Path information for application log files
  */
 export type LogPath = { 
@@ -333,6 +360,22 @@ directory: string;
  * Full path to the main log file
  */
 file: string }
+/**
+ * Emitted for live status updates during conversion
+ */
+export type StatusMessageEvent = { message: StatusMessageType; timestamp: number }
+/**
+ * Status message types for live feedback
+ */
+export type StatusMessageType = { type: "volume_started"; volume_index: number; volume_name: string } | { type: "page_added"; volume_index: number; volume_name: string; page_number: number; total_pages: number } | { type: "volume_finished"; volume_index: number; volume_name: string; success: boolean }
+/**
+ * Emitted when a volume conversion completes
+ */
+export type VolumeCompleteEvent = { volume_index: number; total_volumes: number; volume_name: string; success: boolean; error_message: string | null }
+/**
+ * Emitted when a volume conversion starts
+ */
+export type VolumeStartEvent = { volume_index: number; total_volumes: number; volume_name: string }
 
 /** tauri-specta globals **/
 

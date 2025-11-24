@@ -16,9 +16,9 @@ const config = {
 			$components: './src/components',
 			$types: './src/types',
 			$stores: './src/stores',
-			$states: './src/states'
-		}
-	}
+			$states: './src/states',
+		},
+	},
 };
 
 export default config;

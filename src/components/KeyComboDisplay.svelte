@@ -31,7 +31,7 @@
 			arrowright: '→',
 			space: $t`Space`,
 			plus: '+',
-			minus: '-'
+			minus: '-',
 		},
 		default: {
 			ctrl: $t`Ctrl`,
@@ -53,8 +53,8 @@
 			arrowright: '→',
 			space: $t`Space`,
 			plus: '+',
-			minus: '-'
-		}
+			minus: '-',
+		},
 	});
 
 	let symbolMap = $derived(osName === 'macos' ? keySymbols.darwin : keySymbols.default);

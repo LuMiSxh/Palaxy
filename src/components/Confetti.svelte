@@ -22,7 +22,7 @@
 			'--random-size': `${Math.random() * 0.7 + 0.3}rem`,
 			'--random-rotation': `${Math.random() * 360}deg`,
 			'--random-color': `hsl(${Math.random() * 360}, 70%, 60%)`,
-			'--animation-duration': `${Math.random() * 3 + 2}s`
+			'--animation-duration': `${Math.random() * 3 + 2}s`,
 		};
 	}
 
@@ -31,7 +31,7 @@
 			.fill(0)
 			.map(() => ({
 				id: crypto.randomUUID(),
-				props: generateConfettiProps()
+				props: generateConfettiProps(),
 			}));
 	}
 
@@ -46,7 +46,7 @@
 					.fill(0)
 					.map(() => ({
 						id: crypto.randomUUID(),
-						props: generateConfettiProps()
+						props: generateConfettiProps(),
 					}));
 
 				confettiItems = [...confettiItems, ...newConfetti];

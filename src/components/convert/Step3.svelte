@@ -6,7 +6,7 @@
 		commands,
 		type Direction,
 		type FileFormat,
-		type ImageOutputFormat
+		type ImageOutputFormat,
 	} from '$types';
 	import { t } from 'svelte-i18n-lingui';
 	import { IconFolder } from '@tabler/icons-svelte';
@@ -45,7 +45,7 @@
 		targetLocation =
 			(await open({
 				directory: true,
-				multiple: false
+				multiple: false,
 			})) ?? '';
 	}
 
@@ -107,9 +107,9 @@
 							keys: [
 								['arrowup', $t`Select up`],
 								['arrowdown', $t`Select down`],
-								['enter', $t`Select`]
+								['enter', $t`Select`],
 							],
-							reset: true
+							reset: true,
 						}}
 						bind:value={bundleFlag}
 					>
@@ -139,9 +139,9 @@
 							keys: [
 								['arrowup', $t`Select up`],
 								['arrowdown', $t`Select down`],
-								['enter', $t`Select`]
+								['enter', $t`Select`],
 							],
-							reset: true
+							reset: true,
 						}}
 						bind:value={fileFormat}
 					>
@@ -168,9 +168,9 @@
 							keys: [
 								['arrowup', $t`Select up`],
 								['arrowdown', $t`Select down`],
-								['enter', $t`Select`]
+								['enter', $t`Select`],
 							],
-							reset: true
+							reset: true,
 						}}
 						bind:value={readingDirection}
 					>
@@ -253,8 +253,8 @@
 						use:handleKeyHint={{
 							keys: [
 								['arrowup', $t`Select up`],
-								['arrowdown', $t`Select down`]
-							]
+								['arrowdown', $t`Select down`],
+							],
 						}}
 						bind:value={imageFormat}
 					>

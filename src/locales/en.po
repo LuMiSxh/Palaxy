@@ -17,6 +17,30 @@ msgstr ""
 #~ msgid "{0}"
 #~ msgstr "{0}"
 
+#: src/components/convert/Step7.svelte:218
+msgid "{cur}/{tot} images"
+msgstr "{cur}/{tot} images"
+
+#: src/components/convert/step4/VolumeVisualisation.svelte:45
+msgid "{num, plural, one {# chapter} other {# chapters}}"
+msgstr "{num, plural, one {# chapter} other {# chapters}}"
+
+#: src/components/convert/Step7.svelte:185
+msgid "{tot} failed"
+msgstr "{tot} failed"
+
+#: src/components/convert/Step7.svelte:178
+msgid "{tot} successfull"
+msgstr "{tot} successfull"
+
+#: src/components/convert/Step7.svelte:133
+#~ msgid "✓ Finished Volume {0}: {1}"
+#~ msgstr "✓ Finished Volume {0}: {1}"
+
+#: src/components/convert/Step7.svelte:135
+#~ msgid "✗ Failed Volume {0}: {1}"
+#~ msgstr "✗ Failed Volume {0}: {1}"
+
 #: src/components/ActionHub.svelte:95
 #: src/routes/+layout.svelte:54
 #: src/routes/+page.svelte:14
@@ -31,7 +55,7 @@ msgstr "ActionHub"
 msgid "Add Image"
 msgstr "Add Image"
 
-#: src/components/convert/step4/ManualBundling.svelte:396
+#: src/components/convert/step4/ManualBundling.svelte:399
 msgid "Add new volume"
 msgstr "Add new volume"
 
@@ -39,14 +63,30 @@ msgstr "Add new volume"
 #~ msgid "Add volume"
 #~ msgstr "Add volume"
 
-#: src/components/convert/step4/ManualBundling.svelte:408
-#: src/components/convert/step4/ManualBundling.svelte:417
+#: src/components/convert/step4/ManualBundling.svelte:411
+#: src/components/convert/step4/ManualBundling.svelte:420
 msgid "Add Volume"
 msgstr "Add Volume"
+
+#: src/components/convert/Step7.svelte:130
+#~ msgid "Adding page {0} of {1} to Volume {2}"
+#~ msgstr "Adding page {0} of {1} to Volume {2}"
+
+#: src/components/convert/Step7.svelte:118
+msgid "Adding page {pageNum} of {pageTot} to Volume {volIdx}"
+msgstr "Adding page {pageNum} of {pageTot} to Volume {volIdx}"
 
 #: src/routes/+layout.svelte:83
 #~ msgid "Agents"
 #~ msgstr "Agents"
+
+#: src/components/convert/Step7.svelte:234
+msgid "All Volumes"
+msgstr "All Volumes"
+
+#: src/components/convert/Step7.svelte:327
+msgid "All volumes converted successfully!"
+msgstr "All volumes converted successfully!"
 
 #: src/components/dialogs/Features.svelte:38
 #~ msgid "Allow setting custom keybinds for the application"
@@ -205,8 +245,7 @@ msgstr "Change the theme to light"
 msgid "Change the theme to system"
 msgstr "Change the theme to system"
 
-#: src/components/convert/step4/ManualBundling.svelte:299
-#: src/components/convert/step4/VolumeVisualisation.svelte:43
+#: src/components/convert/step4/ManualBundling.svelte:302
 msgid "chapter"
 msgstr "chapter"
 
@@ -216,19 +255,26 @@ msgid "Chapter"
 msgstr "Chapter"
 
 #: src/components/convert/step4/VolumeVisualisation.svelte:53
-msgid "Chapter {0} of Volume {1}"
-msgstr "Chapter {0} of Volume {1}"
+#~ msgid "Chapter {0} of Volume {1}"
+#~ msgstr "Chapter {0} of Volume {1}"
 
 #: src/components/convert/step4/ManualBundling.svelte:228
-msgid "Chapter {0}{1}"
-msgstr "Chapter {0}{1}"
+#~ msgid "Chapter {0}{1}"
+#~ msgstr "Chapter {0}{1}"
+
+#: src/components/convert/step4/ManualBundling.svelte:228
+msgid "Chapter {chap}"
+msgstr "Chapter {chap}"
+
+#: src/components/convert/step4/VolumeVisualisation.svelte:58
+msgid "Chapter {chap} of Volume {vol}"
+msgstr "Chapter {chap} of Volume {vol}"
 
 #: src/components/convert/step4/ManualBundling.svelte:211
 msgid "Chapter Distribution"
 msgstr "Chapter Distribution"
 
-#: src/components/convert/step4/ManualBundling.svelte:299
-#: src/components/convert/step4/VolumeVisualisation.svelte:43
+#: src/components/convert/step4/ManualBundling.svelte:302
 #: src/components/convert/Step6.svelte:321
 msgid "chapters"
 msgstr "chapters"
@@ -237,13 +283,17 @@ msgstr "chapters"
 msgid "Chapters"
 msgstr "Chapters"
 
-#: src/components/convert/step4/ManualBundling.svelte:404
+#: src/components/convert/step4/ManualBundling.svelte:407
 msgid "Chapters in volume"
 msgstr "Chapters in volume"
 
 #: src/routes/convert/+page.svelte:25
 msgid "Choose Source Material Directory"
 msgstr "Choose Source Material Directory"
+
+#: src/components/ConversionMonitor.svelte:118
+#~ msgid "Clear"
+#~ msgstr "Clear"
 
 #: src/components/dialogs/AutoPopulate.svelte:114
 msgid "Click to select a folder"
@@ -282,9 +332,21 @@ msgstr "Confirmation"
 msgid "Conversion"
 msgstr "Conversion"
 
-#: src/components/convert/Step7.svelte:87
+#: src/components/convert/Step7.svelte:321
 msgid "Conversion Complete!"
 msgstr "Conversion Complete!"
+
+#: src/components/convert/Step7.svelte:329
+msgid "Conversion completed with errors"
+msgstr "Conversion completed with errors"
+
+#: src/components/convert/Step7.svelte:331
+msgid "Conversion completed with some errors"
+msgstr "Conversion completed with some errors"
+
+#: src/components/ConversionMonitor.svelte:117
+#~ msgid "Conversion Events"
+#~ msgstr "Conversion Events"
 
 #: src/components/convert/Step6.svelte:239
 msgid "Conversion Summary"
@@ -294,8 +356,8 @@ msgstr "Conversion Summary"
 msgid "Convert"
 msgstr "Convert"
 
-#: src/components/convert/Step7.svelte:114
-#: src/components/convert/Step7.svelte:30
+#: src/components/convert/Step7.svelte:394
+#: src/components/convert/Step7.svelte:65
 msgid "Convert another manga"
 msgstr "Convert another manga"
 
@@ -307,9 +369,13 @@ msgstr "Convert your manga images into a digital format that can be read on your
 #~ msgid "Convert your manga images into a digital format that can be read on your favorite devices."
 #~ msgstr "Convert your manga images into a digital format that can be read on your favorite devices."
 
+#: src/components/convert/Step7.svelte:160
+msgid "Converting Volumes..."
+msgstr "Converting Volumes..."
+
 #: src/components/convert/Step7.svelte:73
-msgid "Converting..."
-msgstr "Converting..."
+#~ msgid "Converting..."
+#~ msgstr "Converting..."
 
 #: src/components/convert/step5/Chapter.svelte:264
 msgid "Cover"
@@ -333,6 +399,10 @@ msgstr "Create New Folder"
 #: src/components/KeyComboDisplay.svelte:38
 msgid "Ctrl"
 msgstr "Ctrl"
+
+#: src/components/convert/Step7.svelte:197
+msgid "Current Volume"
+msgstr "Current Volume"
 
 #: src/components/convert/step4/ManualBundling.svelte:185
 msgid "Current Volumes"
@@ -428,6 +498,10 @@ msgstr "EPUB"
 msgid "EPUB only"
 msgstr "EPUB only"
 
+#: src/components/convert/Step7.svelte:294
+msgid "Errors"
+msgstr "Errors"
+
 #: src/components/KeyComboDisplay.svelte:27
 #: src/components/KeyComboDisplay.svelte:49
 msgid "Esc"
@@ -450,9 +524,25 @@ msgstr "Excluded"
 #~ msgid "Experimental"
 #~ msgstr "Experimental"
 
+#: src/components/convert/Step7.svelte:184
+#~ msgid "failed"
+#~ msgstr "failed"
+
+#: src/components/convert/Step7.svelte:354
+msgid "Failed"
+msgstr "Failed"
+
 #: src/components/convert/Step4.svelte:36
 msgid "Failed to run bundler. Please try again."
 msgstr "Failed to run bundler. Please try again."
+
+#: src/components/convert/Step7.svelte:133
+msgid "Failed Volume {volIdx}: {volName}"
+msgstr "Failed Volume {volIdx}: {volName}"
+
+#: src/components/convert/Step7.svelte:378
+msgid "Failed Volumes"
+msgstr "Failed Volumes"
 
 #: src/routes/+layout.svelte:195
 #~ msgid "Feature Configuration"
@@ -491,6 +581,10 @@ msgstr "Filter Images"
 #: src/routes/convert/+page.svelte:50
 msgid "Filter out unwanted images, change image order, and set cover images."
 msgstr "Filter out unwanted images, change image order, and set cover images."
+
+#: src/components/convert/Step7.svelte:128
+msgid "Finished Volume {volIdx}: {volName}"
+msgstr "Finished Volume {volIdx}: {volName}"
 
 #: src/components/convert/Step6.svelte:114
 msgid "General Information"
@@ -653,6 +747,10 @@ msgstr "Left to Right"
 msgid "Light"
 msgstr "Light"
 
+#: src/components/convert/Step7.svelte:274
+msgid "Live Status"
+msgstr "Live Status"
+
 #: src/components/convert/Step2.svelte:58
 #: src/components/convert/Step5.svelte:132
 msgid "Loading Images..."
@@ -698,11 +796,11 @@ msgstr "Manga conversion and search at your fingertips."
 msgid "Manual"
 msgstr "Manual"
 
-#: src/components/convert/Step7.svelte:24
+#: src/components/convert/Step7.svelte:34
 msgid "minute"
 msgstr "minute"
 
-#: src/components/convert/Step7.svelte:24
+#: src/components/convert/Step7.svelte:34
 msgid "minutes"
 msgstr "minutes"
 
@@ -734,7 +832,7 @@ msgid "Navigate"
 msgstr "Navigate"
 
 #: src/components/ActionHub.svelte:129
-#: src/components/convert/step4/ManualBundling.svelte:253
+#: src/components/convert/step4/ManualBundling.svelte:256
 msgid "Navigate down"
 msgstr "Navigate down"
 
@@ -745,7 +843,7 @@ msgid "Navigate fields"
 msgstr "Navigate fields"
 
 #: src/components/ActionHub.svelte:130
-#: src/components/convert/step4/ManualBundling.svelte:252
+#: src/components/convert/step4/ManualBundling.svelte:255
 msgid "Navigate up"
 msgstr "Navigate up"
 
@@ -766,11 +864,15 @@ msgstr "Next"
 msgid "No analysis results found. There might be an issue with the source material."
 msgstr "No analysis results found. There might be an issue with the source material."
 
-#: src/components/convert/step4/ManualBundling.svelte:387
+#: src/components/ConversionMonitor.svelte:138
+#~ msgid "No events yet"
+#~ msgstr "No events yet"
+
+#: src/components/convert/step4/ManualBundling.svelte:390
 msgid "No volumes added yet. Add your first volume below."
 msgstr "No volumes added yet. Add your first volume below."
 
-#: src/components/convert/step4/VolumeVisualisation.svelte:65
+#: src/components/convert/step4/VolumeVisualisation.svelte:73
 msgid "No volumes detected. Try running the bundler again."
 msgstr "No volumes detected. Try running the bundler again."
 
@@ -807,6 +909,10 @@ msgstr "OS Version"
 msgid "Output Settings"
 msgstr "Output Settings"
 
+#: src/components/convert/Step7.svelte:168
+msgid "Overall Progress"
+msgstr "Overall Progress"
+
 #: src/routes/+layout.svelte:79
 #: src/routes/+layout.svelte:86
 #~ msgid "Palaxy"
@@ -830,7 +936,7 @@ msgstr "Please resolve these issues before continuing."
 msgid "Previous"
 msgstr "Previous"
 
-#: src/components/convert/Step7.svelte:99
+#: src/components/convert/Step7.svelte:363
 msgid "Processing Time"
 msgstr "Processing Time"
 
@@ -852,7 +958,7 @@ msgstr "Reading Direction"
 #~ msgid "Refresh"
 #~ msgstr "Refresh"
 
-#: src/components/convert/step4/ManualBundling.svelte:254
+#: src/components/convert/step4/ManualBundling.svelte:257
 msgid "Remove selected"
 msgstr "Remove selected"
 
@@ -941,8 +1047,8 @@ msgstr "Search commands..."
 #~ msgid "Search for your favorite manga series and chapters from various sources."
 #~ msgstr "Search for your favorite manga series and chapters from various sources."
 
-#: src/components/convert/Step7.svelte:20
-#: src/components/convert/Step7.svelte:24
+#: src/components/convert/Step7.svelte:30
+#: src/components/convert/Step7.svelte:34
 msgid "seconds"
 msgstr "seconds"
 
@@ -1055,9 +1161,25 @@ msgstr "Space"
 #~ msgid "Start Sync"
 #~ msgstr "Start Sync"
 
+#: src/components/convert/Step7.svelte:128
+#~ msgid "Starting Volume {0}: {1}"
+#~ msgstr "Starting Volume {0}: {1}"
+
+#: src/components/convert/Step7.svelte:113
+msgid "Starting Volume {volumeIdx}: {volName}"
+msgstr "Starting Volume {volumeIdx}: {volName}"
+
 #: src/components/dialogs/Management.svelte:126
 #~ msgid "Stop Sync"
 #~ msgstr "Stop Sync"
+
+#: src/components/convert/Step7.svelte:179
+#~ msgid "successful"
+#~ msgstr "successful"
+
+#: src/components/convert/Step7.svelte:344
+msgid "Successful"
+msgstr "Successful"
 
 #: src/components/convert/step5/Chapter.svelte:223
 msgid "Swap next"
@@ -1108,8 +1230,8 @@ msgid "Tauri Version"
 msgstr "Tauri Version"
 
 #: src/components/convert/Step7.svelte:93
-msgid "The conversion process has completed successfully"
-msgstr "The conversion process has completed successfully"
+#~ msgid "The conversion process has completed successfully"
+#~ msgstr "The conversion process has completed successfully"
 
 #: src/components/convert/step4/utils.svelte.ts:32
 msgid "The total number of chapters {usedNumber} used exceeds the detected number of chapters {detectedNumber}"
@@ -1156,7 +1278,7 @@ msgstr "To get started press"
 msgid "Toggle"
 msgstr "Toggle"
 
-#: src/components/convert/step4/VolumeVisualisation.svelte:75
+#: src/components/convert/step4/VolumeVisualisation.svelte:83
 msgid "Total Chapter Usage"
 msgstr "Total Chapter Usage"
 
@@ -1176,8 +1298,9 @@ msgstr "Used Chapters"
 msgid "Vol"
 msgstr "Vol"
 
-#: src/components/convert/step4/ManualBundling.svelte:297
+#: src/components/convert/step4/ManualBundling.svelte:300
 #: src/components/convert/Step5.svelte:145
+#: src/components/convert/Step7.svelte:252
 msgid "Volume"
 msgstr "Volume"
 
@@ -1185,17 +1308,22 @@ msgstr "Volume"
 #~ msgid "Volume "
 #~ msgstr "Volume "
 
-#: src/components/convert/step4/ManualBundling.svelte:228
 #: src/components/convert/step4/VolumeVisualisation.svelte:41
-msgid "Volume {0}"
-msgstr "Volume {0}"
+#~ msgid "Volume {0}"
+#~ msgstr "Volume {0}"
+
+#: src/components/convert/step4/ManualBundling.svelte:230
+#: src/components/convert/step4/VolumeVisualisation.svelte:42
+#: src/components/convert/Step7.svelte:199
+msgid "Volume {vol}"
+msgstr "Volume {vol}"
 
 #: src/components/convert/step4/VolumeVisualisation.svelte:32
 #: src/components/convert/Step6.svelte:307
 msgid "Volume Distribution"
 msgstr "Volume Distribution"
 
-#: src/components/convert/step4/ManualBundling.svelte:240
+#: src/components/convert/step4/ManualBundling.svelte:243
 msgid "Volume Management"
 msgstr "Volume Management"
 

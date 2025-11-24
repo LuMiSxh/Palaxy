@@ -25,7 +25,7 @@
 		selectedImages = $bindable(),
 		isVisibleState = $bindable(),
 		coverState = $bindable(),
-		imageLoadErrorState = $bindable()
+		imageLoadErrorState = $bindable(),
 	}: Props = $props();
 
 	let draggedOverIndex: number | null = $state(null);
@@ -110,7 +110,7 @@
 	async function addImage(chapterIndex: number) {
 		const selection = await open({
 			multiple: true,
-			filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }]
+			filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
 		});
 
 		if (selection === null) return;
@@ -220,8 +220,8 @@
 					keys: [
 						['enter', $t`Toggle`],
 						['arrowleft', $t`Swap prev`],
-						['arrowright', $t`Swap next`]
-					]
+						['arrowright', $t`Swap next`],
+					],
 				}}
 				id={'image-' + chapterIndex + '-' + imageIndex}
 				draggable="true"
@@ -272,7 +272,7 @@
 			role="button"
 			onclick={async () => await addImage(chapterIndex)}
 			use:handleKeyHint={{
-				keys: [['enter', $t`Add Image`]]
+				keys: [['enter', $t`Add Image`]],
 			}}
 			onkeydown={async (e) => {
 				if (e.key === 'Enter') {

@@ -35,7 +35,7 @@
 		convState.source =
 			(await open({
 				directory: true,
-				multiple: false
+				multiple: false,
 			})) ?? '';
 
 		if (converter.source !== null) {

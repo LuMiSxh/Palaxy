@@ -6,8 +6,8 @@ export default {
 	catalogs: [
 		{
 			path: 'src/locales/{locale}',
-			include: ['src']
-		}
+			include: ['src'],
+		},
 	],
-	extractors: [jstsExtractor, svelteExtractor]
+	extractors: [jstsExtractor, svelteExtractor],
 };

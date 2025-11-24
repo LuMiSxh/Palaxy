@@ -23,7 +23,7 @@
 		IconSettingsCode,
 		IconSettingsQuestion,
 		IconSun,
-		IconTransform
+		IconTransform,
 	} from '@tabler/icons-svelte';
 	import { addToast } from '$states/toast.svelte';
 	import Dialog from '$components/Dialog.svelte';
@@ -58,13 +58,13 @@
 			name: $t`Home`,
 			description: $t`Go to the home page`,
 			icon: IconHome,
-			action: () => goto('/')
+			action: () => goto('/'),
 		},
 		{
 			name: $t`Convert`,
 			description: $t`Convert your manga images into a digital format that can be read on your favorite devices`,
 			icon: IconTransform,
-			action: () => goto('/convert')
+			action: () => goto('/convert'),
 		},
 		{
 			name: $t`Settings`,
@@ -83,7 +83,7 @@
 							action: () => {
 								$appData.theme = Theme.Light;
 								addToast($t`Theme changed to light`);
-							}
+							},
 						},
 						{
 							name: $t`Dark`,
@@ -92,7 +92,7 @@
 							action: () => {
 								$appData.theme = Theme.Dark;
 								addToast($t`Theme changed to dark`);
-							}
+							},
 						},
 						{
 							name: $t`System`,
@@ -101,9 +101,9 @@
 							action: () => {
 								$appData.theme = Theme.System;
 								addToast($t`Theme changed to system`);
-							}
-						}
-					]
+							},
+						},
+					],
 				},
 				{
 					name: $t`Language`,
@@ -117,7 +117,7 @@
 							action: () => {
 								$appData.language = SupportedLanguages.English;
 								addToast($t`Language changed to English`);
-							}
+							},
 						},
 						{
 							name: $t`German`,
@@ -126,9 +126,9 @@
 							action: () => {
 								$appData.language = SupportedLanguages.German;
 								addToast($t`Language changed to German`);
-							}
-						}
-					]
+							},
+						},
+					],
 				},
 				{
 					name: $t`Auto-Populate Fields`,
@@ -137,9 +137,9 @@
 					action: () => {
 						openDialog({
 							title: $t`Auto-Populate Settings`,
-							content: AutoPopulate
+							content: AutoPopulate,
 						});
-					}
+					},
 				},
 				{
 					name: $t`Show KeyHints`,
@@ -150,7 +150,7 @@
 						addToast(
 							$appData.showKeyHints ? $t`KeyHints are now shown` : $t`KeyHints are now hidden`
 						);
-					}
+					},
 				},
 				{
 					name: $t`Mouse Support`,
@@ -163,7 +163,7 @@
 								? $t`Mouse Support is now enabled`
 								: $t`Mouse Support is now disabled`
 						);
-					}
+					},
 				},
 				{
 					name: $t`System Information`,
@@ -172,9 +172,9 @@
 					action: () => {
 						openDialog({
 							title: $t`Information`,
-							content: SystemInfo
+							content: SystemInfo,
 						});
-					}
+					},
 				},
 				{
 					name: $t`Reset`,
@@ -190,12 +190,12 @@
 							},
 							onCancel: () => {
 								addToast($t`Reset canceled`, 'info');
-							}
+							},
 						});
-					}
-				}
-			]
-		}
+					},
+				},
+			],
+		},
 	]);
 
 	if (browser) {

@@ -5,7 +5,7 @@
 		IconAlertTriangle,
 		IconCircleCheck,
 		IconInfoCircle,
-		IconX
+		IconX,
 	} from '@tabler/icons-svelte';
 	import { fade, fly } from 'svelte/transition';
 

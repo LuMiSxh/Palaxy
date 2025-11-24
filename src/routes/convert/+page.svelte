@@ -5,7 +5,7 @@
 		IconFolder,
 		IconHandStop,
 		IconLineScan,
-		IconPencil
+		IconPencil,
 	} from '@tabler/icons-svelte';
 	import { Step1, Step2, Step3, Step4, Step5, Step6, Step7 } from '$components/convert';
 	import { stepState } from '$states/converter.svelte';
@@ -25,45 +25,45 @@
 				title: $t`Choose Source Material Directory`,
 				description: $t`Select the directory where the source material is located.`,
 				icon: IconFolder,
-				cmp: Step1
+				cmp: Step1,
 			},
 			{
 				title: $t`Analysis`,
 				description: $t`Analyze the source material for potential conversion issues and improvements.`,
 				icon: IconLineScan,
-				cmp: Step2
+				cmp: Step2,
 			},
 			{
 				title: $t`Set Metadata`,
 				description: $t`Set the metadata for the to be converted material.`,
 				icon: IconAdjustments,
-				cmp: Step3
+				cmp: Step3,
 			},
 			{
 				title: $t`Bundling`,
 				description: $t`Set the volume sizes for the conversion.`,
 				Icon: IconHandStop,
-				cmp: Step4
+				cmp: Step4,
 			},
 			{
 				title: $t`Filter Images`,
 				description: $t`Filter out unwanted images, change image order, and set cover images.`,
 				icon: IconFilter,
-				cmp: Step5
+				cmp: Step5,
 			},
 			{
 				title: $t`Review`,
 				description: $t`Review all your settings before starting the conversion.`,
 				icon: IconPencil,
-				cmp: Step6
+				cmp: Step6,
 			},
 			{
 				title: $t`Conversion`,
 				description: $t`Palaxy is now converting your material. Please wait.`,
 				icon: IconHandStop,
 				cmp: Step7,
-				hidden: true
-			}
+				hidden: true,
+			},
 		];
 	}) as {
 		title: string;
@@ -91,7 +91,7 @@
 					}
 					stepState.index -= stepState.indexDecrement;
 					stepState.indexDecrement = 1;
-				}
+				},
 			],
 			[
 				'shift+arrowright',
@@ -107,8 +107,8 @@
 					}
 					stepState.index += stepState.indexIncrement;
 					stepState.indexIncrement = 1;
-				}
-			]
+				},
+			],
 		]);
 	});
 

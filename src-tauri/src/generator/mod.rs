@@ -4,7 +4,6 @@
 //! implementations for different file formats.
 
 use crate::prelude::*;
-use async_trait::async_trait;
 use std::path::PathBuf;
 
 pub mod cbz;
@@ -15,7 +14,6 @@ pub mod epub;
 /// The `Generator` trait defines a consistent API for document generators
 /// that can create different file formats (like CBZ, EPUB) from source images.
 /// Implementations handle the specifics of each file format.
-#[async_trait(?Send)]
 pub trait Generator {
     /// Creates a new generator instance.
     ///
@@ -36,7 +34,7 @@ pub trait Generator {
     ///
     /// # Returns
     /// * `EResult<&mut Self>` - Self reference for method chaining, or an error if failed
-    async fn add_page(&mut self, image_path: &PathBuf) -> EResult<&mut Self>
+    fn add_page(&mut self, image_path: &PathBuf) -> EResult<&mut Self>
     where
         Self: Sized;
 
@@ -48,7 +46,7 @@ pub trait Generator {
     ///
     /// # Returns
     /// * `EResult<&mut Self>` - Self reference for method chaining, or an error if failed
-    async fn set_metadata(&mut self, title: &str, volume: usize) -> EResult<&mut Self>
+    fn set_metadata(&mut self, title: &str, volume: usize) -> EResult<&mut Self>
     where
         Self: Sized;
 
@@ -58,5 +56,5 @@ pub trait Generator {
     ///
     /// # Returns
     /// * `EResult<()>` - Success indicator or an error if saving fails
-    async fn save(self) -> EResult<()>;
+    fn save(self) -> EResult<()>;
 }

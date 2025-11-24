@@ -1,13 +1,10 @@
 use crate::generator::Generator;
 use crate::prelude::*;
-use async_trait::async_trait;
 use log::{debug, error, info, trace};
 use memmap2::MmapOptions;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
-use tauri::async_runtime::spawn_blocking;
-use tokio::fs;
 use zip::write::SimpleFileOptions;
 use zip::{CompressionMethod, ZipWriter};
 
@@ -26,7 +23,6 @@ pub struct Cbz {
     page_index: usize,
 }
 
-#[async_trait(?Send)]
 impl Generator for Cbz {
     /// Creates a new CBZ generator with the specified output path and filename.
     ///
@@ -90,7 +86,7 @@ impl Generator for Cbz {
     ///
     /// # Returns
     /// A Result containing a reference to self for method chaining or an Error.
-    async fn add_page(&mut self, image_path: &PathBuf) -> Result<&mut Self, Error> {
+    fn add_page(&mut self, image_path: &PathBuf) -> Result<&mut Self, Error> {
         info!("Adding page {} from: {:?}", self.page_index + 1, image_path);
 
         let (image_extension, _) = match get_file_info(image_path) {
@@ -104,17 +100,24 @@ impl Generator for Cbz {
 
         // Open the file
         trace!("Opening image file: {:?}", image_path);
-        let file = match fs::File::open(image_path).await {
+        let file_std = match File::open(image_path) {
             Ok(f) => f,
             Err(e) => {
                 error!("Failed to open image file {:?}: {}", image_path, e);
                 return Err(Error::from(e));
             }
         };
-
-        let file_std = file.into_std().await;
         let options = self.image_options;
-        let file_name = format!("page_{:03}.{}", self.page_index + 1, image_extension);
+        // Pre-allocate string capacity to avoid reallocations (page_XXX.ext ~= 12-15 chars)
+        let mut file_name = String::with_capacity(16);
+        use std::fmt::Write;
+        write!(
+            &mut file_name,
+            "page_{:03}.{}",
+            self.page_index + 1,
+            image_extension
+        )
+        .expect("String write cannot fail");
         debug!(
             "Adding to CBZ as: {} (stored without recompression)",
             file_name
@@ -124,7 +127,7 @@ impl Generator for Cbz {
             Some(z) => z,
             None => {
                 error!("Zip writer not available");
-                return Err(Error::Unsupported("Zip writer not available".to_string()));
+                return Err(Error::Unsupported("Zip writer not available".into()));
             }
         };
 
@@ -168,36 +171,30 @@ impl Generator for Cbz {
     ///
     /// # Returns
     /// A Result containing a reference to self for method chaining or an Error.
-    async fn set_metadata(&mut self, title: &str, volume: usize) -> Result<&mut Self, Error> {
+    fn set_metadata(&mut self, title: &str, volume: usize) -> Result<&mut Self, Error> {
         info!("Setting CBZ metadata: title='{}', volume={}", title, volume);
         const TEMPLATE: &str = include_str!("../../templates/template.xml");
 
-        // Create owned copies of any borrowed data
-        let title = title.to_string();
-        let page_index = self.page_index;
-        debug!("Preparing ComicInfo.xml with {} pages", page_index);
+        debug!("Preparing ComicInfo.xml with {} pages", self.page_index);
 
-        let xml = match spawn_blocking(move || {
-            TEMPLATE
-                .replace("%title%", &title)
-                .replace("%volume%", &volume.to_string())
-                .replace("%pagecount%", &page_index.to_string())
-        })
-        .await
-        {
-            Ok(content) => content,
-            Err(e) => {
-                error!("Failed to generate ComicInfo.xml content: {}", e);
-                return Err(Error::AsyncTaskError(e.to_string()));
-            }
-        };
+        // Pre-allocate buffer for XML (~500 chars typical)
+        let mut volume_str = String::with_capacity(8);
+        let mut page_count_str = String::with_capacity(8);
+        use std::fmt::Write;
+        write!(&mut volume_str, "{}", volume).expect("String write cannot fail");
+        write!(&mut page_count_str, "{}", self.page_index).expect("String write cannot fail");
+
+        let xml = TEMPLATE
+            .replace("%title%", title)
+            .replace("%volume%", &volume_str)
+            .replace("%pagecount%", &page_count_str);
 
         // Get the zip writer
         let zip = match self.zip.as_mut() {
             Some(z) => z,
             None => {
                 error!("Zip writer not available for adding metadata");
-                return Err(Error::Unsupported("Zip writer not available".to_string()));
+                return Err(Error::Unsupported("Zip writer not available".into()));
             }
         };
 
@@ -224,7 +221,7 @@ impl Generator for Cbz {
     ///
     /// # Returns
     /// A Result indicating success or an Error if saving fails.
-    async fn save(mut self) -> Result<(), Error> {
+    fn save(mut self) -> Result<(), Error> {
         info!("Finalizing and saving CBZ file");
 
         // Take ownership of the zip writer
@@ -232,37 +229,21 @@ impl Generator for Cbz {
             Some(z) => z,
             None => {
                 error!("Zip writer not available for saving");
-                return Err(Error::Unsupported("Zip writer not available".to_string()));
+                return Err(Error::Unsupported("Zip writer not available".into()));
             }
         };
 
-        // Finish writing the zip file in a blocking task
-        debug!("Finishing ZIP archive in blocking task");
-        match spawn_blocking(move || match zip.finish() {
+        // Finish writing the zip file
+        debug!("Finishing ZIP archive");
+        match zip.finish() {
             Ok(_) => {
                 trace!("ZIP archive finalized successfully");
+                info!("CBZ file saved successfully");
                 Ok(())
             }
             Err(e) => {
                 error!("Failed to finalize ZIP archive: {}", e);
                 Err(Error::from(e))
-            }
-        })
-        .await
-        {
-            Ok(result) => match result {
-                Ok(_) => {
-                    info!("CBZ file saved successfully");
-                    Ok(())
-                }
-                Err(e) => {
-                    error!("Error while finalizing CBZ: {}", e);
-                    Err(e)
-                }
-            },
-            Err(e) => {
-                error!("Async task error while saving CBZ: {}", e);
-                Err(Error::AsyncTaskError(e.to_string()))
             }
         }
     }

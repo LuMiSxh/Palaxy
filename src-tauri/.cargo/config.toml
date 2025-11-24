@@ -1,0 +1,43 @@
+# Cargo configuration for optimal performance builds
+# This enables CPU-specific optimizations including SIMD instructions
+
+[build]
+# Enable native CPU optimizations for maximum performance
+# This allows the compiler to use all available CPU features (SSE, AVX, AVX2, etc.)
+# Note: Binaries built with this flag will only run on CPUs with similar features
+rustflags = [
+    "-C", "target-cpu=native",
+]
+
+[target.x86_64-apple-darwin]
+# macOS x86_64 specific optimizations
+rustflags = [
+    "-C", "target-cpu=native",
+    "-C", "link-arg=-Wl,-dead_strip",  # Strip unused symbols
+]
+
+[target.aarch64-apple-darwin]
+# macOS ARM64 (M1/M2) specific optimizations
+rustflags = [
+    "-C", "target-cpu=native",
+    "-C", "link-arg=-Wl,-dead_strip",  # Strip unused symbols
+]
+
+[target.x86_64-pc-windows-msvc]
+# Windows x86_64 specific optimizations
+rustflags = [
+    "-C", "target-cpu=native",
+]
+
+[target.x86_64-unknown-linux-gnu]
+# Linux x86_64 specific optimizations
+rustflags = [
+    "-C", "target-cpu=native",
+    "-C", "link-arg=-Wl,--gc-sections",  # Strip unused sections
+]
+
+# Profile for benchmarking (optional, for future use)
+[profile.bench]
+inherits = "release"
+lto = true
+codegen-units = 1

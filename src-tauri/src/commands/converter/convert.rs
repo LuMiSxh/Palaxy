@@ -4,18 +4,19 @@
 //! into CBZ or EPUB format with parallel processing and progress events.
 
 use super::events::*;
-use super::image::convert_image;
+use super::image::convert_images_batch;
 use crate::generator::Generator;
 use crate::generator::cbz::Cbz;
 use crate::generator::epub::EPub;
 use crate::prelude::*;
 use log::{debug, error, info, trace, warn};
+use rayon::prelude::*;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex as StdMutex};
 use tauri::{AppHandle, State};
 use tokio::fs::create_dir;
-use tokio::sync::{Mutex, Semaphore};
-use tokio::task::{LocalSet, spawn_blocking, spawn_local};
+use tokio::sync::Mutex;
 
 /// Converts bundled volumes into the specified output format.
 ///
@@ -151,220 +152,156 @@ pub async fn conv_convert(
         warn!("Failed to emit conversion start event: {}", e);
     }
 
-    // Create a semaphore to limit concurrent conversions
-    let max_concurrent = num_cpus::get().min(10);
-    info!(
-        "Processing with {} concurrent conversion threads",
-        max_concurrent
-    );
-    let semaphore = Arc::new(Semaphore::new(max_concurrent));
+    // Track results for final event
+    let successful = Arc::new(StdMutex::new(0usize));
+    let failed = Arc::new(StdMutex::new(0usize));
 
-    // Clone temp_dir before moving into async block so we can clean it up later
+    // Clone temp_dir for cleanup later
     let temp_dir_cleanup = temp_dir.clone();
 
-    // Track results for final event
-    let successful = Arc::new(Mutex::new(0usize));
-    let failed = Arc::new(Mutex::new(0usize));
+    info!(
+        "Processing {} volumes in parallel using thread pool",
+        total_volumes
+    );
 
-    // Clone values needed after spawn_blocking
-    let successful_final = Arc::clone(&successful);
-    let failed_final = Arc::clone(&failed);
-    let app_final = app.clone();
+    // Pre-calculate cumulative chapter indices to avoid repeated summing
+    let mut cumulative_indices = Vec::with_capacity(volume_sizes.len());
+    let mut sum = 0;
+    for &chapters in &volume_sizes {
+        cumulative_indices.push(sum);
+        sum += chapters;
+    }
 
-    // Spawn blocking task that creates its own LocalSet
-    let conversion_result = spawn_blocking(move || {
-        let rt = tokio::runtime::Handle::current();
-        rt.block_on(async move {
-            let local = LocalSet::new();
-            local
-                .run_until(async move {
-                    // Create a vector of tasks, each processing one volume
-                    let mut tasks = Vec::new();
-                    let total_volumes = volume_sizes.len();
-                    debug!("Preparing {} volumes for conversion", total_volumes);
+    // Use for_each instead of map/collect to emit events in real-time
+    volume_sizes
+        .par_iter()
+        .enumerate()
+        .for_each(|(i, &chapters)| {
+            let j = cumulative_indices[i];
+            // Use write! for better performance than format!
+            let mut volume_name = String::with_capacity(name.len() + 10);
+            use std::fmt::Write;
+            write!(&mut volume_name, "{} | {}", name, i + 1).expect("String write cannot fail");
 
-                    for (i, &chapters) in volume_sizes.iter().enumerate() {
-                        let j: usize = volume_sizes[0..i].iter().sum();
-                        let volume_name = format!("{} | {}", name.clone(), i + 1);
-                        let target_dir = target_directory_path.clone();
-                        let format_clone = format;
-                        let direction_clone = direction;
-                        let image_format_clone = image_format;
-                        let temp_dir_clone = temp_dir.clone();
-                        let semaphore_clone = Arc::clone(&semaphore);
-                        let app_clone = app.clone();
-                        let successful_clone = Arc::clone(&successful);
-                        let failed_clone = Arc::clone(&failed);
+            debug!(
+                "Volume {} ({}) will include {} chapters",
+                i + 1,
+                volume_name,
+                chapters
+            );
 
-                        debug!(
-                            "Volume {} ({}) will include {} chapters",
-                            i + 1,
-                            volume_name,
-                            chapters
-                        );
+            // Clone the necessary data for this volume
+            let volume_pages = pages[j..(j + chapters)].to_vec();
 
-                        // Clone the necessary data for this volume
-                        let volume_pages = pages[j..(j + chapters)].to_vec();
-                        trace!(
-                            "Volume {} has {} chapter sets with total {} pages",
-                            i + 1,
-                            volume_pages.len(),
-                            volume_pages.iter().map(|c| c.len()).sum::<usize>()
-                        );
+            // Emit volume start event
+            if let Err(e) = emit_volume_start(&app, i, total_volumes, volume_name.clone()) {
+                warn!("Failed to emit volume start event: {}", e);
+            }
 
-                        // Spawn a local task
-                        let task = spawn_local(async move {
-                            trace!("Volume {}: waiting for available thread", i + 1);
-                            let _permit = semaphore_clone.acquire().await.map_err(|e| {
-                                error!("Volume {}: failed to acquire semaphore: {}", i + 1, e);
-                                Error::AsyncTaskError(format!("Failed to acquire semaphore: {}", e))
-                            })?;
+            // Emit status message for volume start
+            if let Err(e) = emit_status_message(
+                &app,
+                StatusMessageType::VolumeStarted {
+                    volume_index: i,
+                    volume_name: volume_name.clone(),
+                },
+            ) {
+                warn!("Failed to emit status message: {}", e);
+            }
 
-                            // Emit volume start event
-                            if let Err(e) =
-                                emit_volume_start(&app_clone, i, total_volumes, volume_name.clone())
-                            {
-                                warn!("Failed to emit volume start event: {}", e);
-                            }
+            debug!("Volume {}: starting conversion to {:?}", i + 1, format);
 
-                            // Emit status message for volume start
-                            if let Err(e) = emit_status_message(
-                                &app_clone,
-                                StatusMessageType::VolumeStarted {
-                                    volume_index: i,
-                                    volume_name: volume_name.clone(),
-                                },
-                            ) {
-                                warn!("Failed to emit status message: {}", e);
-                            }
+            // PERFORM CONVERSION
+            let result = match format {
+                FileFormat::Cbz => convert_cbz_volume_sync(
+                    i,
+                    &volume_name,
+                    &target_directory_path,
+                    &volume_pages,
+                    image_format,
+                    temp_dir.as_ref(),
+                    &app,
+                    total_volumes,
+                ),
+                FileFormat::Epub => convert_epub_volume_sync(
+                    i,
+                    &volume_name,
+                    &target_directory_path,
+                    &volume_pages,
+                    direction,
+                    image_format,
+                    temp_dir.as_ref(),
+                    &app,
+                    total_volumes,
+                ),
+            };
 
-                            debug!(
-                                "Volume {}: starting conversion to {:?}",
-                                i + 1,
-                                format_clone
-                            );
-
-                            // Perform conversion
-                            let result = match format_clone {
-                                FileFormat::Cbz => {
-                                    convert_cbz_volume(
-                                        i,
-                                        &volume_name,
-                                        &target_dir,
-                                        &volume_pages,
-                                        image_format_clone,
-                                        temp_dir_clone.as_ref(),
-                                        &app_clone,
-                                        total_volumes,
-                                    )
-                                    .await
-                                }
-                                FileFormat::Epub => {
-                                    convert_epub_volume(
-                                        i,
-                                        &volume_name,
-                                        &target_dir,
-                                        &volume_pages,
-                                        direction_clone,
-                                        image_format_clone,
-                                        temp_dir_clone.as_ref(),
-                                        &app_clone,
-                                        total_volumes,
-                                    )
-                                    .await
-                                }
-                            };
-
-                            // Emit volume complete event
-                            match &result {
-                                Ok(_) => {
-                                    let mut s = successful_clone.lock().await;
-                                    *s += 1;
-                                    if let Err(e) = emit_volume_complete(
-                                        &app_clone,
-                                        i,
-                                        total_volumes,
-                                        volume_name.clone(),
-                                        true,
-                                        None,
-                                    ) {
-                                        warn!("Failed to emit volume complete event: {}", e);
-                                    }
-
-                                    // Emit status message for successful volume completion
-                                    if let Err(e) = emit_status_message(
-                                        &app_clone,
-                                        StatusMessageType::VolumeFinished {
-                                            volume_index: i,
-                                            volume_name: volume_name.clone(),
-                                            success: true,
-                                        },
-                                    ) {
-                                        warn!("Failed to emit status message: {}", e);
-                                    }
-                                }
-                                Err(err) => {
-                                    let mut f = failed_clone.lock().await;
-                                    *f += 1;
-                                    if let Err(e) = emit_volume_complete(
-                                        &app_clone,
-                                        i,
-                                        total_volumes,
-                                        volume_name.clone(),
-                                        false,
-                                        Some(err.to_string()),
-                                    ) {
-                                        warn!("Failed to emit volume complete event: {}", e);
-                                    }
-
-                                    // Emit status message for failed volume completion
-                                    if let Err(e) = emit_status_message(
-                                        &app_clone,
-                                        StatusMessageType::VolumeFinished {
-                                            volume_index: i,
-                                            volume_name: volume_name.clone(),
-                                            success: false,
-                                        },
-                                    ) {
-                                        warn!("Failed to emit status message: {}", e);
-                                    }
-                                }
-                            }
-
-                            result
-                        });
-
-                        tasks.push(task);
+            // Emit volume complete event
+            match &result {
+                Ok(_) => {
+                    if let Ok(mut s) = successful.lock() {
+                        *s += 1;
+                    }
+                    if let Err(e) = emit_volume_complete(
+                        &app,
+                        i,
+                        total_volumes,
+                        volume_name.clone(),
+                        true,
+                        None,
+                    ) {
+                        warn!("Failed to emit volume complete event: {}", e);
                     }
 
-                    info!("Waiting for {} conversion tasks to complete", tasks.len());
-                    for (i, task) in tasks.into_iter().enumerate() {
-                        match task.await {
-                            Ok(result) => match result {
-                                Ok(_) => {
-                                    debug!("Volume {} conversion completed successfully", i + 1)
-                                }
-                                Err(e) => {
-                                    error!("Volume {} conversion failed: {}", i + 1, e);
-                                    // Don't return error, let other volumes complete
-                                }
-                            },
-                            Err(e) => {
-                                error!("Volume {} task panicked: {}", i + 1, e);
-                            }
-                        }
+                    // Emit status message for successful volume completion
+                    if let Err(e) = emit_status_message(
+                        &app,
+                        StatusMessageType::VolumeFinished {
+                            volume_index: i,
+                            volume_name: volume_name.clone(),
+                            success: true,
+                        },
+                    ) {
+                        warn!("Failed to emit status message: {}", e);
+                    }
+                }
+                Err(err) => {
+                    if let Ok(mut f) = failed.lock() {
+                        *f += 1;
+                    }
+                    if let Err(e) = emit_volume_complete(
+                        &app,
+                        i,
+                        total_volumes,
+                        volume_name.clone(),
+                        false,
+                        Some(err.to_string()),
+                    ) {
+                        warn!("Failed to emit volume complete event: {}", e);
                     }
 
-                    Ok::<(), Error>(())
-                })
-                .await
-        })
-    })
-    .await
-    .map_err(|e| {
-        error!("Blocking task panicked: {}", e);
-        Error::AsyncTaskError(format!("Blocking task panicked: {}", e))
-    });
+                    // Emit status message for failed volume completion
+                    if let Err(e) = emit_status_message(
+                        &app,
+                        StatusMessageType::VolumeFinished {
+                            volume_index: i,
+                            volume_name: volume_name.clone(),
+                            success: false,
+                        },
+                    ) {
+                        warn!("Failed to emit status message: {}", e);
+                    }
+                }
+            }
+
+            // Log individual volume result but don't stop processing
+            if let Err(e) = &result {
+                error!("Volume {} failed: {}", i + 1, e);
+            }
+        });
+
+    // Conversion is complete - all volumes processed in parallel
+    let conversion_result = Ok(());
 
     // Clean up temporary directory if it was created
     if let Some(temp_dir) = temp_dir_cleanup {
@@ -379,10 +316,10 @@ pub async fn conv_convert(
     let duration = start.elapsed().as_secs_f64();
 
     // Emit conversion complete event
-    let successful_count = *successful_final.lock().await;
-    let failed_count = *failed_final.lock().await;
+    let successful_count = *successful.lock().unwrap();
+    let failed_count = *failed.lock().unwrap();
     if let Err(e) = emit_conversion_complete(
-        &app_final,
+        &app,
         total_volumes,
         successful_count,
         failed_count,
@@ -412,7 +349,7 @@ pub async fn conv_convert(
 }
 
 /// Convert a single volume to CBZ format
-async fn convert_cbz_volume(
+fn convert_cbz_volume_sync(
     volume_index: usize,
     volume_name: &str,
     target_dir: &str,
@@ -422,100 +359,121 @@ async fn convert_cbz_volume(
     app: &AppHandle,
     _total_volumes: usize,
 ) -> EResult<()> {
-    debug!(
-        "Volume {}: creating CBZ file: {}",
-        volume_index + 1,
-        volume_name
-    );
+    let total_images: usize = volume_pages.iter().map(|c| c.len()).sum();
+
+    // Use an Atomic counter for thread-safe progress tracking across the volume
+    let current_image_atomic = Arc::new(AtomicUsize::new(0));
+    let volume_name_arc = Arc::new(volume_name.to_string());
+    let app_arc = Arc::new(app.clone());
+
+    // Initialize Generator
     let mut generator = Cbz::new(target_dir, volume_name)?;
 
-    let total_images: usize = volume_pages.iter().map(|c| c.len()).sum();
-    let mut current_image = 0;
+    // Define the progress callback
+    let progress_callback = {
+        let current_image = current_image_atomic.clone();
+        let v_name = volume_name_arc.clone();
+        let app_ref = app_arc.clone();
+
+        move || {
+            let curr = current_image.fetch_add(1, Ordering::Relaxed) + 1;
+
+            // Emit progress frequently (every image or every 5th depending on preference)
+            // Since AVIF is slow, emitting every image makes it feel responsive
+            if let Err(e) = emit_status_message(
+                &app_ref,
+                StatusMessageType::PageAdded {
+                    volume_index,
+                    volume_name: v_name.to_string(),
+                    page_number: curr,
+                    total_pages: total_images,
+                },
+            ) {
+                // Don't panic on event error, just log
+                trace!("Failed to emit status: {}", e);
+            }
+
+            if curr % 5 == 0 || curr == total_images {
+                let _ = emit_image_progress(
+                    &app_ref,
+                    volume_index,
+                    v_name.to_string(),
+                    curr,
+                    total_images,
+                );
+            }
+        }
+    };
 
     trace!(
-        "Volume {}: adding {} chapter sets to CBZ",
+        "Volume {}: processing {} chapter sets",
         volume_index + 1,
         volume_pages.len()
     );
 
     for (chapter_idx, chapter_pages) in volume_pages.iter().enumerate() {
-        trace!(
-            "Volume {}, Chapter {}: adding {} pages",
-            volume_index + 1,
-            chapter_idx + 1,
-            chapter_pages.len()
-        );
-
-        for page in chapter_pages {
-            let page_to_add = if image_format != ImageOutputFormat::None {
-                if let Some(temp_dir) = temp_dir {
-                    match convert_image(page, temp_dir, image_format).await {
-                        Ok(converted_path) => converted_path,
-                        Err(e) => {
-                            error!(
-                                "Volume {}, Chapter {}: failed to convert image to {:?}: {}",
-                                volume_index + 1,
-                                chapter_idx + 1,
-                                image_format,
-                                e
-                            );
-                            page.clone()
+        // 1. CONVERT
+        // We convert one chapter batch at a time.
+        // Events are emitted INSIDE here now.
+        let converted_pages = if image_format != ImageOutputFormat::None {
+            if let Some(temp_dir) = temp_dir {
+                match convert_images_batch(
+                    chapter_pages,
+                    temp_dir,
+                    image_format,
+                    Some(&progress_callback),
+                ) {
+                    Ok(cp) => cp,
+                    Err(e) => {
+                        error!(
+                            "Chapter {} conversion failed: {}, using originals",
+                            chapter_idx, e
+                        );
+                        // Fallback: Manually trigger progress for these images so bar doesn't stall
+                        for _ in 0..chapter_pages.len() {
+                            progress_callback();
                         }
+                        chapter_pages.to_vec()
                     }
-                } else {
-                    page.clone()
                 }
             } else {
-                page.clone()
-            };
-
-            generator.add_page(&page_to_add).await?;
-
-            current_image += 1;
-
-            // Emit status message for page added
-            if let Err(e) = emit_status_message(
-                app,
-                StatusMessageType::PageAdded {
-                    volume_index,
-                    volume_name: volume_name.to_string(),
-                    page_number: current_image,
-                    total_pages: total_images,
-                },
-            ) {
-                warn!("Failed to emit status message: {}", e);
-            }
-
-            // Emit progress every 5 images
-            if current_image % 5 == 0 || current_image == total_images {
-                if let Err(e) = emit_image_progress(
-                    app,
-                    volume_index,
-                    volume_name.to_string(),
-                    current_image,
-                    total_images,
-                ) {
-                    warn!("Failed to emit image progress event: {}", e);
+                // No temp dir? Should generally not happen based on logic
+                for _ in 0..chapter_pages.len() {
+                    progress_callback();
                 }
+                chapter_pages.to_vec()
             }
+        } else {
+            // No conversion needed, just trigger progress
+            for _ in 0..chapter_pages.len() {
+                progress_callback();
+            }
+            chapter_pages.to_vec()
+        };
+
+        // 2. ARCHIVE (ZIP)
+        // This is fast, so we don't need to emit events here (we already did during conversion)
+        for page in converted_pages {
+            generator.add_page(&page)?;
         }
+
+        // Optional: Clean up temp files for this chapter immediately to save disk space?
+        // Currently we rely on the massive cleanup at the end.
     }
 
     debug!(
         "Volume {}: setting metadata and saving CBZ",
         volume_index + 1
     );
-    generator
-        .set_metadata(volume_name, volume_index + 1)
-        .await?;
-    generator.save().await?;
-    info!("Volume {}: CBZ file saved successfully", volume_index + 1);
+    generator.set_metadata(volume_name, volume_index + 1)?;
+    generator.save()?;
 
+    info!("Volume {}: CBZ file saved successfully", volume_index + 1);
     Ok(())
 }
 
 /// Convert a single volume to EPUB format
-async fn convert_epub_volume(
+fn convert_epub_volume_sync(
     volume_index: usize,
     volume_name: &str,
     target_dir: &str,
@@ -533,137 +491,88 @@ async fn convert_epub_volume(
     );
 
     if volume_pages.is_empty() || volume_pages[0].is_empty() {
-        error!(
-            "Volume {}: cannot create EPUB without cover image",
-            volume_index + 1
-        );
         return Err(Error::Unsupported(
             "Cannot create EPUB without cover image".to_string(),
         ));
     }
 
-    let mut generator = EPub::new(target_dir, volume_name)?;
+    let total_images: usize = volume_pages.iter().map(|c| c.len()).sum();
+    let current_image_atomic = Arc::new(AtomicUsize::new(0));
+    let volume_name_arc = Arc::new(volume_name.to_string());
+    let app_arc = Arc::new(app.clone());
 
-    debug!(
-        "Volume {}: setting EPUB cover and properties",
-        volume_index + 1
-    );
+    let mut generator = EPub::new(target_dir, volume_name)?;
+    // Note: Cover needs to be handled carefully if it needs conversion
+    // For now, assuming cover is the first image of first chapter
     generator.set_cover(&volume_pages[0][0])?;
     generator.set_lang("en")?;
     generator.set_reading_direction(direction);
-
-    trace!("Volume {}: setting EPUB metadata", volume_index + 1);
     generator.set_custom_metadata("title", volume_name)?;
     generator.set_custom_metadata("author", "Manga Bundler")?;
 
-    let total_images: usize = volume_pages.iter().map(|c| c.len()).sum();
-    let mut current_image = 0;
-
-    debug!(
-        "Volume {}: adding {} chapters to EPUB",
-        volume_index + 1,
-        volume_pages.len()
-    );
+    // Progress callback (same as CBZ)
+    let progress_callback = {
+        let current_image = current_image_atomic.clone();
+        let v_name = volume_name_arc.clone();
+        let app_ref = app_arc.clone();
+        move || {
+            let curr = current_image.fetch_add(1, Ordering::Relaxed) + 1;
+            let _ = emit_status_message(
+                &app_ref,
+                StatusMessageType::PageAdded {
+                    volume_index,
+                    volume_name: v_name.to_string(),
+                    page_number: curr,
+                    total_pages: total_images,
+                },
+            );
+            if curr % 5 == 0 || curr == total_images {
+                let _ = emit_image_progress(
+                    &app_ref,
+                    volume_index,
+                    v_name.to_string(),
+                    curr,
+                    total_images,
+                );
+            }
+        }
+    };
 
     for (chapter_idx, chapter_pages) in volume_pages.iter().enumerate() {
-        trace!(
-            "Volume {}: adding chapter {} with {} pages",
-            volume_index + 1,
-            chapter_idx + 1,
-            chapter_pages.len()
-        );
-
-        // Convert chapter pages if needed
-        let chapter_pages_to_add: Vec<PathBuf> = if image_format != ImageOutputFormat::None {
+        // 1. CONVERT BATCH
+        let converted_pages = if image_format != ImageOutputFormat::None {
             if let Some(temp_dir) = temp_dir {
-                let mut converted_pages = Vec::new();
-                for page in chapter_pages {
-                    match convert_image(page, temp_dir, image_format).await {
-                        Ok(converted_path) => converted_pages.push(converted_path),
-                        Err(e) => {
-                            error!(
-                                "Volume {}, Chapter {}: failed to convert image to {:?}: {}",
-                                volume_index + 1,
-                                chapter_idx + 1,
-                                image_format,
-                                e
-                            );
-                            converted_pages.push(page.clone());
+                match convert_images_batch(
+                    chapter_pages,
+                    temp_dir,
+                    image_format,
+                    Some(&progress_callback),
+                ) {
+                    Ok(cp) => cp,
+                    Err(_) => {
+                        for _ in 0..chapter_pages.len() {
+                            progress_callback();
                         }
-                    }
-
-                    current_image += 1;
-
-                    // Emit status message for page added
-                    if let Err(e) = emit_status_message(
-                        app,
-                        StatusMessageType::PageAdded {
-                            volume_index,
-                            volume_name: volume_name.to_string(),
-                            page_number: current_image,
-                            total_pages: total_images,
-                        },
-                    ) {
-                        warn!("Failed to emit status message: {}", e);
-                    }
-
-                    // Emit progress every 5 images
-                    if current_image % 5 == 0 || current_image == total_images {
-                        if let Err(e) = emit_image_progress(
-                            app,
-                            volume_index,
-                            volume_name.to_string(),
-                            current_image,
-                            total_images,
-                        ) {
-                            warn!("Failed to emit image progress event: {}", e);
-                        }
+                        chapter_pages.to_vec()
                     }
                 }
-                converted_pages
             } else {
-                chapter_pages.clone()
+                for _ in 0..chapter_pages.len() {
+                    progress_callback();
+                }
+                chapter_pages.to_vec()
             }
         } else {
-            for _ in chapter_pages {
-                current_image += 1;
-
-                // Emit status message for page added
-                if let Err(e) = emit_status_message(
-                    app,
-                    StatusMessageType::PageAdded {
-                        volume_index,
-                        volume_name: volume_name.to_string(),
-                        page_number: current_image,
-                        total_pages: total_images,
-                    },
-                ) {
-                    warn!("Failed to emit status message: {}", e);
-                }
-
-                if current_image % 5 == 0 || current_image == total_images {
-                    if let Err(e) = emit_image_progress(
-                        app,
-                        volume_index,
-                        volume_name.to_string(),
-                        current_image,
-                        total_images,
-                    ) {
-                        warn!("Failed to emit image progress event: {}", e);
-                    }
-                }
+            for _ in 0..chapter_pages.len() {
+                progress_callback();
             }
-            chapter_pages.clone()
+            chapter_pages.to_vec()
         };
 
-        generator
-            .add_chapter(chapter_idx + 1, &chapter_pages_to_add)
-            .await?;
+        // 2. ADD TO EPUB
+        generator.add_chapter(chapter_idx + 1, &converted_pages)?;
     }
 
-    debug!("Volume {}: saving EPUB file", volume_index + 1);
-    generator.save().await?;
-    info!("Volume {}: EPUB file saved successfully", volume_index + 1);
-
+    generator.save()?;
     Ok(())
 }

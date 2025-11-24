@@ -10,6 +10,7 @@ use crate::commands::converter::{
     conv_state_reset, conv_state_set,
 };
 use crate::commands::management::mgmt_get_logs_path;
+#[cfg(debug_assertions)]
 use specta_typescript::Typescript;
 use tauri::{Builder, Manager};
 use tauri_specta::{Builder as SpectaBuilder, collect_commands, collect_events};
@@ -23,16 +24,59 @@ mod types;
 #[macro_use]
 mod macros;
 
+// Use mimalloc as the global allocator for better multi-threaded performance
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
+/// Initialize the rayon global thread pool with optimized settings
+///
+/// This configures rayon for optimal performance on the current hardware:
+/// - Uses all available CPU cores
+/// - Sets appropriate stack size for image processing
+/// - Enables work stealing for better load balancing
+fn init_rayon_thread_pool() {
+    let num_cpus = num_cpus::get();
+
+    // Use all available cores, but cap at 16 to avoid diminishing returns
+    let num_threads = num_cpus.min(16);
+
+    // Set stack size to 4MB per thread (image processing can be stack-heavy)
+    let stack_size = 4 * 1024 * 1024;
+
+    match rayon::ThreadPoolBuilder::new()
+        .num_threads(num_threads)
+        .stack_size(stack_size)
+        .thread_name(|idx| format!("rayon-worker-{}", idx))
+        .build_global()
+    {
+        Ok(_) => {
+            log::info!(
+                "Initialized rayon thread pool with {} threads (stack size: {}MB)",
+                num_threads,
+                stack_size / (1024 * 1024)
+            );
+        }
+        Err(_) => {
+            // Thread pool already initialized, which is fine
+            log::info!("Rayon thread pool already initialized, using default configuration");
+        }
+    }
+}
+
 /// Initializes and runs the Tauri application.
 ///
 /// This function performs the following tasks:
-/// 1. Register commands for frontend-backend communication
-/// 2. Export TypeScript bindings for development build
-/// 3. Configure the application with necessary plugins
-/// 4. Set up application state, including database initialization
-/// 5. Start the Tauri application with the configured settings
+/// 1. Initialize optimized rayon thread pool
+/// 2. Register commands for frontend-backend communication
+/// 3. Export TypeScript bindings for development build
+/// 4. Configure the application with necessary plugins
+/// 5. Set up application state, including database initialization
+/// 6. Start the Tauri application with the configured settings
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Initialize rayon thread pool early for optimal performance
+    init_rayon_thread_pool();
+
     // Register commands for the frontend to call
     let spectra_builder = SpectaBuilder::<tauri::Wry>::new()
         .commands(collect_commands![
@@ -72,16 +116,17 @@ pub fn run() {
                 .expect("no main window")
                 .set_focus();
         }))
-        // Configure application logging
+        // Configure application logging with different levels for debug/release
         .plugin(
             tauri_plugin_log::Builder::new()
-                .target(tauri_plugin_log::Target::new(
-                    tauri_plugin_log::TargetKind::LogDir {
-                        file_name: Some("logs".to_string()),
-                    },
-                ))
                 .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
-                .level(log::LevelFilter::Info)
+                .level(if cfg!(debug_assertions) {
+                    log::LevelFilter::Debug
+                } else {
+                    // Warn
+                    log::LevelFilter::Debug
+                })
+                .filter(|metadata| metadata.target().starts_with(env!("CARGO_PKG_NAME")))
                 .format(|out, message, record| {
                     let time = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
                     out.finish(format_args!(

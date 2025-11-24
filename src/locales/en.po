@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-02-14 14:13+0100\n"
+"POT-Creation-Date: 2025-11-24 11:50+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -12,10 +12,6 @@ msgstr ""
 "Last-Translator: \n"
 "Language-Team: \n"
 "Plural-Forms: \n"
-
-#: src/routes/settings/+page.svelte:94
-#~ msgid "{0}"
-#~ msgstr "{0}"
 
 #: src/components/convert/Step7.svelte:218
 msgid "{cur}/{tot} images"
@@ -33,23 +29,11 @@ msgstr "{tot} failed"
 msgid "{tot} successfull"
 msgstr "{tot} successfull"
 
-#: src/components/convert/Step7.svelte:133
-#~ msgid "✓ Finished Volume {0}: {1}"
-#~ msgstr "✓ Finished Volume {0}: {1}"
-
-#: src/components/convert/Step7.svelte:135
-#~ msgid "✗ Failed Volume {0}: {1}"
-#~ msgstr "✗ Failed Volume {0}: {1}"
-
 #: src/components/ActionHub.svelte:95
 #: src/routes/+layout.svelte:54
 #: src/routes/+page.svelte:14
 msgid "ActionHub"
 msgstr "ActionHub"
-
-#: src/components/dialogs/Features.svelte:28
-#~ msgid "Add browsing agents feature"
-#~ msgstr "Add browsing agents feature"
 
 #: src/components/convert/step5/Chapter.svelte:275
 msgid "Add Image"
@@ -59,26 +43,14 @@ msgstr "Add Image"
 msgid "Add new volume"
 msgstr "Add new volume"
 
-#: src/components/convert/step4/ManualBundling.svelte:404
-#~ msgid "Add volume"
-#~ msgstr "Add volume"
-
 #: src/components/convert/step4/ManualBundling.svelte:411
 #: src/components/convert/step4/ManualBundling.svelte:420
 msgid "Add Volume"
 msgstr "Add Volume"
 
-#: src/components/convert/Step7.svelte:130
-#~ msgid "Adding page {0} of {1} to Volume {2}"
-#~ msgstr "Adding page {0} of {1} to Volume {2}"
-
 #: src/components/convert/Step7.svelte:118
 msgid "Adding page {pageNum} of {pageTot} to Volume {volIdx}"
 msgstr "Adding page {pageNum} of {pageTot} to Volume {volIdx}"
-
-#: src/routes/+layout.svelte:83
-#~ msgid "Agents"
-#~ msgstr "Agents"
 
 #: src/components/convert/Step7.svelte:234
 msgid "All Volumes"
@@ -87,14 +59,6 @@ msgstr "All Volumes"
 #: src/components/convert/Step7.svelte:327
 msgid "All volumes converted successfully!"
 msgstr "All volumes converted successfully!"
-
-#: src/components/dialogs/Features.svelte:38
-#~ msgid "Allow setting custom keybinds for the application"
-#~ msgstr "Allow setting custom keybinds for the application"
-
-#: src/components/dialogs/Features.svelte:18
-#~ msgid "Allows changing the application language"
-#~ msgstr "Allows changing the application language"
 
 #: src/components/KeyComboDisplay.svelte:41
 #: src/components/KeyComboDisplay.svelte:42
@@ -117,27 +81,9 @@ msgstr "Analysis Results"
 msgid "Analyze the source material for potential conversion issues and improvements."
 msgstr "Analyze the source material for potential conversion issues and improvements."
 
-#: src/components/convert/Step2.svelte:59
-#~ msgid "Analyzing source material..."
-#~ msgstr "Analyzing source material..."
-
-#: src/routes/settings/+page.svelte:72
-#: src/routes/settings/+page.svelte:74
-#: src/routes/settings/+page.svelte:76
-#~ msgid "App Version"
-#~ msgstr "App Version"
-
 #: src/components/dialogs/SystemInfo.svelte:53
 msgid "Application Information"
 msgstr "Application Information"
-
-#: src/components/dialogs/Management.svelte:142
-#~ msgid "Application Logs"
-#~ msgstr "Application Logs"
-
-#: src/components/dialogs/Management.svelte:147
-#~ msgid "Application logs are stored on your device. You can access them through your file explorer."
-#~ msgstr "Application logs are stored on your device. You can access them through your file explorer."
 
 #: src/components/dialogs/SystemInfo.svelte:59
 msgid "Application Name"
@@ -171,14 +117,6 @@ msgstr "Auto-Populate Settings Saved"
 msgid "Automatic"
 msgstr "Automatic"
 
-#: src/components/dialogs/Features.svelte:19
-#~ msgid "beta"
-#~ msgstr "beta"
-
-#: src/components/dialogs/Features.svelte:27
-#~ msgid "Browse Agents"
-#~ msgstr "Browse Agents"
-
 #: src/components/convert/Step4.svelte:136
 msgid "Bundle Options"
 msgstr "Bundle Options"
@@ -205,10 +143,6 @@ msgstr "Cancel"
 msgid "CBZ"
 msgstr "CBZ"
 
-#: src/routes/+page.svelte:77
-#~ msgid "Change Palaxy's settings to better suit your needs and preferences."
-#~ msgstr "Change Palaxy's settings to better suit your needs and preferences."
-
 #: src/routes/+layout.svelte:110
 msgid "Change the language of the application"
 msgstr "Change the language of the application"
@@ -220,10 +154,6 @@ msgstr "Change the language to English"
 #: src/routes/+layout.svelte:124
 msgid "Change the language to German"
 msgstr "Change the language to German"
-
-#: src/routes/+layout.svelte:148
-#~ msgid "Change the language to Japanese"
-#~ msgstr "Change the language to Japanese"
 
 #: src/routes/+layout.svelte:71
 msgid "Change the settings of the application"
@@ -254,14 +184,6 @@ msgstr "chapter"
 msgid "Chapter"
 msgstr "Chapter"
 
-#: src/components/convert/step4/VolumeVisualisation.svelte:53
-#~ msgid "Chapter {0} of Volume {1}"
-#~ msgstr "Chapter {0} of Volume {1}"
-
-#: src/components/convert/step4/ManualBundling.svelte:228
-#~ msgid "Chapter {0}{1}"
-#~ msgstr "Chapter {0}{1}"
-
 #: src/components/convert/step4/ManualBundling.svelte:228
 msgid "Chapter {chap}"
 msgstr "Chapter {chap}"
@@ -291,23 +213,9 @@ msgstr "Chapters in volume"
 msgid "Choose Source Material Directory"
 msgstr "Choose Source Material Directory"
 
-#: src/components/ConversionMonitor.svelte:118
-#~ msgid "Clear"
-#~ msgstr "Clear"
-
 #: src/components/dialogs/AutoPopulate.svelte:114
 msgid "Click to select a folder"
 msgstr "Click to select a folder"
-
-#: src/components/convert/Step3.svelte:155
-#: src/components/convert/Step1.svelte:96
-#~ msgid "Click to select or drag a folder in"
-#~ msgstr "Click to select or drag a folder in"
-
-#: src/components/convert/Step3.svelte:110
-#: src/components/convert/Step1.svelte:77
-#~ msgid "Click to select or drag it onto it"
-#~ msgstr "Click to select or drag it onto it"
 
 #: src/components/ActionHub.svelte:132
 #: src/components/ActionHub.svelte:133
@@ -344,10 +252,6 @@ msgstr "Conversion completed with errors"
 msgid "Conversion completed with some errors"
 msgstr "Conversion completed with some errors"
 
-#: src/components/ConversionMonitor.svelte:117
-#~ msgid "Conversion Events"
-#~ msgstr "Conversion Events"
-
 #: src/components/convert/Step6.svelte:239
 msgid "Conversion Summary"
 msgstr "Conversion Summary"
@@ -365,17 +269,9 @@ msgstr "Convert another manga"
 msgid "Convert your manga images into a digital format that can be read on your favorite devices"
 msgstr "Convert your manga images into a digital format that can be read on your favorite devices"
 
-#: src/routes/+page.svelte:23
-#~ msgid "Convert your manga images into a digital format that can be read on your favorite devices."
-#~ msgstr "Convert your manga images into a digital format that can be read on your favorite devices."
-
 #: src/components/convert/Step7.svelte:160
 msgid "Converting Volumes..."
 msgstr "Converting Volumes..."
-
-#: src/components/convert/Step7.svelte:73
-#~ msgid "Converting..."
-#~ msgstr "Converting..."
 
 #: src/components/convert/step5/Chapter.svelte:264
 msgid "Cover"
@@ -384,10 +280,6 @@ msgstr "Cover"
 #: src/components/convert/Step6.svelte:280
 msgid "Cover Images"
 msgstr "Cover Images"
-
-#: src/components/convert/Step3.svelte:166
-#~ msgid "Create folder"
-#~ msgstr "Create folder"
 
 #: src/components/convert/Step3.svelte:220
 #: src/components/convert/Step6.svelte:188
@@ -407,10 +299,6 @@ msgstr "Current Volume"
 #: src/components/convert/step4/ManualBundling.svelte:185
 msgid "Current Volumes"
 msgstr "Current Volumes"
-
-#: src/components/dialogs/Features.svelte:37
-#~ msgid "Custom Keybinds"
-#~ msgstr "Custom Keybinds"
 
 #: src/routes/+layout.svelte:89
 #: src/types/appdata.ts:29
@@ -442,33 +330,13 @@ msgstr "Detection Result"
 msgid "Enable Auto-Population"
 msgstr "Enable Auto-Population"
 
-#: src/components/dialogs/Features.svelte:23
-#~ msgid "Enable manga search functionality"
-#~ msgstr "Enable manga search functionality"
-
 #: src/routes/+layout.svelte:157
 msgid "Enable or disable a button to show the ActionHub"
 msgstr "Enable or disable a button to show the ActionHub"
 
-#: src/components/dialogs/Features.svelte:76
-#~ msgid "Enable or disable application features"
-#~ msgstr "Enable or disable application features"
-
-#: src/routes/+layout.svelte:191
-#~ msgid "Enable or disable features of the application"
-#~ msgstr "Enable or disable features of the application"
-
 #: src/routes/+layout.svelte:135
 msgid "Enable or disable the auto-population of fields in the application"
 msgstr "Enable or disable the auto-population of fields in the application"
-
-#: src/components/dialogs/Features.svelte:33
-#~ msgid "Enable the internal management features like the SyncManager"
-#~ msgstr "Enable the internal management features like the SyncManager"
-
-#: src/components/dialogs/Features.svelte:33
-#~ msgid "Enable the mouse support feature for the application"
-#~ msgstr "Enable the mouse support feature for the application"
 
 #: src/components/convert/Step6.svelte:351
 msgid "end"
@@ -511,23 +379,6 @@ msgstr "Esc"
 msgid "Excluded"
 msgstr "Excluded"
 
-#: src/components/dialogs/Features.svelte:24
-#: src/components/dialogs/Features.svelte:29
-#: src/components/dialogs/Features.svelte:34
-#: src/components/dialogs/Features.svelte:39
-#~ msgid "experimental"
-#~ msgstr "experimental"
-
-#: src/routes/+page.svelte:40
-#: src/routes/+page.svelte:59
-#: src/routes/settings/+page.svelte:117
-#~ msgid "Experimental"
-#~ msgstr "Experimental"
-
-#: src/components/convert/Step7.svelte:184
-#~ msgid "failed"
-#~ msgstr "failed"
-
 #: src/components/convert/Step7.svelte:354
 msgid "Failed"
 msgstr "Failed"
@@ -544,26 +395,6 @@ msgstr "Failed Volume {volIdx}: {volName}"
 msgid "Failed Volumes"
 msgstr "Failed Volumes"
 
-#: src/routes/+layout.svelte:195
-#~ msgid "Feature Configuration"
-#~ msgstr "Feature Configuration"
-
-#: src/components/dialogs/Features.svelte:67
-#~ msgid "Feature flags are not saved"
-#~ msgstr "Feature flags are not saved"
-
-#: src/components/dialogs/Features.svelte:61
-#~ msgid "Feature flags saved"
-#~ msgstr "Feature flags saved"
-
-#: src/routes/+layout.svelte:190
-#~ msgid "Features"
-#~ msgstr "Features"
-
-#: src/components/convert/Step3.svelte:75
-#~ msgid "File Name(s)"
-#~ msgstr "File Name(s)"
-
 #: src/components/convert/Step3.svelte:134
 #: src/components/convert/Step6.svelte:146
 #: src/components/dialogs/AutoPopulate.svelte:76
@@ -573,10 +404,6 @@ msgstr "File Type"
 #: src/routes/convert/+page.svelte:49
 msgid "Filter Images"
 msgstr "Filter Images"
-
-#: src/routes/convert/+page.svelte:54
-#~ msgid "Filter out images that are ads / unwanted for the conversion."
-#~ msgstr "Filter out images that are ads / unwanted for the conversion."
 
 #: src/routes/convert/+page.svelte:50
 msgid "Filter out unwanted images, change image order, and set cover images."
@@ -598,10 +425,6 @@ msgstr "German"
 #: src/components/ActionHub.svelte:97
 msgid "Go back"
 msgstr "Go back"
-
-#: src/routes/+layout.svelte:29
-#~ msgid "Go back to the home page"
-#~ msgstr "Go back to the home page"
 
 #: src/routes/+layout.svelte:59
 msgid "Go to the home page"
@@ -670,10 +493,6 @@ msgstr "Images will be converted to WebP format"
 msgid "Images will keep their original format"
 msgstr "Images will keep their original format"
 
-#: src/components/dialogs/Management.svelte:77
-#~ msgid "Imminent"
-#~ msgstr "Imminent"
-
 #: src/components/convert/Step4.svelte:118
 msgid "Increase"
 msgstr "Increase"
@@ -681,12 +500,6 @@ msgstr "Increase"
 #: src/routes/+layout.svelte:174
 msgid "Information"
 msgstr "Information"
-
-#: src/components/dialogs/Features.svelte:32
-#: src/routes/+layout.svelte:201
-#: src/routes/+layout.svelte:207
-#~ msgid "Internal Management"
-#~ msgstr "Internal Management"
 
 #: src/components/convert/Step4.svelte:140
 #: src/components/convert/Step4.svelte:150
@@ -702,11 +515,6 @@ msgstr "Invoke"
 #: src/components/convert/Step2.svelte:84
 msgid "Issues Found"
 msgstr "Issues Found"
-
-#: src/types/appdata.ts:53
-#: src/routes/+layout.svelte:147
-#~ msgid "Japanese"
-#~ msgstr "Japanese"
 
 #: src/routes/+layout.svelte:151
 msgid "KeyHints are now hidden"
@@ -727,14 +535,6 @@ msgstr "Language changed to English"
 #: src/routes/+layout.svelte:128
 msgid "Language changed to German"
 msgstr "Language changed to German"
-
-#: src/routes/+layout.svelte:152
-#~ msgid "Language changed to Japanese"
-#~ msgstr "Language changed to Japanese"
-
-#: src/components/dialogs/Features.svelte:17
-#~ msgid "Language Settings"
-#~ msgstr "Language Settings"
 
 #: src/components/convert/Step3.svelte:178
 #: src/components/convert/Step6.svelte:176
@@ -764,33 +564,9 @@ msgstr "Loading system information..."
 msgid "Loading..."
 msgstr "Loading..."
 
-#: src/components/dialogs/Management.svelte:152
-#~ msgid "Log Directory:"
-#~ msgstr "Log Directory:"
-
-#: src/components/dialogs/Management.svelte:161
-#~ msgid "Log File:"
-#~ msgstr "Log File:"
-
-#: src/routes/+layout.svelte:202
-#~ msgid "Manage the internal state of the application"
-#~ msgstr "Manage the internal state of the application"
-
-#: src/routes/+layout.svelte:84
-#~ msgid "Manage your agents and their settings for better search results"
-#~ msgstr "Manage your agents and their settings for better search results"
-
-#: src/routes/+page.svelte:60
-#~ msgid "Manage your agents and their settings for better search results."
-#~ msgstr "Manage your agents and their settings for better search results."
-
 #: src/routes/+page.svelte:26
 msgid "Manga conversion and search at your fingertips."
 msgstr "Manga conversion and search at your fingertips."
-
-#: src/components/dialogs/Features.svelte:22
-#~ msgid "Manga Search"
-#~ msgstr "Manga Search"
 
 #: src/components/convert/Step3.svelte:116
 msgid "Manual"
@@ -815,16 +591,6 @@ msgstr "Mouse Support is now disabled"
 #: src/routes/+layout.svelte:163
 msgid "Mouse Support is now enabled"
 msgstr "Mouse Support is now enabled"
-
-#: src/components/convert/Step1.svelte:46
-#~ msgid "Multiple paths dropped, only the first path will be used:"
-#~ msgstr "Multiple paths dropped, only the first path will be used:"
-
-#: src/routes/settings/+page.svelte:63
-#: src/routes/settings/+page.svelte:65
-#: src/routes/settings/+page.svelte:67
-#~ msgid "Name"
-#~ msgstr "Name"
 
 #: src/components/convert/Step5.svelte:69
 #: src/components/convert/Step5.svelte:70
@@ -856,17 +622,9 @@ msgstr "New Images"
 msgid "Next"
 msgstr "Next"
 
-#: src/components/dialogs/Management.svelte:104
-#~ msgid "Next sync in:"
-#~ msgstr "Next sync in:"
-
 #: src/components/convert/Step2.svelte:140
 msgid "No analysis results found. There might be an issue with the source material."
 msgstr "No analysis results found. There might be an issue with the source material."
-
-#: src/components/ConversionMonitor.svelte:138
-#~ msgid "No events yet"
-#~ msgstr "No events yet"
 
 #: src/components/convert/step4/ManualBundling.svelte:390
 msgid "No volumes added yet. Add your first volume below."
@@ -880,11 +638,6 @@ msgstr "No volumes detected. Try running the bundler again."
 #: src/components/dialogs/AutoPopulate.svelte:179
 msgid "None"
 msgstr "None"
-
-#: src/components/convert/Step3.svelte:159
-#: src/components/convert/Step1.svelte:100
-#~ msgid "None selected"
-#~ msgstr "None selected"
 
 #: src/components/convert/Step6.svelte:137
 #: src/components/convert/Step6.svelte:150
@@ -913,19 +666,9 @@ msgstr "Output Settings"
 msgid "Overall Progress"
 msgstr "Overall Progress"
 
-#: src/routes/+layout.svelte:79
-#: src/routes/+layout.svelte:86
-#~ msgid "Palaxy"
-#~ msgstr "Palaxy"
-
 #: src/routes/convert/+page.svelte:62
 msgid "Palaxy is now converting your material. Please wait."
 msgstr "Palaxy is now converting your material. Please wait."
-
-#: src/components/dialogs/AutoPopulate.svelte:86
-#: src/components/convert/Step3.svelte:138
-#~ msgid "PDF"
-#~ msgstr "PDF"
 
 #: src/components/convert/Step2.svelte:150
 msgid "Please resolve these issues before continuing."
@@ -954,10 +697,6 @@ msgstr "Project Settings"
 msgid "Reading Direction"
 msgstr "Reading Direction"
 
-#: src/components/dialogs/Management.svelte:118
-#~ msgid "Refresh"
-#~ msgstr "Refresh"
-
 #: src/components/convert/step4/ManualBundling.svelte:257
 msgid "Remove selected"
 msgstr "Remove selected"
@@ -974,10 +713,6 @@ msgstr "Reset"
 msgid "Reset canceled"
 msgstr "Reset canceled"
 
-#: src/routes/+layout.svelte:221
-#~ msgid "Reset successfull"
-#~ msgstr "Reset successfull"
-
 #: src/routes/+layout.svelte:189
 msgid "Reset successfully"
 msgstr "Reset successfully"
@@ -993,10 +728,6 @@ msgstr "Review"
 #: src/routes/convert/+page.svelte:56
 msgid "Review all your settings before starting the conversion."
 msgstr "Review all your settings before starting the conversion."
-
-#: src/routes/convert/+page.svelte:61
-#~ msgid "Review the settings and the material before conversion."
-#~ msgstr "Review the settings and the material before conversion."
 
 #: src/components/convert/Step3.svelte:181
 #: src/components/convert/Step6.svelte:28
@@ -1017,35 +748,15 @@ msgstr "Save"
 msgid "Scroll down"
 msgstr "Scroll down"
 
-#: src/components/dialogs/Management.svelte:26
-#~ msgid "Scroll Down"
-#~ msgstr "Scroll Down"
-
 #: src/components/convert/Step2.svelte:45
 #: src/components/convert/step4/VolumeVisualisation.svelte:27
 #: src/components/convert/Step6.svelte:76
 msgid "Scroll up"
 msgstr "Scroll up"
 
-#: src/components/dialogs/Management.svelte:25
-#~ msgid "Scroll Up"
-#~ msgstr "Scroll Up"
-
-#: src/routes/+layout.svelte:76
-#~ msgid "Search"
-#~ msgstr "Search"
-
 #: src/components/ActionHub.svelte:19
 msgid "Search commands..."
 msgstr "Search commands..."
-
-#: src/routes/+layout.svelte:77
-#~ msgid "Search for your favorite manga series and chapters from various sources"
-#~ msgstr "Search for your favorite manga series and chapters from various sources"
-
-#: src/routes/+page.svelte:41
-#~ msgid "Search for your favorite manga series and chapters from various sources."
-#~ msgstr "Search for your favorite manga series and chapters from various sources."
 
 #: src/components/convert/Step7.svelte:30
 #: src/components/convert/Step7.svelte:34
@@ -1149,33 +860,9 @@ msgstr "Source Path"
 msgid "Space"
 msgstr "Space"
 
-#: src/components/dialogs/Features.svelte:19
-#~ msgid "stable"
-#~ msgstr "stable"
-
-#: src/routes/+page.svelte:22
-#~ msgid "Stable"
-#~ msgstr "Stable"
-
-#: src/components/dialogs/Management.svelte:134
-#~ msgid "Start Sync"
-#~ msgstr "Start Sync"
-
-#: src/components/convert/Step7.svelte:128
-#~ msgid "Starting Volume {0}: {1}"
-#~ msgstr "Starting Volume {0}: {1}"
-
 #: src/components/convert/Step7.svelte:113
 msgid "Starting Volume {volumeIdx}: {volName}"
 msgstr "Starting Volume {volumeIdx}: {volName}"
-
-#: src/components/dialogs/Management.svelte:126
-#~ msgid "Stop Sync"
-#~ msgstr "Stop Sync"
-
-#: src/components/convert/Step7.svelte:179
-#~ msgid "successful"
-#~ msgstr "successful"
 
 #: src/components/convert/Step7.svelte:344
 msgid "Successful"
@@ -1193,26 +880,10 @@ msgstr "Swap prev"
 msgid "Switch to Manual Bundling"
 msgstr "Switch to Manual Bundling"
 
-#: src/components/dialogs/Management.svelte:62
-#~ msgid "Sync started"
-#~ msgstr "Sync started"
-
-#: src/components/dialogs/Management.svelte:99
-#~ msgid "Sync Status"
-#~ msgstr "Sync Status"
-
-#: src/components/dialogs/Management.svelte:71
-#~ msgid "Sync stopped"
-#~ msgstr "Sync stopped"
-
 #: src/routes/+layout.svelte:98
 #: src/types/appdata.ts:29
 msgid "System"
 msgstr "System"
-
-#: src/routes/+layout.svelte:193
-#~ msgid "System Info"
-#~ msgstr "System Info"
 
 #: src/components/dialogs/SystemInfo.svelte:88
 #: src/routes/+layout.svelte:169
@@ -1228,10 +899,6 @@ msgstr "Target Location"
 #: src/components/dialogs/SystemInfo.svelte:75
 msgid "Tauri Version"
 msgstr "Tauri Version"
-
-#: src/components/convert/Step7.svelte:93
-#~ msgid "The conversion process has completed successfully"
-#~ msgstr "The conversion process has completed successfully"
 
 #: src/components/convert/step4/utils.svelte.ts:32
 msgid "The total number of chapters {usedNumber} used exceeds the detected number of chapters {detectedNumber}"
@@ -1264,10 +931,6 @@ msgstr "This is the last step. There are no more steps."
 #: src/routes/+page.svelte:32
 msgid "This will open the ActionHub from where you can access all the features of Palaxy."
 msgstr "This will open the ActionHub from where you can access all the features of Palaxy."
-
-#: src/routes/+page.svelte:29
-#~ msgid "To ge started press"
-#~ msgstr "To ge started press"
 
 #: src/routes/+page.svelte:29
 msgid "To get started press"
@@ -1303,14 +966,6 @@ msgstr "Vol"
 #: src/components/convert/Step7.svelte:252
 msgid "Volume"
 msgstr "Volume"
-
-#: src/components/convert/step4/ManualBundling.svelte:293
-#~ msgid "Volume "
-#~ msgstr "Volume "
-
-#: src/components/convert/step4/VolumeVisualisation.svelte:41
-#~ msgid "Volume {0}"
-#~ msgstr "Volume {0}"
 
 #: src/components/convert/step4/ManualBundling.svelte:230
 #: src/components/convert/step4/VolumeVisualisation.svelte:42
@@ -1355,10 +1010,6 @@ msgstr "Will save directly in target location"
 #: src/components/KeyComboDisplay.svelte:40
 msgid "Win"
 msgstr "Win"
-
-#: src/routes/convert/+page.svelte:97
-#~ msgid "You cannot proceed the next step."
-#~ msgstr "You cannot proceed the next step."
 
 #: src/routes/convert/+page.svelte:104
 msgid "You cannot proceed to the next step."

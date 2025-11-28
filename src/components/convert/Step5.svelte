@@ -67,7 +67,7 @@
 	onMount(async () => {
 		unregisterKeyHint = keyHint.smartAdd([
 			['tab', $t`Navigate`],
-			['shift+tab', $t`Navigate`]
+			['shift+tab', $t`Navigate`],
 		]);
 
 		// Initialize state

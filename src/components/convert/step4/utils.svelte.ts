@@ -34,8 +34,8 @@ export function checkChapterLimits(): void {
 						'The total number of chapters {usedNumber} used exceeds the detected number of chapters {detectedNumber}',
 					values: {
 						usedNumber: totalUsed,
-						detectedNumber: step4State.result.total_chapters
-					}
+						detectedNumber: step4State.result.total_chapters,
+					},
 				}),
 				'warning'
 			);

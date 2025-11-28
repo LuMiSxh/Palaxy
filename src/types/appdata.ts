@@ -21,7 +21,7 @@ export enum Theme {
 	/**
 	 * Theme based on system settings.
 	 */
-	System = -1
+	System = -1,
 }
 
 // Translations for the theme
@@ -40,42 +40,12 @@ export enum SupportedLanguages {
 	/**
 	 * German language support.
 	 */
-	German = 'de'
+	German = 'de',
 }
 
 // Translations for the languages
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const __ = [msg`English`, msg`German`];
-
-/**
- * Enumerates feature flags for enabling or disabling features.
- */
-export enum FeatureFlag {
-	/**
-	 * Allows language changes within the app.
-	 */
-	CHANGE_LANGUAGE = 11,
-
-	/**
-	 * Enables manga search functionality.
-	 */
-	SEARCH_MANGA = 12,
-
-	/**
-	 * Adds browsing agents feature.
-	 */
-	BROWSE_AGENTS = 13,
-
-	/**
-	 * Enables custom keybinding configuration.
-	 */
-	CUSTOM_KEYBINDS = 15,
-
-	/**
-	 * Allows internal management of the application.
-	 */
-	INTERNAL_MANAGEMENT = 16,
-}
 
 /**
  * Defines the structure for storing application data.
@@ -90,11 +60,6 @@ export interface AppData {
 	 * Current language setting of the application.
 	 */
 	language: SupportedLanguages;
-
-	/**
-	 * A list of activated feature flags.
-	 */
-	featureFlags: Array<FeatureFlag>;
 
 	/**
 	 * Specifies whether key hints should be shown.
@@ -132,6 +97,21 @@ export interface AppData {
 			 * Whether a new folder should be created during conversion.
 			 */
 			createNewFolder: boolean;
+
+			/**
+			 * Image output format for conversion.
+			 */
+			imageFormat: 'None' | 'WebP' | 'AVIF' | null;
+
+			/**
+			 * Whether to hide the volume number when there's only one volume.
+			 */
+			hideSingleVolumeNumber: boolean;
+
+			/**
+			 * Custom separator string between project name and volume number.
+			 */
+			volumeSeparator: string;
 		};
 	};
 }
@@ -142,7 +122,6 @@ export interface AppData {
 export const defaultAppData: AppData = {
 	theme: Theme.System,
 	language: SupportedLanguages.English,
-	featureFlags: [],
 	showKeyHints: true,
 	mouseSupport: false,
 	autoPop: {
@@ -150,7 +129,10 @@ export const defaultAppData: AppData = {
 		converter: {
 			conversionType: null,
 			targetLocation: null,
-			createNewFolder: true
-		}
-	}
+			createNewFolder: true,
+			imageFormat: null,
+			hideSingleVolumeNumber: false,
+			volumeSeparator: ' | ',
+		},
+	},
 };

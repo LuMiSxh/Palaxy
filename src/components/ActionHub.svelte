@@ -18,7 +18,7 @@
 		commands = $bindable([]),
 		placeholderText = $t`Search commands...`,
 		onCommandSelect = () => {},
-		showPalette = $bindable(false)
+		showPalette = $bindable(false),
 	}: Props = $props();
 
 	let value = $state('');
@@ -84,7 +84,7 @@
 			tick().then(() => {
 				listItemRefs[selectedIndex]?.scrollIntoView({
 					behavior: 'smooth',
-					block: 'nearest'
+					block: 'nearest',
 				});
 			});
 		}
@@ -130,7 +130,7 @@
 			['arrowup', $t`Navigate up`],
 			['enter', $t`Select`],
 			['escape', $t`Close`],
-			['space', $t`Close`]
+			['space', $t`Close`],
 		]);
 
 		// Focus the input
@@ -148,7 +148,7 @@
 							selectedIndex = (selectedIndex + 1) % filteredCommands.length;
 						}
 						return true;
-					}
+					},
 				],
 
 				[
@@ -160,7 +160,7 @@
 								(selectedIndex - 1 + filteredCommands.length) % filteredCommands.length;
 						}
 						return true;
-					}
+					},
 				],
 
 				[
@@ -171,7 +171,7 @@
 						if (filteredCommands.length === 0) return true;
 						executeCommand(filteredCommands[selectedIndex]);
 						return true;
-					}
+					},
 				],
 
 				[
@@ -179,7 +179,7 @@
 					() => {
 						goBack();
 						return true;
-					}
+					},
 				],
 
 				[
@@ -193,8 +193,8 @@
 						value = '';
 						showPalette = false;
 						return true;
-					}
-				]
+					},
+				],
 			],
 			[
 				// Except handlers
@@ -203,8 +203,8 @@
 					() => {
 						inp?.focus();
 						return true;
-					}
-				]
+					},
+				],
 			]
 		);
 

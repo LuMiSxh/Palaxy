@@ -1,10 +1,10 @@
 <script lang="ts">
 	import convState from '$states/converter.svelte';
-	import { t } from 'svelte-i18n-lingui';
+	import { t, plural } from 'svelte-i18n-lingui';
 	import {
 		getChaptersPercentage,
 		getTotalChapters,
-		step4State
+		step4State,
 	} from '$components/convert/step4/utils.svelte';
 	import { handleKeyHint } from '$states/keyhint.svelte';
 
@@ -25,8 +25,8 @@
 		use:handleKeyHint={{
 			keys: [
 				['arrowup', $t`Scroll up`],
-				['arrowdown', $t`Scroll down`]
-			]
+				['arrowdown', $t`Scroll down`],
+			],
 		}}
 	>
 		<h3 class="mb-4 font-semibold">{$t`Volume Distribution`}</h3>
@@ -38,10 +38,15 @@
 						class="volume-item border-background-tertiary dark:border-background-dark-tertiary rounded-lg border p-4"
 					>
 						<div class="mb-2 flex items-center justify-between">
-							<span class="font-medium">{$t`Volume ${i + 1}`}</span>
-							<span class="badge badge-secondary"
-								>{chapters} {chapters === 1 ? $t`chapter` : $t`chapters`}</span
+							<span class="font-medium"
+								>{$t({ message: 'Volume {vol}', values: { vol: i + 1 } })}</span
 							>
+							<span class="badge badge-secondary">
+								{$plural(chapters, {
+									one: '# chapter',
+									other: '# chapters',
+								})}
+							</span>
 						</div>
 
 						<div class="mt-3 flex gap-1">
@@ -50,7 +55,10 @@
 								<div
 									class="bg-primary h-4 flex-1 rounded-sm opacity-80 transition-opacity hover:opacity-100"
 									style="--index: {j}; animation-delay: calc(var(--index) * 30ms);"
-									title={$t`Chapter ${j + 1} of Volume ${i + 1}`}
+									title={$t({
+										message: 'Chapter {chap} of Volume {vol}',
+										values: { chap: j + 1, vol: i + 1 },
+									})}
 								></div>
 							{/each}
 						</div>

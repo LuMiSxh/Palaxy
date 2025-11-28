@@ -1,13 +1,11 @@
 use std::fs::File;
-use std::io::Cursor;
+use std::io::{BufWriter, Cursor};
 use std::path::{Path, PathBuf};
 
 use crate::generator::Generator;
 use crate::prelude::*;
-use async_trait::async_trait;
 use epub_builder::{EpubBuilder, EpubContent, EpubVersion, ZipLibrary};
 use log::{debug, error, info, trace};
-use memmap2::MmapOptions;
 
 /// Generates XHTML content for an image to be included in the EPUB.
 ///
@@ -42,6 +40,8 @@ pub struct EPub {
     filename: String,
     /// Reading direction for the EPUB content
     reading_direction: Option<Direction>,
+    /// Count of pages added to the EPUB
+    page_count: usize,
 }
 
 impl EPub {
@@ -89,11 +89,16 @@ impl EPub {
             }
         };
 
-        match self.epub.add_cover_image(
-            format!("data/cover.{}", cover_extension),
-            cover_file,
-            cover_mime,
-        ) {
+        // Pre-allocate string capacity for cover path
+        let mut cover_path = String::with_capacity(16 + cover_extension.len());
+        use std::fmt::Write;
+        write!(&mut cover_path, "data/cover.{}", cover_extension)
+            .expect("String write cannot fail");
+
+        match self
+            .epub
+            .add_cover_image(cover_path, cover_file, cover_mime)
+        {
             Ok(_) => {
                 debug!("Cover image added successfully");
                 Ok(self)
@@ -134,139 +139,8 @@ impl EPub {
         self.reading_direction = Some(direction);
         self
     }
-
-    /// Adds a chapter containing multiple image pages to the EPUB.
-    ///
-    /// # Arguments
-    ///
-    /// * `chapter_count` - Chapter number/index
-    /// * `image_paths` - Vector of paths to the images in this chapter
-    ///
-    /// # Returns
-    ///
-    /// * `EResult<&mut Self>` - Self reference for method chaining or an error
-    pub async fn add_chapter(
-        &mut self,
-        chapter_count: usize,
-        image_paths: &Vec<PathBuf>,
-    ) -> EResult<&mut Self> {
-        info!(
-            "Adding chapter {} with {} images",
-            chapter_count,
-            image_paths.len()
-        );
-
-        for (i, path) in image_paths.iter().enumerate() {
-            trace!(
-                "Processing image {}/{} at path: {:?}",
-                i + 1,
-                image_paths.len(),
-                path
-            );
-
-            let image_file = match File::open(&path) {
-                Ok(file) => file,
-                Err(e) => {
-                    error!("Failed to open image file {:?}: {}", path, e);
-                    return Err(Error::from(e));
-                }
-            };
-
-            let (image_extension, image_mime) = get_file_info(&path)?;
-            debug!(
-                "Image info: extension={}, mime={}",
-                image_extension, image_mime
-            );
-
-            let image_name = format!("images/{}/{}.{}", chapter_count, i + 1, image_extension);
-            let image_xhtml = generate_xhtml(&image_name)?;
-
-            trace!("Adding resource: {}", image_name);
-            if let Err(e) = self.epub.add_resource(&image_name, image_file, image_mime) {
-                error!("Failed to add image resource {}: {}", image_name, e);
-                return Err(Error::from(e));
-            }
-
-            let content_path = format!("{}-{}.xhtml", chapter_count, i + 1);
-            trace!("Adding content: {}", content_path);
-            if let Err(e) = self.epub.add_content(EpubContent::new(
-                content_path.clone(),
-                image_xhtml.as_bytes(),
-            )) {
-                error!("Failed to add XHTML content {}: {}", content_path, e);
-                return Err(Error::from(e));
-            }
-        }
-        debug!("Chapter {} added successfully", chapter_count);
-        Ok(self)
-    }
-
-    /// Adds a resource to the EPUB using memory mapping for efficient handling of large files.
-    ///
-    /// # Arguments
-    ///
-    /// * `resource_path` - Path where the resource will be stored in the EPUB
-    /// * `image_path` - Path to the image file on the filesystem
-    ///
-    /// # Returns
-    ///
-    /// * `Result<&mut Self, Error>` - Self reference for method chaining or an error
-    pub async fn add_resource_mmap(
-        &mut self,
-        resource_path: &str,
-        image_path: &PathBuf,
-    ) -> Result<&mut Self, Error> {
-        debug!(
-            "Adding memory-mapped resource from {:?} as {}",
-            image_path, resource_path
-        );
-
-        let (_, image_mime) = match get_file_info(image_path) {
-            Ok(info) => info,
-            Err(e) => {
-                error!("Failed to get file info for {:?}: {}", image_path, e);
-                return Err(e);
-            }
-        };
-
-        // Open the file asynchronously
-        let file = match tokio::fs::File::open(image_path).await {
-            Ok(f) => f,
-            Err(e) => {
-                error!(
-                    "Failed to open file for memory mapping {:?}: {}",
-                    image_path, e
-                );
-                return Err(Error::from(e));
-            }
-        };
-
-        let file_std = file.into_std().await;
-        let epub = &mut self.epub;
-        let path = resource_path.to_string();
-        let mime = image_mime.to_string();
-
-        trace!("Creating memory map for file: {:?}", image_path);
-        let mmap = match unsafe { MmapOptions::new().map(&file_std) } {
-            Ok(map) => map,
-            Err(e) => {
-                error!("Memory mapping failed for {:?}: {}", image_path, e);
-                return Err(Error::from(e));
-            }
-        };
-
-        // Add resource directly from memory-mapped data
-        if let Err(e) = epub.add_resource(&path, Cursor::new(&mmap[..]), &mime) {
-            error!("Failed to add memory-mapped resource {}: {}", path, e);
-            return Err(Error::from(e));
-        }
-
-        trace!("Memory-mapped resource added successfully: {}", path);
-        Ok(self)
-    }
 }
 
-#[async_trait]
 impl Generator for EPub {
     /// Creates a new EPUB generator.
     ///
@@ -303,65 +177,49 @@ impl Generator for EPub {
         debug!("Stylesheet added successfully");
         Ok(EPub {
             epub,
-            output_path: output_path.to_string(),
-            filename: filename.to_string(),
+            output_path: output_path.into(),
+            filename: filename.into(),
             reading_direction: None,
+            page_count: 0,
         })
     }
 
-    /// Adds a single image page to the EPUB.
-    ///
-    /// Note: This is a simplified interface that treats each page as its own chapter
-    /// for consistency with the Generator trait.
-    ///
-    /// # Arguments
-    ///
-    /// * `image_path` - Path to the image file
-    ///
-    /// # Returns
-    ///
-    /// * `EResult<&mut Self>` - Self reference for method chaining or an error
-    async fn add_page(&mut self, image_path: &PathBuf) -> EResult<&mut Self> {
-        info!("Adding page with image: {:?}", image_path);
+    fn add_page_from_memory(&mut self, data: &[u8], extension: &str) -> EResult<&mut Self> {
+        self.page_count += 1;
 
-        let (image_extension, _) = match get_file_info(&image_path) {
-            Ok(info) => info,
-            Err(e) => {
-                error!("Failed to get file info for page image: {}", e);
-                return Err(e);
-            }
+        let mime = match extension.to_lowercase().as_str() {
+            "jpg" | "jpeg" => "image/jpeg",
+            "png" => "image/png",
+            "webp" => "image/webp",
+            "avif" => "image/avif",
+            _ => "application/octet-stream",
         };
 
-        // Use the page index as chapter count for this simplified version
-        let chapter_count = 1;
-        let i = 0;
+        let name_stem = format!("page_{:03}", self.page_count);
+        let image_filename = format!("images/{}.{}", name_stem, extension);
+        let content_filename = format!("{}.xhtml", name_stem);
 
-        let image_name = format!("images/{}/{}.{}", chapter_count, i + 1, image_extension);
-        debug!("Using image name: {}", image_name);
+        trace!("Adding EPUB page {}: {}", self.page_count, image_filename);
 
-        let image_xhtml = match generate_xhtml(&image_name) {
-            Ok(xhtml) => xhtml,
-            Err(e) => {
-                error!("Failed to generate XHTML for page: {}", e);
-                return Err(e);
-            }
-        };
-
-        if let Err(e) = self.add_resource_mmap(&image_name, image_path).await {
-            error!("Failed to add page resource: {}", e);
-            return Err(e);
-        }
-
-        let content_path = format!("{}-{}.xhtml", chapter_count, i + 1);
-        if let Err(e) = self.epub.add_content(EpubContent::new(
-            content_path.clone(),
-            image_xhtml.as_bytes(),
-        )) {
-            error!("Failed to add page XHTML content: {}", e);
+        // Cursor<Vec<u8>> implements Read, which epub-builder accepts
+        if let Err(e) = self
+            .epub
+            .add_resource(&image_filename, Cursor::new(data), mime)
+        {
+            error!("Failed to add EPUB resource {}: {}", image_filename, e);
             return Err(Error::from(e));
         }
 
-        debug!("Page added successfully");
+        let xhtml = generate_xhtml(&image_filename)?;
+
+        if let Err(e) = self
+            .epub
+            .add_content(EpubContent::new(content_filename, xhtml.as_bytes()))
+        {
+            error!("Failed to add EPUB content: {}", e);
+            return Err(Error::from(e));
+        }
+
         Ok(self)
     }
 
@@ -375,13 +233,15 @@ impl Generator for EPub {
     /// # Returns
     ///
     /// * `EResult<&mut Self>` - Self reference for method chaining or an error
-    async fn set_metadata(&mut self, title: &str, volume: usize) -> EResult<&mut Self> {
+    fn set_metadata(&mut self, title: &str, volume: usize) -> EResult<&mut Self> {
         info!(
             "Setting EPUB metadata: title='{}', volume={}",
             title, volume
         );
 
-        let full_title = format!("{} | {}", title, volume);
+        let mut full_title = String::with_capacity(title.len() + 12);
+        use std::fmt::Write;
+        write!(&mut full_title, "{} | {}", title, volume).expect("String write cannot fail");
         if let Err(e) = self.epub.metadata("title", &full_title) {
             error!("Failed to set title metadata: {}", e);
             return Err(Error::from(e));
@@ -411,9 +271,12 @@ impl Generator for EPub {
     /// # Returns
     ///
     /// * `EResult<()>` - Success or an error
-    async fn save(mut self) -> EResult<()> {
+    fn save(self) -> EResult<()> {
         let output_path = Path::new(&self.output_path);
-        let output_file_path = output_path.join(format!("{}.epub", self.filename));
+        let mut epub_filename = String::with_capacity(self.filename.len() + 5);
+        use std::fmt::Write;
+        write!(&mut epub_filename, "{}.epub", self.filename).expect("String write cannot fail");
+        let output_file_path = output_path.join(epub_filename);
         info!("Saving EPUB to: {:?}", output_file_path);
 
         let file = match File::create(&output_file_path) {
@@ -424,7 +287,9 @@ impl Generator for EPub {
             }
         };
 
-        match self.epub.generate(file) {
+        let buf_writer = BufWriter::with_capacity(64 * 1024, file);
+
+        match self.epub.generate(buf_writer) {
             Ok(_) => {
                 info!("EPUB file generated successfully");
                 Ok(())

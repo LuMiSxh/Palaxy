@@ -116,6 +116,6 @@ export function handleKeyHint(
 			if (document.activeElement === node) {
 				addHints();
 			}
-		}
+		},
 	};
 }

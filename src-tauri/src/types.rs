@@ -45,6 +45,22 @@ pub enum Direction {
     Rtl,
 }
 
+/// Image output format for conversion
+///
+/// * `None` - Keep original image format (default)
+/// * `WebP` - Convert images to WebP format
+/// * `Avif` - Convert images to AVIF format
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Default, Type)]
+pub enum ImageOutputFormat {
+    #[default]
+    #[serde(rename = "None")]
+    None,
+    #[serde(rename = "WebP")]
+    WebP,
+    #[serde(rename = "AVIF")]
+    Avif,
+}
+
 /// Indicates the stability status of a feature
 ///
 /// * `Experimental` - Feature is under testing
@@ -82,9 +98,13 @@ pub enum ConvStateKey {
     Direction(Direction),
     Format(FileFormat),
     CreateDirectory(bool),
+    ConvertToWebp(bool),
+    ImageFormat(ImageOutputFormat),
     VolumeSizes(Vec<usize>),
     Data(Vec<Vec<PathBuf>>),
     EditedData(Option<Vec<Vec<PathBuf>>>),
+    HideSingleVolumeNumber(bool),
+    VolumeSeparator(String),
 }
 
 // --- Responses ---

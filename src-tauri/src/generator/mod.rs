@@ -4,8 +4,6 @@
 //! implementations for different file formats.
 
 use crate::prelude::*;
-use std::path::PathBuf;
-use async_trait::async_trait;
 
 pub mod cbz;
 pub mod epub;
@@ -15,7 +13,6 @@ pub mod epub;
 /// The `Generator` trait defines a consistent API for document generators
 /// that can create different file formats (like CBZ, EPUB) from source images.
 /// Implementations handle the specifics of each file format.
-#[async_trait]
 pub trait Generator {
     /// Creates a new generator instance.
     ///
@@ -25,16 +22,21 @@ pub trait Generator {
     ///
     /// # Returns
     /// * `EResult<Self>` - A new generator instance or an error if creation fails
-    fn new(output_path: &str, filename: &str) -> EResult<Self> where Self: Sized;
+    fn new(output_path: &str, filename: &str) -> EResult<Self>
+    where
+        Self: Sized;
 
-    /// Adds a page to the generated document.
+    /// Adds a page to the generated document from in-memory data.
     ///
     /// # Parameters
-    /// * `image_path` - Path to the image file to add as a page
+    /// * `data` - Byte slice containing the image data
+    /// * `extension` - File extension indicating the image format (e.g., "jpg", "png")
     ///
     /// # Returns
     /// * `EResult<&mut Self>` - Self reference for method chaining, or an error if failed
-    async fn add_page(&mut self, image_path: &PathBuf) -> EResult<&mut Self> where Self: Sized;
+    fn add_page_from_memory(&mut self, data: &[u8], extension: &str) -> EResult<&mut Self>
+    where
+        Self: Sized;
 
     /// Sets metadata for the generated document.
     ///
@@ -44,7 +46,9 @@ pub trait Generator {
     ///
     /// # Returns
     /// * `EResult<&mut Self>` - Self reference for method chaining, or an error if failed
-    async fn set_metadata(&mut self, title: &str, volume: usize) -> EResult<&mut Self> where Self: Sized;
+    fn set_metadata(&mut self, title: &str, volume: usize) -> EResult<&mut Self>
+    where
+        Self: Sized;
 
     /// Saves the generated document to disk.
     ///
@@ -52,5 +56,5 @@ pub trait Generator {
     ///
     /// # Returns
     /// * `EResult<()>` - Success indicator or an error if saving fails
-    async fn save(self) -> EResult<()>;
+    fn save(self) -> EResult<()>;
 }

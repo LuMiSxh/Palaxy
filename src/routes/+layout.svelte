@@ -3,8 +3,8 @@
 	import { t } from 'svelte-i18n-lingui';
 	import { goto } from '$app/navigation';
 	import { appData, appDataKey } from '$stores/appdata.js';
-	import { defaultAppData, FeatureFlag, SupportedLanguages, Theme } from '$types/appdata';
-	import { ffIsEnabled, setTheme } from '$lib/utils';
+	import { defaultAppData, SupportedLanguages, Theme } from '$types/appdata';
+	import { setTheme } from '$lib/utils';
 	import { browser, dev } from '$app/environment';
 	import Toast from '$components/Toast.svelte';
 	import { onMount } from 'svelte';
@@ -17,17 +17,13 @@
 		IconHome,
 		IconKeyboard,
 		IconLanguage,
-		IconListDetails,
 		IconMoon,
 		IconMouse,
-		IconSearch,
 		IconSettings,
 		IconSettingsCode,
 		IconSettingsQuestion,
 		IconSun,
 		IconTransform,
-		IconUsers,
-		IconLayersIntersect
 	} from '@tabler/icons-svelte';
 	import { addToast } from '$states/toast.svelte';
 	import Dialog from '$components/Dialog.svelte';
@@ -36,8 +32,6 @@
 	import KeyHint from '$components/KeyHint.svelte';
 	import { keyHint } from '$states/keyhint.svelte';
 	import AutoPopulate from '$components/dialogs/AutoPopulate.svelte';
-	import Features from '$components/dialogs/Features.svelte';
-	import Management from '$components/dialogs/Management.svelte';
 
 	let { children } = $props();
 
@@ -64,27 +58,13 @@
 			name: $t`Home`,
 			description: $t`Go to the home page`,
 			icon: IconHome,
-			action: () => goto('/')
+			action: () => goto('/'),
 		},
 		{
 			name: $t`Convert`,
 			description: $t`Convert your manga images into a digital format that can be read on your favorite devices`,
 			icon: IconTransform,
-			action: () => goto('/convert')
-		},
-		{
-			name: $t`Search`,
-			description: $t`Search for your favorite manga series and chapters from various sources`,
-			icon: IconSearch,
-			hidden: !ffIsEnabled($appData, FeatureFlag.SEARCH_MANGA),
-			action: () => goto('/search')
-		},
-		{
-			name: $t`Agents`,
-			description: $t`Manage your agents and their settings for better search results`,
-			icon: IconUsers,
-			hidden: !ffIsEnabled($appData, FeatureFlag.BROWSE_AGENTS),
-			action: () => goto('/agents')
+			action: () => goto('/convert'),
 		},
 		{
 			name: $t`Settings`,
@@ -103,7 +83,7 @@
 							action: () => {
 								$appData.theme = Theme.Light;
 								addToast($t`Theme changed to light`);
-							}
+							},
 						},
 						{
 							name: $t`Dark`,
@@ -112,7 +92,7 @@
 							action: () => {
 								$appData.theme = Theme.Dark;
 								addToast($t`Theme changed to dark`);
-							}
+							},
 						},
 						{
 							name: $t`System`,
@@ -121,15 +101,14 @@
 							action: () => {
 								$appData.theme = Theme.System;
 								addToast($t`Theme changed to system`);
-							}
-						}
-					]
+							},
+						},
+					],
 				},
 				{
 					name: $t`Language`,
 					description: $t`Change the language of the application`,
 					icon: IconLanguage,
-					hidden: !ffIsEnabled($appData, FeatureFlag.CHANGE_LANGUAGE),
 					subcommands: [
 						{
 							name: $t`English`,
@@ -138,7 +117,7 @@
 							action: () => {
 								$appData.language = SupportedLanguages.English;
 								addToast($t`Language changed to English`);
-							}
+							},
 						},
 						{
 							name: $t`German`,
@@ -147,9 +126,9 @@
 							action: () => {
 								$appData.language = SupportedLanguages.German;
 								addToast($t`Language changed to German`);
-							}
-						}
-					]
+							},
+						},
+					],
 				},
 				{
 					name: $t`Auto-Populate Fields`,
@@ -158,9 +137,9 @@
 					action: () => {
 						openDialog({
 							title: $t`Auto-Populate Settings`,
-							content: AutoPopulate
+							content: AutoPopulate,
 						});
-					}
+					},
 				},
 				{
 					name: $t`Show KeyHints`,
@@ -171,7 +150,7 @@
 						addToast(
 							$appData.showKeyHints ? $t`KeyHints are now shown` : $t`KeyHints are now hidden`
 						);
-					}
+					},
 				},
 				{
 					name: $t`Mouse Support`,
@@ -184,30 +163,7 @@
 								? $t`Mouse Support is now enabled`
 								: $t`Mouse Support is now disabled`
 						);
-					}
-				},
-				{
-					name: $t`Features`,
-					description: $t`Enable or disable features of the application`,
-					icon: IconListDetails,
-					action: () => {
-						openDialog({
-							title: $t`Feature Configuration`,
-							content: Features
-						});
-					}
-				},
-				{
-					name: $t`Internal Management`,
-					description: $t`Manage the internal state of the application`,
-					icon: IconLayersIntersect,
-					hidden: !ffIsEnabled($appData, FeatureFlag.INTERNAL_MANAGEMENT),
-					action: () => {
-						openDialog({
-							title: $t`Internal Management`,
-							content: Management
-						});
-					}
+					},
 				},
 				{
 					name: $t`System Information`,
@@ -216,9 +172,9 @@
 					action: () => {
 						openDialog({
 							title: $t`Information`,
-							content: SystemInfo
+							content: SystemInfo,
 						});
-					}
+					},
 				},
 				{
 					name: $t`Reset`,
@@ -234,12 +190,12 @@
 							},
 							onCancel: () => {
 								addToast($t`Reset canceled`, 'info');
-							}
+							},
 						});
-					}
-				}
-			]
-		}
+					},
+				},
+			],
+		},
 	]);
 
 	if (browser) {

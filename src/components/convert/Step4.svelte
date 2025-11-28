@@ -115,8 +115,8 @@
 									use:handleKeyHint={{
 										keys: [
 											['arrowleft', $t`Decrease`],
-											['arrowright', $t`Increase`]
-										]
+											['arrowright', $t`Increase`],
+										],
 									}}
 								/>
 								<div class="mt-1 flex w-full justify-between">

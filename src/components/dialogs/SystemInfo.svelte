@@ -22,7 +22,7 @@
 				getTauriVersion(),
 				platform(),
 				arch(),
-				version()
+				version(),
 			]);
 
 			appName = name;

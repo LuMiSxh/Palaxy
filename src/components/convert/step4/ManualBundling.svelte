@@ -3,7 +3,7 @@
 		checkChapterLimits,
 		getChaptersPercentage,
 		getTotalChapters,
-		step4State
+		step4State,
 	} from '$components/convert/step4/utils.svelte';
 	import convState, { stepState } from '$states/converter.svelte';
 	import { IconChevronRight, IconFileZip, IconPlus, IconX } from '@tabler/icons-svelte';
@@ -95,7 +95,7 @@
 
 		convState.chapterSizes = [
 			...convState.chapterSizes.slice(0, volVisSelectedIdx),
-			...convState.chapterSizes.slice(volVisSelectedIdx + 1)
+			...convState.chapterSizes.slice(volVisSelectedIdx + 1),
 		];
 
 		// Adjust selected index
@@ -113,7 +113,7 @@
 		if (volumeItems[volVisSelectedIdx]) {
 			volumeItems[volVisSelectedIdx].scrollIntoView({
 				behavior: 'smooth',
-				block: 'nearest'
+				block: 'nearest',
 			});
 		}
 	}
@@ -225,7 +225,10 @@
 								class:bg-error={isExceeded}
 								class:bg-background-tertiary={!isUsed}
 								class:dark:bg-background-dark-tertiary={!isUsed}
-								title={$t`Chapter ${i + 1}${isUsed ? ' - ' + $t`Volume ${volumeIndex + 1}` : ''}`}
+								title={$t({ message: 'Chapter {chap}', values: { chap: i + 1 } }) +
+									(isUsed
+										? ' - ' + $t({ message: 'Volume {vol}', values: { vol: volumeIndex + 1 } })
+										: '')}
 							></div>
 						{/each}
 					</div>
@@ -241,7 +244,7 @@
 
 			<!-- Volume list -->
 			<div
-				class="focus:ring-primary mb-4 flex-grow overflow-y-auto rounded !px-1 !py-1 focus:ring-2 focus:outline-none"
+				class="focus:ring-primary mb-4 grow overflow-y-auto rounded px-1! py-1! focus:ring-2 focus:outline-none"
 				tabindex="0"
 				role="tablist"
 				bind:this={volumeListContainer}
@@ -251,8 +254,8 @@
 					keys: [
 						['arrowup', $t`Navigate up`],
 						['arrowdown', $t`Navigate down`],
-						['delete', $t`Remove selected`]
-					]
+						['delete', $t`Remove selected`],
+					],
 				}}
 			>
 				{#if convState.chapterSizes.length > 0}

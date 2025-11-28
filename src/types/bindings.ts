@@ -9,7 +9,7 @@ export const commands = {
  * Updates a specific field in the conversion state.
  * 
  * # Arguments
- * * `input` - Key-value pair specifying which state field is to update and its new value
+ * * `input` - Key-value pair specifying which state field to update and its new value
  * * `state` - Application state containing conversion parameters
  * 
  * # Returns
@@ -107,12 +107,12 @@ async convBundle(sensibility: number | null) : Promise<Result<BaseResponse<Bundl
 /**
  * Converts bundled volumes into the specified output format.
  * 
- * Processes all volumes in parallel, generating output files in either CBZ or EPUB format
- * according to the configuration. Creates directories as needed and applies appropriate
- * metadata to the generated files.
+ * Processes volumes with concurrency control, generating output files in either
+ * CBZ or EPUB format. Emits progress events to the frontend for real-time tracking.
  * 
  * # Arguments
  * * `state` - Application state containing conversion parameters
+ * * `app` - Tauri application handle for event emission
  * 
  * # Returns
  * * `EResult<BaseResponse>` - Success response with execution duration
@@ -120,59 +120,6 @@ async convBundle(sensibility: number | null) : Promise<Result<BaseResponse<Bundl
 async convConvert() : Promise<Result<BaseResponse<null>, Error>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("conv_convert") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-/**
- * Starts the database synchronization service.
- * 
- * # Arguments
- * * `interval` - Time interval in minutes between syncs
- * * `app_handle` - Tauri application handle
- * * `sync_manager` - State-managed sync manager instance
- * 
- * # Returns
- * * `EResult<BaseResponse>` - Success response or error
- */
-async mgmtSyncStart(interval: number | null) : Promise<Result<BaseResponse<null>, Error>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("mgmt_sync_start", { interval }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-/**
- * Stops the database synchronization service.
- * 
- * # Arguments
- * * `sync_manager` - State-managed sync manager instance
- * 
- * # Returns
- * * `EResult<BaseResponse>` - Success response or error
- */
-async mgmtSyncStop() : Promise<Result<BaseResponse<null>, Error>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("mgmt_sync_stop") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-/**
- * Retrieves the current status of the synchronization service.
- * 
- * # Arguments
- * * `sync_manager` - State-managed sync manager instance
- * 
- * # Returns
- * * `EResult<BaseResponse<SyncStatus>>` - Status containing next sync time information
- */
-async mgmtSyncStatus() : Promise<Result<BaseResponse<SyncStatus>, Error>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("mgmt_sync_status") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -200,6 +147,21 @@ async mgmtGetLogsPath() : Promise<Result<BaseResponse<LogPath>, Error>> {
 /** user-defined events **/
 
 
+export const events = __makeEvents__<{
+conversionCompleteEvent: ConversionCompleteEvent,
+conversionStartEvent: ConversionStartEvent,
+imageProgressEvent: ImageProgressEvent,
+statusMessageEvent: StatusMessageEvent,
+volumeCompleteEvent: VolumeCompleteEvent,
+volumeStartEvent: VolumeStartEvent
+}>({
+conversionCompleteEvent: "conversion-complete-event",
+conversionStartEvent: "conversion-start-event",
+imageProgressEvent: "image-progress-event",
+statusMessageEvent: "status-message-event",
+volumeCompleteEvent: "volume-complete-event",
+volumeStartEvent: "volume-start-event"
+})
 
 /** user-defined constants **/
 
@@ -276,6 +238,14 @@ format: FileFormat;
  */
 create_directory: boolean; 
 /**
+ * Whether to convert images to WebP format (deprecated, use image_format instead)
+ */
+convert_to_webp: boolean; 
+/**
+ * Image output format for conversion
+ */
+image_format: ImageOutputFormat; 
+/**
  * Sizes for volume splitting
  */
 volume_sizes: number[]; 
@@ -286,13 +256,29 @@ data: string[][];
 /**
  * Optional edited version of the data collection
  */
-edited_data: string[][] | null }
+edited_data: string[][] | null; 
+/**
+ * Whether to hide the volume number when there's only one volume
+ */
+hide_single_volume_number: boolean; 
+/**
+ * Custom separator string between project name and volume number
+ */
+volume_separator?: string }
 /**
  * Keys for the conversion state data
  * 
  * Represents various properties that can be set during the conversion process
  */
-export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null }
+export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { ConvertToWebp: boolean } | { ImageFormat: ImageOutputFormat } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null } | { HideSingleVolumeNumber: boolean } | { VolumeSeparator: string }
+/**
+ * Emitted when all conversions complete
+ */
+export type ConversionCompleteEvent = { total_volumes: number; successful: number; failed: number; duration_seconds: number }
+/**
+ * Emitted when conversion batch starts
+ */
+export type ConversionStartEvent = { total_volumes: number }
 /**
  * Reading direction for content in an ePub file
  * 
@@ -350,19 +336,7 @@ export type Error =
 /**
  * Error for resources that couldn't be found
  */
-{ type: "NotFound"; data: string } | 
-/**
- * Generic database error
- */
-{ type: "DatabaseError"; data: string } | 
-/**
- * SQLx database errors
- */
-{ type: "SqlxError" } | 
-/**
- * SQLx migration errors
- */
-{ type: "SqlxMigrationError" }
+{ type: "NotFound"; data: string }
 /**
  * Supported file formats for conversion
  * 
@@ -370,6 +344,18 @@ export type Error =
  * * `Cbz` - Comic Book ZIP format (default)
  */
 export type FileFormat = "EPUB" | "CBZ"
+/**
+ * Image output format for conversion
+ * 
+ * * `None` - Keep original image format (default)
+ * * `WebP` - Convert images to WebP format
+ * * `Avif` - Convert images to AVIF format
+ */
+export type ImageOutputFormat = "None" | "WebP" | "AVIF"
+/**
+ * Emitted periodically to show image processing progress
+ */
+export type ImageProgressEvent = { volume_index: number; volume_name: string; current_image: number; total_images: number }
 /**
  * Path information for application log files
  */
@@ -383,17 +369,21 @@ directory: string;
  */
 file: string }
 /**
- * Status information about the synchronization service
+ * Emitted for live status updates during conversion
  */
-export type SyncStatus = { 
+export type StatusMessageEvent = { message: StatusMessageType; timestamp: number }
 /**
- * Seconds until the next sync operation
+ * Status message types for live feedback
  */
-seconds_until_next_sync: number | null; 
+export type StatusMessageType = { type: "volume_started"; volume_index: number; volume_name: string } | { type: "page_added"; volume_index: number; volume_name: string; page_number: number; total_pages: number } | { type: "volume_finished"; volume_index: number; volume_name: string; success: boolean }
 /**
- * Minutes until the next sync operation
+ * Emitted when a volume conversion completes
  */
-minutes_until_next_sync: number | null }
+export type VolumeCompleteEvent = { volume_index: number; total_volumes: number; volume_name: string; success: boolean; error_message: string | null }
+/**
+ * Emitted when a volume conversion starts
+ */
+export type VolumeStartEvent = { volume_index: number; total_volumes: number; volume_name: string }
 
 /** tauri-specta globals **/
 

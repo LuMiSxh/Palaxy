@@ -1,6 +1,6 @@
 [package]
 name = "palaxy"
-version = "0.3.2"
+version = "0.3.3"
 description = "The manga converter for the modern age"
 authors = ["LuMiSxh"]
 license = ""
@@ -21,30 +21,60 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = ["protocol-asset", "macos-private-api"] }
-serde = { version = "1", features = ["derive"] }
-thiserror = "2.0"
-regex = "1.11"
-image = "0.25"
-lazy_static = { version = "1.5", features = [] }
-tokio = { version = "1.44", features = ["fs"] }
-epub-builder = "0.8"
-zip = "2.5"
-rayon = "1.10"
-tauri-plugin-dialog = "2.2"
-reqwest = { version = "0.12", features = ["json"] }
-async-trait = "0.1"
-specta-typescript = "0.0.9"
+tauri-build = { version = "2", features = [] }
+tauri-plugin-dialog = "2.4"
+tauri-plugin-os = "2"
+tauri-plugin-log = "2"
 tauri-specta = { version = "=2.0.0-rc.21", features = ["derive", "typescript"] }
 specta = "=2.0.0-rc.22"
-tauri-plugin-os = "2"
-memmap2 = "0.9"
-num_cpus = "1.16.0"
-tauri-plugin-log = "2"
-sqlx = { version = "0.8", features = ["runtime-tokio-native-tls", "sqlite", "migrate"] }
-once_cell = "1.21"
+specta-typescript = "0.0.9"
+serde = { version = "1", features = ["derive"] }
+thiserror = "2.0"
+tokio = { version = "1.48", features = ["fs"] }
+async-trait = "0.1"
 futures = "0.3.31"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "avif"] }
+epub-builder = "0.8"
+zip = "6.0.0"
+regex = "1.12"
+lazy_static = "1.5"
+rayon = "1.11"
+memmap2 = "0.9"
+num_cpus = "1.17.0"
+once_cell = "1.21"
 log = "0.4"
-chrono = "0.4.40"
+chrono = "0.4.42"
+reqwest = { version = "0.12", features = ["json"] }
+ravif = "0.12"
+lru = "0.16"
+mimalloc = "0.1"
+
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = "2"
+
+[profile.release]
+# Enable Link Time Optimization for better cross-crate inlining and dead code elimination
+# "fat" LTO provides maximum optimization across all crates
+lto = "fat"
+
+# Use a single codegen unit for maximum optimization potential
+# This allows LLVM to optimize across the entire crate at once
+codegen-units = 1
+
+# Enable all optimizations
+opt-level = 3
+
+# Strip symbols and debug info from the binary to reduce size
+strip = true
+
+# Abort on panic instead of unwinding (slightly smaller and faster)
+panic = "abort"
+
+# Enable overflow checks even in release (safety without much cost)
+overflow-checks = true
+
+[profile.release.build-override]
+# Use faster optimization for build scripts (they don't need to be as optimized)
+opt-level = 3
+codegen-units = 16

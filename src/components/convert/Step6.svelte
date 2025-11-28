@@ -10,7 +10,7 @@
 		IconChartPie,
 		IconCopy,
 		IconPhoto,
-		IconVocabulary
+		IconVocabulary,
 	} from '@tabler/icons-svelte';
 
 	let convStateData: ConvState | null = $state(null);
@@ -74,7 +74,7 @@
 	onMount(async () => {
 		unregisterKeyHint = keyHint.smartAdd([
 			['arrowup', $t`Scroll up`],
-			['arrowdown', $t`Scroll down`]
+			['arrowdown', $t`Scroll down`],
 		]);
 
 		stepState.disablePrev = false;
@@ -204,6 +204,28 @@
 									: $t`Will save directly in target location`}
 							</span>
 						</div>
+					</div>
+
+					<!-- Image Output Format -->
+					<div>
+						<label for="" class="mb-2 block font-medium">{$t`Image Output Format`}</label>
+						<div class="flex items-center gap-4">
+							<input
+								type="text"
+								class="input input-primary pointer-events-none cursor-not-allowed opacity-75"
+								value={convStateData?.image_format ?? 'None'}
+								disabled
+							/>
+						</div>
+						<span class="mt-2 block text-sm">
+							{#if convStateData?.image_format === 'None'}
+								{$t`Images will keep their original format`}
+							{:else if convStateData?.image_format === 'WebP'}
+								{$t`Images will be converted to WebP format`}
+							{:else if convStateData?.image_format === 'AVIF'}
+								{$t`Images will be converted to AVIF format (smaller, slower)`}
+							{/if}
+						</span>
 					</div>
 				</div>
 			</div>

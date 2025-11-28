@@ -42,7 +42,7 @@
 		// Show the key hint for navigating
 		cleanupKeyHint = keyHint.smartAdd([
 			['arrowdown', $t`Scroll down`],
-			['arrowup', $t`Scroll up`]
+			['arrowup', $t`Scroll up`],
 		]);
 	});
 

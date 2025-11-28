@@ -5,8 +5,9 @@
 		IconFileCode2,
 		IconFileDownload,
 		IconFolder,
+		IconPhoto,
 		IconSettings,
-		IconToggleRight
+		IconToggleRight,
 	} from '@tabler/icons-svelte';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import dialogManager from '$states/dialog.svelte';
@@ -20,6 +21,9 @@
 	let convType = $state($appData.autoPop.converter.conversionType);
 	let convLocation = $state($appData.autoPop.converter.targetLocation);
 	let convNewFolder = $state($appData.autoPop.converter.createNewFolder);
+	let convImageFormat = $state($appData.autoPop.converter.imageFormat);
+	let hideSingleVolumeNumber = $state($appData.autoPop.converter.hideSingleVolumeNumber);
+	let volumeSeparator = $state($appData.autoPop.converter.volumeSeparator);
 
 	// set States
 	function save() {
@@ -27,6 +31,9 @@
 		$appData.autoPop.converter.conversionType = convType;
 		$appData.autoPop.converter.targetLocation = convLocation === '' ? null : convLocation;
 		$appData.autoPop.converter.createNewFolder = convNewFolder;
+		$appData.autoPop.converter.imageFormat = convImageFormat;
+		$appData.autoPop.converter.hideSingleVolumeNumber = hideSingleVolumeNumber;
+		$appData.autoPop.converter.volumeSeparator = volumeSeparator;
 		addToast($t`Auto-Populate Settings Saved`, 'info');
 		dialogManager.closeDialog(id);
 	}
@@ -34,7 +41,7 @@
 	async function selectLocation() {
 		const location = await open({
 			directory: true,
-			multiple: false
+			multiple: false,
 		});
 		if (location) {
 			convLocation = location;
@@ -43,92 +50,13 @@
 </script>
 
 <div class="p-2">
-	<div class="grid gap-4">
-		<!-- Enable Auto-Population Card -->
-		<div class="flex items-center">
-			<IconToggleRight class="text-primary mr-2" size={20} />
-			<h3 class="font-semibold">{$t`Enable Auto-Population`}</h3>
-		</div>
-		<label class="toggle toggle-lg">
-			<input
-				type="checkbox"
-				class="toggle-input"
-				onkeydown={(evt) => {
-					if (evt.key === 'Enter') {
-						evt.preventDefault();
-						evt.stopPropagation();
-						autoPop = !autoPop;
-					}
-				}}
-				bind:checked={autoPop}
-			/>
-			<span class="toggle-track">
-				<span class="toggle-thumb"></span>
-			</span>
-		</label>
-
-		<!-- File Type Card -->
-		<div class="flex items-center">
-			<IconFileCode2 class="text-primary mr-2" size={20} />
-			<h3 class="font-semibold">{$t`File Type`}</h3>
-		</div>
-		<select
-			class="select select-primary w-full"
-			use:handleKeyHint={{
-				keys: [
-					['arrowup', $t`Select up`],
-					['arrowdown', $t`Select down`],
-					['enter', $t`Select`]
-				]
-			}}
-			bind:value={convType}
-		>
-			<option value="EPUB">{$t`EPUB`}</option>
-			<option value="CBZ">{$t`CBZ`}</option>
-			<option value={null}>{$t`None`}</option>
-		</select>
-
-		<!-- Target Location Card -->
-		<div class="flex items-center">
-			<IconFolder class="text-primary mr-2" size={20} />
-			<h3 class="font-semibold">{$t`Target Location`}</h3>
-		</div>
-		<button
-			class="btn btn-primary flex w-full items-center justify-between p-2 select-none"
-			onclick={selectLocation}
-			onkeydown={(evt) => {
-				if (evt.key === 'Enter') {
-					evt.preventDefault();
-					evt.stopPropagation();
-					selectLocation();
-				}
-			}}
-			use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
-		>
-			<span class="flex items-center">
-				<IconFileDownload class="mr-2" size={20} />
-				{#if !convLocation}
-					<span>{$t`Click to select a folder`}</span>
-				{:else}
-					<span class="overflow-hidden text-ellipsis">{convLocation.split('/').pop()}</span>
-				{/if}
-			</span>
-		</button>
-		{#if convLocation}
-			<p
-				class="text-content-secondary dark:text-content-dark-secondary mt-2 truncate text-xs"
-				title={convLocation}
-			>
-				{truncatePath(convLocation, 60)}
-			</p>
-		{/if}
-
-		<!-- Create New Folder Card -->
-		<div class="flex items-center">
-			<IconSettings class="text-primary mr-2" size={20} />
-			<h3 class="font-semibold">{$t`Create New Folder`}</h3>
-		</div>
-		<div class="flex items-center gap-4">
+	<div class="space-y-4">
+		<!-- Enable Auto-Population -->
+		<div>
+			<div class="mb-2 flex items-center">
+				<IconToggleRight class="text-primary mr-2" size={20} />
+				<h3 class="font-semibold">{$t`Enable Auto-Population`}</h3>
+			</div>
 			<label class="toggle toggle-lg">
 				<input
 					type="checkbox"
@@ -137,21 +65,189 @@
 						if (evt.key === 'Enter') {
 							evt.preventDefault();
 							evt.stopPropagation();
-							convNewFolder = !convNewFolder;
+							autoPop = !autoPop;
 						}
 					}}
-					use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
-					bind:checked={convNewFolder}
+					bind:checked={autoPop}
 				/>
 				<span class="toggle-track">
 					<span class="toggle-thumb"></span>
 				</span>
 			</label>
-			<span class="text-sm">
-				{convNewFolder
-					? $t`Will create a new folder for output files`
-					: $t`Will save directly in target location`}
-			</span>
+		</div>
+
+		<div class="grid grid-cols-2 gap-4">
+			<!-- File Type -->
+			<div>
+				<div class="mb-2 flex items-center">
+					<IconFileCode2 class="text-primary mr-2" size={20} />
+					<h3 class="font-semibold">{$t`File Type`}</h3>
+				</div>
+				<select
+					class="select select-primary w-full"
+					use:handleKeyHint={{
+						keys: [
+							['arrowup', $t`Select up`],
+							['arrowdown', $t`Select down`],
+							['enter', $t`Select`],
+						],
+					}}
+					bind:value={convType}
+				>
+					<option value="EPUB">{$t`EPUB`}</option>
+					<option value="CBZ">{$t`CBZ`}</option>
+					<option value={null}>{$t`None`}</option>
+				</select>
+			</div>
+
+			<!-- Image Output Format -->
+			<div>
+				<div class="mb-2 flex items-center">
+					<IconPhoto class="text-primary mr-2" size={20} />
+					<h3 class="font-semibold">{$t`Image Output Format`}</h3>
+				</div>
+				<select
+					class="select select-primary w-full"
+					use:handleKeyHint={{
+						keys: [
+							['arrowup', $t`Select up`],
+							['arrowdown', $t`Select down`],
+							['enter', $t`Select`],
+						],
+					}}
+					bind:value={convImageFormat}
+				>
+					<option value="None">{$t`Original (No Conversion)`}</option>
+					<option value="WebP">WebP</option>
+					<option value="AVIF">AVIF</option>
+					<option value={null}>{$t`None`}</option>
+				</select>
+			</div>
+		</div>
+
+		<!-- Target Location -->
+		<div>
+			<div class="mb-2 flex items-center">
+				<IconFolder class="text-primary mr-2" size={20} />
+				<h3 class="font-semibold">{$t`Target Location`}</h3>
+			</div>
+			<button
+				class="btn btn-primary flex w-full items-center justify-between p-2 select-none"
+				onclick={selectLocation}
+				onkeydown={(evt) => {
+					if (evt.key === 'Enter') {
+						evt.preventDefault();
+						evt.stopPropagation();
+						selectLocation();
+					}
+				}}
+				use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
+			>
+				<span class="flex items-center">
+					<IconFileDownload class="mr-2" size={20} />
+					{#if !convLocation}
+						<span>{$t`Click to select a folder`}</span>
+					{:else}
+						<span class="overflow-hidden text-ellipsis">{convLocation.split('/').pop()}</span>
+					{/if}
+				</span>
+			</button>
+			{#if convLocation}
+				<p
+					class="text-content-secondary dark:text-content-dark-secondary mt-1 truncate text-xs"
+					title={convLocation}
+				>
+					{truncatePath(convLocation, 60)}
+				</p>
+			{/if}
+		</div>
+
+		<!-- Create New Folder -->
+		<div>
+			<div class="mb-2 flex items-center">
+				<IconSettings class="text-primary mr-2" size={20} />
+				<h3 class="font-semibold">{$t`Create New Folder`}</h3>
+			</div>
+			<div class="flex items-center gap-4">
+				<label class="toggle toggle-lg">
+					<input
+						type="checkbox"
+						class="toggle-input"
+						onkeydown={(evt) => {
+							if (evt.key === 'Enter') {
+								evt.preventDefault();
+								evt.stopPropagation();
+								convNewFolder = !convNewFolder;
+							}
+						}}
+						use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
+						bind:checked={convNewFolder}
+					/>
+					<span class="toggle-track">
+						<span class="toggle-thumb"></span>
+					</span>
+				</label>
+				<span class="text-sm">
+					{convNewFolder
+						? $t`Will create a new folder for output files`
+						: $t`Will save directly in target location`}
+				</span>
+			</div>
+		</div>
+
+		<!-- Hide Single Volume Number -->
+		<div>
+			<div class="mb-2 flex items-center">
+				<IconSettings class="text-primary mr-2" size={20} />
+				<h3 class="font-semibold">{$t`Hide Single Volume Number`}</h3>
+			</div>
+			<div class="flex items-center gap-4">
+				<label class="toggle toggle-lg">
+					<input
+						type="checkbox"
+						class="toggle-input"
+						onkeydown={(evt) => {
+							if (evt.key === 'Enter') {
+								evt.preventDefault();
+								evt.stopPropagation();
+								hideSingleVolumeNumber = !hideSingleVolumeNumber;
+							}
+						}}
+						use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
+						bind:checked={hideSingleVolumeNumber}
+					/>
+					<span class="toggle-track">
+						<span class="toggle-thumb"></span>
+					</span>
+				</label>
+				<span class="text-sm">
+					{hideSingleVolumeNumber
+						? $t`Will hide volume number when only one volume exists`
+						: $t`Will always show volume number`}
+				</span>
+			</div>
+		</div>
+
+		<!-- Volume Separator -->
+		<div>
+			<div class="mb-2 flex items-center">
+				<IconSettings class="text-primary mr-2" size={20} />
+				<h3 class="font-semibold">{$t`Volume Separator`}</h3>
+			</div>
+			<input
+				type="text"
+				class="input input-primary w-full"
+				placeholder=" | "
+				bind:value={volumeSeparator}
+				onkeydown={(evt) => {
+					if (evt.key === ' ') {
+						evt.stopPropagation();
+					}
+				}}
+			/>
+			<p class="text-content-secondary dark:text-content-dark-secondary mt-1 text-xs">
+				{$t`Separator between volume name and volume number (e.g., "My Manga | 1")`}
+			</p>
 		</div>
 	</div>
 

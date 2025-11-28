@@ -166,73 +166,62 @@
 					</div>
 					<progress class="progress progress-primary w-full" max="100" value={overallProgress}
 					></progress>
-					<div class="mt-2 flex items-center justify-between text-xs">
-						<span class="flex items-center gap-1 opacity-70">
-							<IconBolt size={14} />
-							{conversionProgress.activeVolumes.length}
-							{$t`active threads`}
+					<div class="mt-2 flex justify-end gap-3 text-xs">
+						<span class="text-success flex items-center gap-1">
+							<IconCircleCheck size={14} />
+							{$t({
+								message: '{tot} successfull',
+								values: { tot: conversionProgress.completed.successful },
+							})}
 						</span>
-						<div class="flex gap-3">
-							<span class="text-success flex items-center gap-1">
-								<IconCircleCheck size={14} />
-								{$t({
-									message: '{tot} successfull',
-									values: { tot: conversionProgress.completed.successful },
-								})}
-							</span>
-							<span class="text-error flex items-center gap-1">
-								<IconCircleX size={14} />
-								{$t({
-									message: '{tot} failed',
-									values: { tot: conversionProgress.completed.failed },
-								})}
-							</span>
-						</div>
+						<span class="text-error flex items-center gap-1">
+							<IconCircleX size={14} />
+							{$t({
+								message: '{tot} failed',
+								values: { tot: conversionProgress.completed.failed },
+							})}
+						</span>
 					</div>
 				</div>
 
-				<!-- Active Conversions Grid -->
+				<!-- Current Volume -->
 				{#if conversionProgress.activeVolumes.length > 0}
+					{@const volume = conversionProgress.activeVolumes[0]}
 					<div>
-						<h4 class="mb-2 text-sm font-semibold">{$t`Active Conversions`}</h4>
-						<div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
-							{#each conversionProgress.activeVolumes as volume (volume.index)}
-								<div
-									class="bg-background-tertiary dark:bg-background-dark-tertiary rounded-lg p-3 shadow-sm"
-									in:fly={{ y: 10, duration: 300 }}
-								>
-									<div class="mb-2 flex items-center justify-between">
-										<span class="text-xs font-semibold opacity-70">
-											{$t({ message: 'Volume {vol}', values: { vol: volume.index + 1 } })}
-										</span>
-										<span class="text-primary text-xs font-bold">{volume.progress.toFixed(0)}%</span
-										>
-									</div>
-									<div class="mb-2 truncate text-sm font-medium" title={volume.name}>
-										{volume.name}
-									</div>
-									<progress
-										class="progress progress-secondary w-full"
-										max="100"
-										value={volume.progress}
-									></progress>
-									<div class="mt-1 flex justify-end">
-										<span class="text-[10px] opacity-60">
-											{volume.currentImage} / {volume.totalImages}
-										</span>
-									</div>
-								</div>
-							{/each}
+						<h4 class="mb-2 text-sm font-semibold">{$t`Current Volume`}</h4>
+						<div
+							class="bg-background-tertiary dark:bg-background-dark-tertiary rounded-lg p-4 shadow-md"
+							in:fly={{ y: 10, duration: 300 }}
+						>
+							<div class="mb-3 flex items-center justify-between">
+								<span class="text-sm font-semibold">
+									{$t({ message: 'Volume {vol}', values: { vol: volume.index + 1 } })}
+								</span>
+								<span class="text-primary text-lg font-bold">{volume.progress.toFixed(0)}%</span>
+							</div>
+							<div class="mb-3 truncate text-base font-medium" title={volume.name}>
+								{volume.name}
+							</div>
+							<progress class="progress progress-primary w-full" max="100" value={volume.progress}
+							></progress>
+							<div class="mt-2 flex justify-between text-sm">
+								<span class="opacity-70">
+									{$t`Images`}
+								</span>
+								<span class="font-medium">
+									{volume.currentImage} / {volume.totalImages}
+								</span>
+							</div>
 						</div>
 					</div>
 				{/if}
 
-				<!-- Volume List (Compact) -->
+				<!-- All Volumes List -->
 				{#if conversionProgress.volumes.length > 0}
 					<div>
-						<h4 class="mb-2 text-sm font-semibold">{$t`Volume Status`}</h4>
+						<h4 class="mb-2 text-sm font-semibold">{$t`All Volumes`}</h4>
 						<div
-							class="border-background-tertiary dark:border-background-dark-tertiary max-h-48 space-y-1 overflow-y-auto rounded-lg border p-2"
+							class="border-background-tertiary dark:border-background-dark-tertiary max-h-56 space-y-1 overflow-y-auto rounded-lg border p-2"
 						>
 							{#each conversionProgress.volumes as volume}
 								<div

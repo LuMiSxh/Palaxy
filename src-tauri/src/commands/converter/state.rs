@@ -36,6 +36,8 @@ pub async fn conv_state_set(
             ConvStateKey::VolumeSizes(_) => "VolumeSizes",
             ConvStateKey::Data(_) => "Data",
             ConvStateKey::EditedData(_) => "EditedData",
+            ConvStateKey::HideSingleVolumeNumber(_) => "HideSingleVolumeNumber",
+            ConvStateKey::VolumeSeparator(_) => "VolumeSeparator",
         }
     );
     let start = std::time::Instant::now();
@@ -102,6 +104,14 @@ pub async fn conv_state_set(
                 value.as_ref().map_or(0, |v| v.len())
             );
             state.edited_data = value;
+        }
+        ConvStateKey::HideSingleVolumeNumber(value) => {
+            debug!("Setting hide single volume number flag to: {}", value);
+            state.hide_single_volume_number = value;
+        }
+        ConvStateKey::VolumeSeparator(value) => {
+            debug!("Setting volume separator to: {}", value);
+            state.volume_separator = value;
         }
     }
 

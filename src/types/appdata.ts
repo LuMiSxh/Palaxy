@@ -102,6 +102,16 @@ export interface AppData {
 			 * Image output format for conversion.
 			 */
 			imageFormat: 'None' | 'WebP' | 'AVIF' | null;
+
+			/**
+			 * Whether to hide the volume number when there's only one volume.
+			 */
+			hideSingleVolumeNumber: boolean;
+
+			/**
+			 * Custom separator string between project name and volume number.
+			 */
+			volumeSeparator: string;
 		};
 	};
 }
@@ -121,6 +131,8 @@ export const defaultAppData: AppData = {
 			targetLocation: null,
 			createNewFolder: true,
 			imageFormat: null,
+			hideSingleVolumeNumber: false,
+			volumeSeparator: ' | ',
 		},
 	},
 };

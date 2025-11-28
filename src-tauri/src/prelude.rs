@@ -100,6 +100,7 @@ pub type EResult<T> = Result<T, Error>;
 /// Contains all necessary information about a conversion task including
 /// source and destination paths, format settings, and file organization.
 #[derive(Serialize, Deserialize, Clone, Default, Type, Debug)]
+#[serde(default)]
 pub struct ConvState {
     /// Name of the conversion task
     pub name: String,
@@ -125,6 +126,16 @@ pub struct ConvState {
     pub data: Vec<Vec<PathBuf>>,
     /// Optional edited version of the data collection
     pub edited_data: Option<Vec<Vec<PathBuf>>>,
+    /// Whether to hide the volume number when there's only one volume
+    pub hide_single_volume_number: bool,
+    /// Custom separator string between project name and volume number
+    #[serde(default = "default_volume_separator")]
+    pub volume_separator: String,
+}
+
+/// Default value for volume separator
+fn default_volume_separator() -> String {
+    " - ".to_string()
 }
 
 impl ConvState {

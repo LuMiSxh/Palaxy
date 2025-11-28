@@ -17,11 +17,11 @@ msgstr ""
 msgid "{num, plural, one {# chapter} other {# chapters}}"
 msgstr "{num, plural, one {# Kapitel} other {# Kapitel}}"
 
-#: src/components/convert/Step7.svelte:185
+#: src/components/convert/Step7.svelte:179
 msgid "{tot} failed"
 msgstr "{tot} fehlgeschlagen"
 
-#: src/components/convert/Step7.svelte:178
+#: src/components/convert/Step7.svelte:172
 msgid "{tot} successfull"
 msgstr "{tot} erfolgreich"
 
@@ -32,12 +32,12 @@ msgid "ActionHub"
 msgstr "ActionHub"
 
 #: src/components/convert/Step7.svelte:197
-msgid "Active Conversions"
-msgstr "Aktive Konvertierungen"
+#~ msgid "Active Conversions"
+#~ msgstr "Aktive Konvertierungen"
 
 #: src/components/convert/Step7.svelte:173
-msgid "active threads"
-msgstr "aktive Threads"
+#~ msgid "active threads"
+#~ msgstr "aktive Threads"
 
 #: src/components/convert/step5/Chapter.svelte:275
 msgid "Add Image"
@@ -56,11 +56,11 @@ msgstr "Band hinzufügen"
 msgid "Adding page {pageNum} of {pageTot} to Volume {volIdx}"
 msgstr "Seite {pageNum} von {pageTot} zu Band {volIdx} wird hinzugefügt"
 
-#: src/components/convert/Step7.svelte:234
-#~ msgid "All Volumes"
-#~ msgstr "Alle Bände"
+#: src/components/convert/Step7.svelte:222
+msgid "All Volumes"
+msgstr "Alle Bände"
 
-#: src/components/convert/Step7.svelte:317
+#: src/components/convert/Step7.svelte:306
 msgid "All volumes converted successfully!"
 msgstr "Alle Bände erfolgreich konvertiert!"
 
@@ -113,11 +113,11 @@ msgstr "Felder automatisch ausfüllen"
 msgid "Auto-Populate Settings"
 msgstr "Automatische Einstellungen"
 
-#: src/components/dialogs/AutoPopulate.svelte:33
+#: src/components/dialogs/AutoPopulate.svelte:37
 msgid "Auto-Populate Settings Saved"
 msgstr "Automatische Einstellungen gespeichert"
 
-#: src/components/convert/Step3.svelte:119
+#: src/components/convert/Step3.svelte:128
 msgid "Automatic"
 msgstr "Automatisch"
 
@@ -129,7 +129,7 @@ msgstr "Paketoptionen"
 msgid "Bundle Summary"
 msgstr "Paketzusammenfassung"
 
-#: src/components/convert/Step3.svelte:102
+#: src/components/convert/Step3.svelte:111
 msgid "Bundle Type"
 msgstr "Pakettyp"
 
@@ -138,12 +138,12 @@ msgid "Bundling"
 msgstr "Bündelung"
 
 #: src/components/DialogContent.svelte:119
-#: src/components/dialogs/AutoPopulate.svelte:196
+#: src/components/dialogs/AutoPopulate.svelte:267
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: src/components/convert/Step3.svelte:149
-#: src/components/dialogs/AutoPopulate.svelte:90
+#: src/components/convert/Step3.svelte:160
+#: src/components/dialogs/AutoPopulate.svelte:98
 msgid "CBZ"
 msgstr "CBZ"
 
@@ -217,7 +217,7 @@ msgstr "Kapitel im Band"
 msgid "Choose Source Material Directory"
 msgstr "Wähle das Verzeichnis des Quellmaterials"
 
-#: src/components/dialogs/AutoPopulate.svelte:114
+#: src/components/dialogs/AutoPopulate.svelte:149
 msgid "Click to select a folder"
 msgstr "Klicke, um einen Ordner auszuwählen"
 
@@ -244,15 +244,15 @@ msgstr "Bestätigung"
 msgid "Conversion"
 msgstr "Konvertierung"
 
-#: src/components/convert/Step7.svelte:311
+#: src/components/convert/Step7.svelte:300
 msgid "Conversion Complete!"
 msgstr "Konvertierung abgeschlossen!"
 
-#: src/components/convert/Step7.svelte:319
+#: src/components/convert/Step7.svelte:308
 msgid "Conversion completed with errors"
 msgstr "Konvertierung mit Fehlern abgeschlossen"
 
-#: src/components/convert/Step7.svelte:321
+#: src/components/convert/Step7.svelte:310
 msgid "Conversion completed with some errors"
 msgstr "Konvertierung mit einigen Fehlern abgeschlossen"
 
@@ -264,7 +264,7 @@ msgstr "Konvertierungszusammenfassung"
 msgid "Convert"
 msgstr "Konvertieren"
 
-#: src/components/convert/Step7.svelte:384
+#: src/components/convert/Step7.svelte:373
 #: src/components/convert/Step7.svelte:67
 msgid "Convert another manga"
 msgstr "Einen weiteren Manga konvertieren"
@@ -293,9 +293,9 @@ msgstr "Cover-Bilder"
 #~ msgid "Create folder"
 #~ msgstr "Ordner erstellen"
 
-#: src/components/convert/Step3.svelte:220
+#: src/components/convert/Step3.svelte:285
 #: src/components/convert/Step6.svelte:188
-#: src/components/dialogs/AutoPopulate.svelte:132
+#: src/components/dialogs/AutoPopulate.svelte:169
 msgid "Create New Folder"
 msgstr "Neuen Ordner erstellen"
 
@@ -304,9 +304,9 @@ msgstr "Neuen Ordner erstellen"
 msgid "Ctrl"
 msgstr "Strg"
 
-#: src/components/convert/Step7.svelte:197
-#~ msgid "Current Volume"
-#~ msgstr "Aktuelles Band"
+#: src/components/convert/Step7.svelte:191
+msgid "Current Volume"
+msgstr "Aktuelles Band"
 
 #: src/components/convert/step4/ManualBundling.svelte:185
 msgid "Current Volumes"
@@ -338,7 +338,7 @@ msgstr "Erkannte Bänder"
 msgid "Detection Result"
 msgstr "Erkennungsergebnis"
 
-#: src/components/dialogs/AutoPopulate.svelte:53
+#: src/components/dialogs/AutoPopulate.svelte:58
 msgid "Enable Auto-Population"
 msgstr "Einschalten der automatischen Befüllung"
 
@@ -364,16 +364,16 @@ msgstr "Englisch"
 msgid "Enter"
 msgstr "Eingabe"
 
-#: src/components/convert/Step3.svelte:96
+#: src/components/convert/Step3.svelte:105
 msgid "Enter project name"
 msgstr "Projektname eingeben"
 
-#: src/components/convert/Step3.svelte:148
-#: src/components/dialogs/AutoPopulate.svelte:89
+#: src/components/convert/Step3.svelte:159
+#: src/components/dialogs/AutoPopulate.svelte:97
 msgid "EPUB"
 msgstr "EPUB"
 
-#: src/components/convert/Step3.svelte:159
+#: src/components/convert/Step3.svelte:170
 #: src/components/convert/Step6.svelte:181
 msgid "EPUB only"
 msgstr "Nur EPUB"
@@ -391,7 +391,7 @@ msgstr "Esc"
 msgid "Excluded"
 msgstr "Ausgeschlossen"
 
-#: src/components/convert/Step7.svelte:344
+#: src/components/convert/Step7.svelte:333
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
@@ -403,13 +403,13 @@ msgstr "Fehler beim Ausführen des Bundlers. Bitte versuche es erneut."
 msgid "Failed Volume {volIdx}: {volName}"
 msgstr "Fehlgeschlagenes Band {volIdx}: {volName}"
 
-#: src/components/convert/Step7.svelte:368
+#: src/components/convert/Step7.svelte:357
 msgid "Failed Volumes"
 msgstr "Fehlgeschlagene Bände"
 
-#: src/components/convert/Step3.svelte:134
+#: src/components/convert/Step3.svelte:145
 #: src/components/convert/Step6.svelte:146
-#: src/components/dialogs/AutoPopulate.svelte:76
+#: src/components/dialogs/AutoPopulate.svelte:84
 msgid "File Type"
 msgstr "Dateityp"
 
@@ -454,6 +454,11 @@ msgstr "Gute Punkte"
 msgid "Grayscale Sensibility"
 msgstr "Graustufen-Empfindlichkeit"
 
+#: src/components/convert/Step3.svelte:316
+#: src/components/dialogs/AutoPopulate.svelte:202
+msgid "Hide Single Volume Number"
+msgstr "Einzelne Bandnummer verbergen"
+
 #: src/routes/+layout.svelte:58
 msgid "Home"
 msgstr "Startseite"
@@ -462,7 +467,7 @@ msgstr "Startseite"
 msgid "Hover for details"
 msgstr "Für Details darüber schweben"
 
-#: src/components/convert/Step3.svelte:117
+#: src/components/convert/Step3.svelte:126
 msgid "Image"
 msgstr "Bild"
 
@@ -470,9 +475,9 @@ msgstr "Bild"
 msgid "Image Error"
 msgstr "Bildfehler"
 
-#: src/components/convert/Step3.svelte:249
+#: src/components/convert/Step3.svelte:200
 #: src/components/convert/Step6.svelte:211
-#: src/components/dialogs/AutoPopulate.svelte:163
+#: src/components/dialogs/AutoPopulate.svelte:107
 msgid "Image Output Format"
 msgstr "Bildausgabeformat"
 
@@ -487,6 +492,7 @@ msgstr "Bilder"
 
 #: src/components/convert/Step5.svelte:147
 #: src/components/convert/Step6.svelte:259
+#: src/components/convert/Step7.svelte:209
 msgid "Images"
 msgstr "Bilder"
 
@@ -494,17 +500,17 @@ msgstr "Bilder"
 msgid "Images per volume"
 msgstr "Bilder pro Band"
 
-#: src/components/convert/Step3.svelte:271
+#: src/components/convert/Step3.svelte:223
 #: src/components/convert/Step6.svelte:226
 msgid "Images will be converted to AVIF format (smaller, slower)"
 msgstr "Bilder werden in AVIF-Format konvertiert (kleiner, langsamer)"
 
-#: src/components/convert/Step3.svelte:269
+#: src/components/convert/Step3.svelte:221
 #: src/components/convert/Step6.svelte:224
 msgid "Images will be converted to WebP format"
 msgstr "Bilder werden in WebP-Format konvertiert"
 
-#: src/components/convert/Step3.svelte:267
+#: src/components/convert/Step3.svelte:219
 #: src/components/convert/Step6.svelte:222
 msgid "Images will keep their original format"
 msgstr "Bilder behalten ihr ursprüngliches Format"
@@ -525,10 +531,11 @@ msgstr "Information"
 #: src/components/convert/Step4.svelte:150
 #: src/components/DialogContent.svelte:112
 #: src/components/DialogContent.svelte:126
-#: src/components/dialogs/AutoPopulate.svelte:109
-#: src/components/dialogs/AutoPopulate.svelte:146
-#: src/components/dialogs/AutoPopulate.svelte:186
-#: src/components/dialogs/AutoPopulate.svelte:200
+#: src/components/dialogs/AutoPopulate.svelte:144
+#: src/components/dialogs/AutoPopulate.svelte:183
+#: src/components/dialogs/AutoPopulate.svelte:216
+#: src/components/dialogs/AutoPopulate.svelte:257
+#: src/components/dialogs/AutoPopulate.svelte:271
 msgid "Invoke"
 msgstr "Aufrufen"
 
@@ -565,7 +572,7 @@ msgstr "Sprache auf Deutsch geändert"
 #~ msgid "Language Settings"
 #~ msgstr "Spracheinstellungen"
 
-#: src/components/convert/Step3.svelte:178
+#: src/components/convert/Step3.svelte:189
 #: src/components/convert/Step6.svelte:176
 #: src/components/convert/Step6.svelte:26
 msgid "Left to Right"
@@ -576,7 +583,7 @@ msgstr "Links nach Rechts"
 msgid "Light"
 msgstr "Hell"
 
-#: src/components/convert/Step7.svelte:284
+#: src/components/convert/Step7.svelte:273
 msgid "Live Log"
 msgstr "Live-Protokoll"
 
@@ -605,7 +612,7 @@ msgstr "Manga-Konvertierung und -Suche auf Knopfdruck."
 #~ msgid "Manga Search"
 #~ msgstr "Manga-Suche"
 
-#: src/components/convert/Step3.svelte:116
+#: src/components/convert/Step3.svelte:125
 msgid "Manual"
 msgstr "Manuell"
 
@@ -639,7 +646,7 @@ msgstr "Navigieren"
 msgid "Navigate down"
 msgstr "Navigiere nach unten"
 
-#: src/components/convert/Step3.svelte:53
+#: src/components/convert/Step3.svelte:59
 #: src/components/convert/Step4.svelte:44
 #: src/components/DialogContent.svelte:58
 msgid "Navigate fields"
@@ -671,8 +678,8 @@ msgstr "Noch keine Bänder hinzugefügt. Füge deinen ersten Band unten hinzu."
 msgid "No volumes detected. Try running the bundler again."
 msgstr "Keine Bänder erkannt. Versuche den Bundler erneut auszuführen."
 
-#: src/components/dialogs/AutoPopulate.svelte:91
-#: src/components/dialogs/AutoPopulate.svelte:179
+#: src/components/dialogs/AutoPopulate.svelte:99
+#: src/components/dialogs/AutoPopulate.svelte:123
 msgid "None"
 msgstr "Nichts"
 
@@ -686,8 +693,8 @@ msgstr "Nicht angegeben"
 msgid "Operating System"
 msgstr "Betriebssystem"
 
-#: src/components/convert/Step3.svelte:261
-#: src/components/dialogs/AutoPopulate.svelte:176
+#: src/components/convert/Step3.svelte:213
+#: src/components/dialogs/AutoPopulate.svelte:120
 msgid "Original (No Conversion)"
 msgstr "Original (Keine Konvertierung)"
 
@@ -695,7 +702,7 @@ msgstr "Original (Keine Konvertierung)"
 msgid "OS Version"
 msgstr "Betriebssystemversion"
 
-#: src/components/convert/Step3.svelte:129
+#: src/components/convert/Step3.svelte:139
 msgid "Output Settings"
 msgstr "Ausgabeeinstellungen"
 
@@ -716,20 +723,20 @@ msgstr "Bitte behebe diese Probleme, bevor du fortfährst."
 msgid "Previous"
 msgstr "Zurück"
 
-#: src/components/convert/Step7.svelte:353
+#: src/components/convert/Step7.svelte:342
 msgid "Processing Time"
 msgstr "Verarbeitungszeit"
 
-#: src/components/convert/Step3.svelte:90
+#: src/components/convert/Step3.svelte:99
 #: src/components/convert/Step6.svelte:121
 msgid "Project Name"
 msgstr "Projektname"
 
-#: src/components/convert/Step3.svelte:85
+#: src/components/convert/Step3.svelte:93
 msgid "Project Settings"
 msgstr "Projekteinstellungen"
 
-#: src/components/convert/Step3.svelte:157
+#: src/components/convert/Step3.svelte:168
 #: src/components/convert/Step6.svelte:171
 msgid "Reading Direction"
 msgstr "Leserichtung"
@@ -770,7 +777,7 @@ msgstr "Überprüfung"
 msgid "Review all your settings before starting the conversion."
 msgstr "Überprüfe alle deine Einstellungen, bevor du die Konvertierung startest."
 
-#: src/components/convert/Step3.svelte:181
+#: src/components/convert/Step3.svelte:192
 #: src/components/convert/Step6.svelte:28
 msgid "Right to Left"
 msgstr "Rechts nach Links"
@@ -779,7 +786,7 @@ msgstr "Rechts nach Links"
 msgid "Running Bundler..."
 msgstr "Bundler wird ausgeführt..."
 
-#: src/components/dialogs/AutoPopulate.svelte:210
+#: src/components/dialogs/AutoPopulate.svelte:281
 msgid "Save"
 msgstr "Speichern"
 
@@ -805,11 +812,11 @@ msgid "seconds"
 msgstr "Sekunden"
 
 #: src/components/ActionHub.svelte:131
-#: src/components/convert/Step3.svelte:110
-#: src/components/convert/Step3.svelte:142
-#: src/components/convert/Step3.svelte:171
-#: src/components/dialogs/AutoPopulate.svelte:84
-#: src/components/dialogs/AutoPopulate.svelte:171
+#: src/components/convert/Step3.svelte:119
+#: src/components/convert/Step3.svelte:153
+#: src/components/convert/Step3.svelte:182
+#: src/components/dialogs/AutoPopulate.svelte:92
+#: src/components/dialogs/AutoPopulate.svelte:115
 msgid "Select"
 msgstr "Auswählen"
 
@@ -817,12 +824,12 @@ msgstr "Auswählen"
 msgid "Select a folder to convert"
 msgstr "Wähle einen Ordner zum Konvertieren"
 
-#: src/components/convert/Step3.svelte:109
-#: src/components/convert/Step3.svelte:141
-#: src/components/convert/Step3.svelte:170
-#: src/components/convert/Step3.svelte:256
-#: src/components/dialogs/AutoPopulate.svelte:83
-#: src/components/dialogs/AutoPopulate.svelte:170
+#: src/components/convert/Step3.svelte:118
+#: src/components/convert/Step3.svelte:152
+#: src/components/convert/Step3.svelte:181
+#: src/components/convert/Step3.svelte:208
+#: src/components/dialogs/AutoPopulate.svelte:91
+#: src/components/dialogs/AutoPopulate.svelte:114
 msgid "Select down"
 msgstr "Auswählen nach unten"
 
@@ -831,11 +838,11 @@ msgid "Select input folder"
 msgstr "Eingabeordner auswählen"
 
 #: src/components/convert/Step1.svelte:65
-#: src/components/convert/Step3.svelte:193
+#: src/components/convert/Step3.svelte:258
 msgid "Select location"
 msgstr "Ort auswählen"
 
-#: src/components/convert/Step3.svelte:199
+#: src/components/convert/Step3.svelte:264
 msgid "Select output folder"
 msgstr "Ausgabeordner auswählen"
 
@@ -843,18 +850,28 @@ msgstr "Ausgabeordner auswählen"
 msgid "Select the directory where the source material is located."
 msgstr "Auswählen des Verzeichnisses, in dem sich das Quellmaterial befindet."
 
-#: src/components/convert/Step3.svelte:108
-#: src/components/convert/Step3.svelte:140
-#: src/components/convert/Step3.svelte:169
-#: src/components/convert/Step3.svelte:255
-#: src/components/dialogs/AutoPopulate.svelte:82
-#: src/components/dialogs/AutoPopulate.svelte:169
+#: src/components/convert/Step3.svelte:117
+#: src/components/convert/Step3.svelte:151
+#: src/components/convert/Step3.svelte:180
+#: src/components/convert/Step3.svelte:207
+#: src/components/dialogs/AutoPopulate.svelte:90
+#: src/components/dialogs/AutoPopulate.svelte:113
 msgid "Select up"
 msgstr "Auswählen nach oben"
 
 #: src/components/convert/Step4.svelte:96
 msgid "Sensibility Settings"
 msgstr "Empfindlichkeitseinstellungen"
+
+#: src/components/convert/Step3.svelte:327
+#: src/components/dialogs/AutoPopulate.svelte:230
+#~ msgid "Separator between project name and volume number (e.g., \"Project | 1\")"
+#~ msgstr "Trennzeichen zwischen Projektname und Bandnummer (z.B. \"Projekt | 1\")"
+
+#: src/components/convert/Step3.svelte:246
+#: src/components/dialogs/AutoPopulate.svelte:249
+msgid "Separator between volume name and volume number (e.g., \"My Manga | 1\")"
+msgstr "Trennzeichen zwischen Bandname und Bandnummer (z.B. \"Mein Manga | 1\")"
 
 #: src/routes/convert/+page.svelte:37
 msgid "Set Metadata"
@@ -905,7 +922,7 @@ msgstr "Leertaste"
 msgid "Starting Volume {volumeIdx}: {volName}"
 msgstr "Starte Band {volumeIdx}: {volName}"
 
-#: src/components/convert/Step7.svelte:334
+#: src/components/convert/Step7.svelte:323
 msgid "Successful"
 msgstr "Erfolgreich"
 
@@ -935,9 +952,9 @@ msgstr "System"
 msgid "System Information"
 msgstr "Systeminformationen"
 
-#: src/components/convert/Step3.svelte:188
+#: src/components/convert/Step3.svelte:252
 #: src/components/convert/Step6.svelte:158
-#: src/components/dialogs/AutoPopulate.svelte:97
+#: src/components/dialogs/AutoPopulate.svelte:132
 msgid "Target Location"
 msgstr "Zielort"
 
@@ -981,7 +998,8 @@ msgstr "Dies öffnet den ActionHub, von dem aus du auf alle Funktionen von Palax
 msgid "To get started press"
 msgstr "Um loszulegen drücke"
 
-#: src/components/convert/Step3.svelte:227
+#: src/components/convert/Step3.svelte:293
+#: src/components/convert/Step3.svelte:324
 #: src/components/convert/step5/Chapter.svelte:221
 msgid "Toggle"
 msgstr "Umschalten"
@@ -1008,13 +1026,13 @@ msgstr "Vol"
 
 #: src/components/convert/step4/ManualBundling.svelte:300
 #: src/components/convert/Step5.svelte:145
-#: src/components/convert/Step7.svelte:260
+#: src/components/convert/Step7.svelte:249
 msgid "Volume"
 msgstr "Band"
 
 #: src/components/convert/step4/ManualBundling.svelte:230
 #: src/components/convert/step4/VolumeVisualisation.svelte:42
-#: src/components/convert/Step7.svelte:206
+#: src/components/convert/Step7.svelte:198
 msgid "Volume {vol}"
 msgstr "Band {vol}"
 
@@ -1027,9 +1045,14 @@ msgstr "Band-Verteilung"
 msgid "Volume Management"
 msgstr "Band-Verwaltung"
 
+#: src/components/convert/Step3.svelte:231
+#: src/components/dialogs/AutoPopulate.svelte:235
+msgid "Volume Separator"
+msgstr "Band-Trennzeichen"
+
 #: src/components/convert/Step7.svelte:233
-msgid "Volume Status"
-msgstr "Band-Status"
+#~ msgid "Volume Status"
+#~ msgstr "Band-Status"
 
 #: src/components/convert/Step6.svelte:249
 msgid "Volumes"
@@ -1043,15 +1066,25 @@ msgstr "Warnungen"
 msgid "Welcome to Palaxy!"
 msgstr "Willkommen bei Palaxy!"
 
-#: src/components/convert/Step3.svelte:241
+#: src/components/convert/Step3.svelte:339
+#: src/components/dialogs/AutoPopulate.svelte:226
+msgid "Will always show volume number"
+msgstr "Wird die Bandnummer immer anzeigen"
+
+#: src/components/convert/Step3.svelte:307
 #: src/components/convert/Step6.svelte:203
-#: src/components/dialogs/AutoPopulate.svelte:155
+#: src/components/dialogs/AutoPopulate.svelte:192
 msgid "Will create a new folder for output files"
 msgstr "Wird einen neuen Ordner für Ausgabedateien erstellen"
 
-#: src/components/convert/Step3.svelte:242
+#: src/components/convert/Step3.svelte:338
+#: src/components/dialogs/AutoPopulate.svelte:225
+msgid "Will hide volume number when only one volume exists"
+msgstr "Wird die Bandnummer verbergen, wenn nur ein Band existiert"
+
+#: src/components/convert/Step3.svelte:308
 #: src/components/convert/Step6.svelte:204
-#: src/components/dialogs/AutoPopulate.svelte:156
+#: src/components/dialogs/AutoPopulate.svelte:193
 msgid "Will save directly in target location"
 msgstr "Wird direkt im Zielort speichern"
 

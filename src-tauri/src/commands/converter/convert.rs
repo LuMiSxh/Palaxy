@@ -48,6 +48,8 @@ pub async fn conv_convert(
         volume_sizes,
         data,
         edited_data,
+        hide_single_volume_number,
+        volume_separator,
     ) = {
         let state = state.lock().await;
         debug!(
@@ -70,6 +72,8 @@ pub async fn conv_convert(
             state.volume_sizes.clone(),
             state.data.clone(),
             state.edited_data.clone(),
+            state.hide_single_volume_number,
+            state.volume_separator.clone(),
         )
     }; // Lock is released here
 
@@ -177,10 +181,15 @@ pub async fn conv_convert(
         .enumerate()
         .for_each(|(i, &chapters)| {
             let j = cumulative_indices[i];
-            // Use write! for better performance than format!
-            let mut volume_name = String::with_capacity(name.len() + 10);
-            use std::fmt::Write;
-            write!(&mut volume_name, "{} | {}", name, i + 1).expect("String write cannot fail");
+            // Format volume name based on settings
+            let volume_name = if hide_single_volume_number && total_volumes == 1 {
+                // Hide volume number when there's only one volume
+                name.trim().to_string()
+            } else {
+                // Use custom separator between name and volume number
+                // Trim only the name to avoid double spacing, keep separator as-is
+                format!("{}{}{}", name.trim(), volume_separator, i + 1)
+            };
 
             debug!(
                 "Volume {} ({}) will include {} chapters",

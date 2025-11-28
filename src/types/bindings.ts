@@ -256,13 +256,21 @@ data: string[][];
 /**
  * Optional edited version of the data collection
  */
-edited_data: string[][] | null }
+edited_data: string[][] | null; 
+/**
+ * Whether to hide the volume number when there's only one volume
+ */
+hide_single_volume_number: boolean; 
+/**
+ * Custom separator string between project name and volume number
+ */
+volume_separator?: string }
 /**
  * Keys for the conversion state data
  * 
  * Represents various properties that can be set during the conversion process
  */
-export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { ConvertToWebp: boolean } | { ImageFormat: ImageOutputFormat } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null }
+export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { ConvertToWebp: boolean } | { ImageFormat: ImageOutputFormat } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null } | { HideSingleVolumeNumber: boolean } | { VolumeSeparator: string }
 /**
  * Emitted when all conversions complete
  */

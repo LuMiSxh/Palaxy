@@ -29,8 +29,18 @@
 			step4State.result = result.payload;
 			convState.chapterSizes = result.payload.chapter_sizes ?? [];
 
-			// Only update the UI if we have valid data
-			stepState.disableNext = convState.chapterSizes.length <= 0;
+			// If image/name bundling detected no volumes, switch to manual
+			if (convState.chapterSizes.length === 0 && convState.bundle !== 'MANUAL') {
+				addToast(
+					$t`No volumes detected. Switching to manual bundling.`,
+					'warning'
+				);
+				convState.bundle = 'MANUAL';
+				stepState.disableNext = false;
+			} else {
+				// Only update the UI if we have valid data
+				stepState.disableNext = convState.chapterSizes.length <= 0;
+			}
 		} else {
 			// Handle the error case
 			addToast($t`Failed to run bundler. Please try again.`, 'error');

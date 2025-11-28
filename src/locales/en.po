@@ -649,6 +649,10 @@ msgstr "No analysis results found. There might be an issue with the source mater
 msgid "No volumes added yet. Add your first volume below."
 msgstr "No volumes added yet. Add your first volume below."
 
+#: src/components/convert/Step4.svelte:35
+msgid "No volumes detected. Switching to manual bundling."
+msgstr "No volumes detected. Switching to manual bundling."
+
 #: src/components/convert/step4/VolumeVisualisation.svelte:73
 msgid "No volumes detected. Try running the bundler again."
 msgstr "No volumes detected. Try running the bundler again."

@@ -674,6 +674,10 @@ msgstr "Keine Analyseergebnisse gefunden. Es könnte ein Problem mit dem Quellma
 msgid "No volumes added yet. Add your first volume below."
 msgstr "Noch keine Bänder hinzugefügt. Füge deinen ersten Band unten hinzu."
 
+#: src/components/convert/Step4.svelte:35
+msgid "No volumes detected. Switching to manual bundling."
+msgstr "Keine Bänder erkannt. Wechsle zur manuellen Bündelung."
+
 #: src/components/convert/step4/VolumeVisualisation.svelte:73
 msgid "No volumes detected. Try running the bundler again."
 msgstr "Keine Bänder erkannt. Versuche den Bundler erneut auszuführen."

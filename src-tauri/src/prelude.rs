@@ -74,9 +74,6 @@ pub enum Error {
     /// Error for unsupported operations or formats
     #[error("Unsupported: {0}")]
     Unsupported(String),
-    /// Error for resources that couldn't be found
-    #[error("Not found: {0}")]
-    NotFound(String),
 }
 
 /// Implementation for serializing Error types to strings

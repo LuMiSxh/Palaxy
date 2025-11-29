@@ -1,4 +1,5 @@
 import type Toast from '$types/toast';
+import { toast } from 'waku/components';
 
 /**
  * Manages toast notifications in the application.
@@ -22,16 +23,10 @@ class ToastState {
 		type: 'info' | 'warning' | 'error' | 'success' = 'info',
 		timeout: number | null = 3600
 	): void {
-		const id = Math.floor(Math.random() * 1000000);
-		const toast: Toast = { id, message, type, timeout };
-
-		this.toasts = [...this.toasts, toast];
-
-		if (timeout) {
-			setTimeout(() => {
-				this.removeToast(id);
-			}, timeout);
-		}
+		// This function is now a legacy function because waku-toast will be used
+		// to display toasts in the future.
+		// This function is now just a shim to keep the old interface working.
+		toast({ title: message, type: type, timeout: timeout });
 	}
 
 	/**

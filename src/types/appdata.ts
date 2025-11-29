@@ -132,7 +132,7 @@ export const defaultAppData: AppData = {
 			createNewFolder: true,
 			imageFormat: null,
 			hideSingleVolumeNumber: false,
-			volumeSeparator: ' | ',
+			volumeSeparator: ' - ',
 		},
 	},
 };

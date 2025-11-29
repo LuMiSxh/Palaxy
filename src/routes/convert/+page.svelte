@@ -10,11 +10,10 @@
 	import { Step1, Step2, Step3, Step4, Step5, Step6, Step7 } from '$components/convert';
 	import { stepState } from '$states/converter.svelte';
 	import { t } from 'svelte-i18n-lingui';
-	import { onMount, type Snippet, untrack } from 'svelte';
+	import { type Snippet } from 'svelte';
 	import { appData } from '$stores/appdata';
-	import { keyboard } from '$lib/keyboard';
-	import { addToast } from '$states/toast.svelte';
 	import { keyHint } from '$states/keyhint.svelte';
+	import type { KeyCombination } from '$types/keys';
 
 	// Reset the state of the stepState
 	stepState.reset();
@@ -75,63 +74,21 @@
 	let currentStep = $derived(steps[stepState.index]);
 	let activeComponent = $derived(currentStep.cmp);
 
-	onMount(() => {
-		return keyboard.smartRegister([
-			[
-				'shift+arrowleft',
-				(event) => {
-					event.preventDefault();
-					if (stepState.disablePrev) {
-						if (stepState.index === 0) {
-							addToast($t`This is the first step. There are no previous steps.`, 'warning');
-						} else {
-							addToast($t`You cannot return to the previous step.`, 'warning');
-						}
-						return;
-					}
-					stepState.index -= stepState.indexDecrement;
-					stepState.indexDecrement = 1;
-				},
-			],
-			[
-				'shift+arrowright',
-				(event) => {
-					event.preventDefault();
-					if (stepState.disableNext) {
-						if (stepState.index === steps.length - 1) {
-							addToast($t`This is the last step. There are no more steps.`, 'warning');
-						} else {
-							addToast($t`You cannot proceed to the next step.`, 'warning');
-						}
-						return;
-					}
-					stepState.index += stepState.indexIncrement;
-					stepState.indexIncrement = 1;
-				},
-			],
-		]);
-	});
-
-	function keyHintEffect() {
-		if (stepState.disablePrev) {
-			keyHint.removeKey('shift+arrowleft');
-		} else {
-			keyHint.addKey('shift+arrowleft', $t`Previous`);
-		}
-
-		if (stepState.disableNext) {
-			keyHint.removeKey('shift+arrowright');
-		} else {
-			keyHint.addKey('shift+arrowright', $t`Next`);
-		}
-	}
-
 	$effect(() => {
-		untrack(() => keyHintEffect());
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		stepState.disablePrev;
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		stepState.disableNext;
+		const hints: [KeyCombination, string][] = [['tab', $t`Navigate fields`]];
+
+		if (!stepState.disablePrev) {
+			hints.push(['shift+arrowleft', $t`Previous`]);
+		}
+
+		if (!stepState.disableNext) {
+			hints.push(['shift+arrowright', $t`Next`]);
+		}
+
+		// register() adds these keys on a new layer.
+		// Returning the result tells Svelte to run the cleanup function
+		// (removing this layer) whenever dependencies change or component destroys.
+		return keyHint.register(hints);
 	});
 </script>
 
@@ -139,7 +96,7 @@
 	<section class="glass-surface relative flex h-full w-full flex-col">
 		<div class="mb-2 ml-2 w-full">
 			<h1
-				class="text-primary from-primary via-secondary to-secondary mb-2 bg-gradient-to-r via-60% bg-clip-text text-3xl dark:text-transparent"
+				class="text-primary from-primary via-secondary to-secondary mb-2 bg-linear-to-r via-60% bg-clip-text text-3xl dark:text-transparent"
 			>
 				{currentStep.title}
 			</h1>

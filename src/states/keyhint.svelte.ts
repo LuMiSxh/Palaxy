@@ -1,108 +1,182 @@
 import type { KeyCombination } from '$types/keys';
+import { untrack } from 'svelte';
 
-class KeyHint {
-	private keys: [KeyCombination, string][] = $state([]);
+type Scope = {
+	keys: [KeyCombination, string][];
+	exclusive: boolean;
+};
 
-	constructor() {}
-
-	/**
-	 * Adds a key combination with its hint. If the key combination already exists, overrides its hint.
-	 * @param key The key combination to add
-	 * @param hint The hint to display for this key combination
-	 */
-	addKey(key: KeyCombination, hint: string): this {
-		// Check if the key combination already exists
-		const existingIndex = this.keys.findIndex((k) => k[0] === key);
-
-		if (existingIndex >= 0) {
-			// If exists, override the hint
-			this.keys = this.keys.map((k) => (k[0] === key ? [key, hint] : k));
-		} else {
-			// If not exists, add a new key combination
-			this.keys = [...this.keys, [key, hint]];
-		}
-
-		return this;
-	}
+class KeyHintState {
+	// We store hints in specific 'scopes' (layers).
+	// This allows multiple components to add keys without overwriting or needing to save/restore snapshots.
+	private scopes = $state<Record<string, Scope>>({});
 
 	/**
-	 * Removes a key combination and its hint.
-	 * @param key The key combination
-	 * @returns This instance
+	 * Register keys.
+	 * @param exclusive If true, hides hints from all non-exclusive scopes while active.
 	 */
-	removeKey(key: KeyCombination): this {
-		this.keys = this.keys.filter(([k]) => k !== key);
-		return this;
-	}
-
-	/**
-	 * Adds multiple key combinations with their hints. Returns a function to remove the added key combinations.
-	 * @param keyhints An array of key combinations and their hints
-	 * @param ignore An array of key combinations to ignore when re-applying the previous key combinations
-	 * @returns A function to remove the added key combinations
-	 */
-	smartAdd(
-		keyhints: Parameters<typeof this.addKey>[],
-		ignore: KeyCombination[] | undefined = undefined
-	): () => void {
-		// Get all current key hints
-		const currentKeys = this.keys;
-
-		// Add the new key hints
-		keyhints.forEach(([key, hint]) => this.addKey(key, hint));
-
-		// Return a function to remove the added key hints and restore the previous ones
+	register(keys: [KeyCombination, string][], exclusive = false): () => void {
+		const id = Math.random().toString(36).slice(2);
+		untrack(() => {
+			this.scopes = { ...this.scopes, [id]: { keys, exclusive } };
+		});
 		return () => {
-			if (ignore !== undefined) {
-				this.keys = currentKeys.filter(([key]) => !ignore.includes(key));
-			} else {
-				this.keys = currentKeys;
-			}
+			untrack(() => {
+				const { [id]: _, ...rest } = this.scopes;
+				this.scopes = rest;
+			});
 		};
 	}
 
-	clear(): void {
-		this.keys = [];
+	/**
+	 * Legacy support for global/static keys (like Layout).
+	 * These go into a 'global' scope.
+	 */
+	addKey(key: KeyCombination, hint: string) {
+		untrack(() => {
+			const currentScope = this.scopes['global'] || { keys: [], exclusive: false };
+			const otherKeys = currentScope.keys.filter((k) => k[0] !== key);
+
+			this.scopes = {
+				...this.scopes,
+				global: {
+					keys: [...otherKeys, [key, hint]],
+					exclusive: false,
+				},
+			};
+		});
 	}
 
-	set(keys: [KeyCombination, string][]): void {
-		this.keys = keys;
+	removeKey(key: KeyCombination) {
+		untrack(() => {
+			const currentScope = this.scopes['global'];
+			if (!currentScope) return;
+
+			this.scopes = {
+				...this.scopes,
+				global: {
+					keys: currentScope.keys.filter((k) => k[0] !== key),
+					exclusive: false,
+				},
+			};
+		});
 	}
 
+	clear() {
+		untrack(() => {
+			this.scopes = {};
+		});
+	}
+
+	/**
+	 * Flattens all scopes into a single list for the UI.
+	 * Later registrations (like ActionHub) naturally appear at the end
+	 * if we iterate object keys, or we can just merge them.
+	 */
 	get(): [KeyCombination, string][] {
-		return this.keys;
+		const allScopes = Object.values(this.scopes);
+
+		// Check if ANY active scope is exclusive
+		const hasExclusive = allScopes.some((s) => s.exclusive);
+
+		const merged = new Map<string, string>();
+
+		allScopes.forEach((scope) => {
+			// If we are in exclusive mode, skip any scope that isn't exclusive
+			if (hasExclusive && !scope.exclusive) return;
+
+			scope.keys.forEach(([key, label]) => merged.set(key, label));
+		});
+
+		return Array.from(merged.entries()) as [KeyCombination, string][];
 	}
 }
 
-export const keyHint = new KeyHint();
+export const keyHint = new KeyHintState();
+
+let activeCleanup: (() => void) | null = null;
+
+function handleFocusIn(event: FocusEvent) {
+	// 1. Always clean up the previous element's hints first
+	if (activeCleanup) {
+		activeCleanup();
+		activeCleanup = null;
+	}
+
+	const target = event.target as HTMLElement;
+	// Check if target exists and has the attribute
+	if (!target || !target.getAttribute) return;
+
+	const attribute = target.getAttribute('data-keyhint');
+	if (!attribute) return;
+
+	// 2. Parse the attribute
+	// Supports single: "enter;Invoke"
+	// Supports multiple: "enter;Invoke|esc;Cancel"
+	const hints: [KeyCombination, string][] = attribute.split('|').map((part) => {
+		const [key, label] = part.split(';');
+		return [key.trim() as KeyCombination, label?.trim() || ''];
+	});
+
+	if (hints.length > 0) {
+		// 3. Register and save cleanup
+		activeCleanup = keyHint.register(hints);
+	}
+}
+
+function handleFocusOut(event: FocusEvent) {
+	// If focus is lost completely (clicked outside window or body), cleanup
+	if (!event.relatedTarget && activeCleanup) {
+		activeCleanup();
+		activeCleanup = null;
+	}
+}
 
 /**
- * Adds key hints to an element when focused. And removes them when blurred.
- * @param node
- * @param data
+ * Mounts the global event listeners for data-keyhint attributes.
+ * Call this once in your root layout onMount.
+ */
+export function mountGlobalKeyHintListener() {
+	if (typeof window !== 'undefined') {
+		document.addEventListener('focusin', handleFocusIn);
+		document.addEventListener('focusout', handleFocusOut);
+
+		return () => {
+			document.removeEventListener('focusin', handleFocusIn);
+			document.removeEventListener('focusout', handleFocusOut);
+		};
+	}
+	return () => {};
+}
+
+/**
+ * Action to handle key hints on DOM elements focus/blur
  */
 export function handleKeyHint(
 	node: HTMLElement,
-	data: { keys: Parameters<typeof keyHint.addKey>[]; reset?: boolean }
+	data: { keys: [KeyCombination, string][]; reset?: boolean }
 ) {
-	let oldKeyHints = keyHint.get();
+	let unregister: (() => void) | null = null;
 
-	const addHints = () =>
-		data.keys.forEach((key) => {
-			oldKeyHints = keyHint.get();
-			keyHint.addKey(...key);
-		});
+	const addHints = () => {
+		if (unregister) unregister(); // Safety check
+		unregister = keyHint.register(data.keys);
+	};
 
 	const removeHints = () => {
-		if (data.reset) {
-			keyHint.set(oldKeyHints);
-		} else {
-			data.keys.forEach(([key]) => keyHint.removeKey(key));
+		if (unregister) {
+			unregister();
+			unregister = null;
 		}
 	};
 
 	node.addEventListener('focus', addHints);
 	node.addEventListener('blur', removeHints);
+
+	// If element is already focused when action mounts
+	if (document.activeElement === node) {
+		addHints();
+	}
 
 	return {
 		destroy() {
@@ -110,9 +184,9 @@ export function handleKeyHint(
 			node.removeEventListener('focus', addHints);
 			node.removeEventListener('blur', removeHints);
 		},
-		update(newKeys: Parameters<typeof keyHint.addKey>[]) {
+		update(newData: typeof data) {
 			removeHints();
-			data.keys = newKeys;
+			data = newData;
 			if (document.activeElement === node) {
 				addHints();
 			}

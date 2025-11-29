@@ -31,10 +31,7 @@
 
 			// If image/name bundling detected no volumes, switch to manual
 			if (convState.chapterSizes.length === 0 && convState.bundle !== 'MANUAL') {
-				addToast(
-					$t`No volumes detected. Switching to manual bundling.`,
-					'warning'
-				);
+				addToast($t`No volumes detected. Switching to manual bundling.`, 'warning');
 				convState.bundle = 'MANUAL';
 				stepState.disableNext = false;
 			} else {

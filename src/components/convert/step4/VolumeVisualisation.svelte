@@ -7,19 +7,21 @@
 		step4State,
 	} from '$components/convert/step4/utils.svelte';
 	import { handleKeyHint } from '$states/keyhint.svelte';
+	import { VStack, HStack } from 'waku/layout';
+	import { Badge } from 'waku/components';
 
 	let volVisFocused = $state(false);
 </script>
 
 <div
-	class="card flex h-full flex-col overflow-hidden"
+	class="glass-subtle flex h-full flex-col overflow-hidden rounded-xl"
 	class:ring-2={volVisFocused}
-	class:ring-primary={volVisFocused}
+	class:ring-accent-500={volVisFocused}
 >
 	<div
-		class="card-body flex flex-col overflow-y-auto"
+		class="flex flex-col overflow-y-auto p-4"
 		tabindex="0"
-		role="tab"
+		role="tabpanel"
 		onfocus={() => (volVisFocused = true)}
 		onblur={() => (volVisFocused = false)}
 		use:handleKeyHint={{
@@ -29,31 +31,28 @@
 			],
 		}}
 	>
-		<h3 class="mb-4 font-semibold">{$t`Volume Distribution`}</h3>
+		<h3 class="mb-3 text-base font-semibold">{$t`Volume Distribution`}</h3>
 
 		{#if convState.chapterSizes.length > 0}
-			<div class="flex-1 space-y-4">
+			<VStack gap="sm" class="flex-1">
 				{#each convState.chapterSizes as chapters, i}
-					<div
-						class="volume-item border-background-tertiary dark:border-background-dark-tertiary rounded-lg border p-4"
-					>
-						<div class="mb-2 flex items-center justify-between">
+					<div class="bg-surface-1 hover:bg-surface-2 rounded-lg p-3 transition-all">
+						<HStack justify="between" align="center" class="mb-3">
 							<span class="font-medium"
 								>{$t({ message: 'Volume {vol}', values: { vol: i + 1 } })}</span
 							>
-							<span class="badge badge-secondary">
+							<Badge variant="secondary">
 								{$plural(chapters, {
 									one: '# chapter',
 									other: '# chapters',
 								})}
-							</span>
-						</div>
+							</Badge>
+						</HStack>
 
-						<div class="mt-3 flex gap-1">
-							<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
+						<div class="flex gap-1">
 							{#each Array(chapters) as _, j}
 								<div
-									class="bg-primary h-4 flex-1 rounded-sm opacity-80 transition-opacity hover:opacity-100"
+									class="bg-accent-500 h-4 flex-1 rounded-sm opacity-80 transition-all hover:scale-105 hover:opacity-100"
 									style="--index: {j}; animation-delay: calc(var(--index) * 30ms);"
 									title={$t({
 										message: 'Chapter {chap} of Volume {vol}',
@@ -64,33 +63,29 @@
 						</div>
 					</div>
 				{/each}
-			</div>
+			</VStack>
 		{:else}
 			<div
-				class="border-background-tertiary dark:border-background-dark-tertiary flex h-24 items-center justify-center rounded-lg border border-dashed p-4"
+				class="border-waku-border/50 flex h-24 items-center justify-center rounded-lg border border-dashed p-4"
 			>
-				<p class="text-content-secondary dark:text-content-dark-secondary">
+				<p class="text-muted text-center text-sm">
 					{$t`No volumes detected. Try running the bundler again.`}
 				</p>
 			</div>
 		{/if}
 
 		{#if step4State.result && step4State.result.total_chapters > 0}
-			<div
-				class="border-background-tertiary dark:border-background-dark-tertiary mt-6 border-t pt-4"
-			>
-				<div class="mb-2 flex items-center justify-between">
-					<span class="font-medium">{$t`Total Chapter Usage`}</span>
-					<span class="">{getTotalChapters()}/{step4State.result.total_chapters}</span>
-				</div>
-				<div
-					class="bg-background-tertiary dark:bg-background-dark-tertiary h-2 w-full overflow-hidden rounded-full"
-				>
+			<div class="border-waku-border/50 mt-4 border-t pt-3">
+				<HStack justify="between" align="center" class="mb-2">
+					<span class="text-sm font-medium">{$t`Total Chapter Usage`}</span>
+					<span class="text-sm">{getTotalChapters()}/{step4State.result.total_chapters}</span>
+				</HStack>
+				<div class="bg-surface-2 h-2 w-full overflow-hidden rounded-full">
 					<div
 						class="h-full rounded-full transition-all duration-300 ease-out"
 						class:bg-success={getTotalChapters() === step4State.result.total_chapters}
 						class:bg-warning={getTotalChapters() < step4State.result.total_chapters}
-						class:bg-error={getTotalChapters() > step4State.result.total_chapters}
+						class:bg-danger={getTotalChapters() > step4State.result.total_chapters}
 						style="width: {getChaptersPercentage()}%"
 					></div>
 				</div>
@@ -101,21 +96,13 @@
 
 <style>
 	/* Ensure the scrollable container has smooth scrolling */
-	.card-body.overflow-y-auto {
+	[role='tabpanel'] {
 		scroll-behavior: smooth;
 		-webkit-overflow-scrolling: touch;
 	}
 
-	/* Make sure the scroll container reacts to wheel events */
-	.card-body.overflow-y-auto:focus {
+	/* Remove focus outline */
+	[role='tabpanel']:focus {
 		outline: none;
-	}
-
-	/* Ensure volume items have proper hover states */
-	.volume-item {
-		cursor: pointer;
-		transition:
-			background-color 0.15s ease,
-			border-color 0.15s ease;
 	}
 </style>

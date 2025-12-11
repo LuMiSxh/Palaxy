@@ -1,169 +1,163 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { stepMachine } from '$states/stepMachine.svelte';
+	import { stepRegistry } from '$lib/steps/registry.svelte';
+	import '$lib/steps/definitions';
+	import { VStack, HStack } from 'waku/layout';
+	import { Button, Badge } from 'waku/components';
+	import { keyHint } from '$states/keyhint.svelte';
+	import { keyboard } from '$lib/keyboard';
+	import { t } from 'svelte-i18n-lingui';
+	import { appData } from '$stores/appdata';
+	import type { KeyCombination } from '$types/keys';
 	import {
-		IconAdjustments,
-		IconFilter,
 		IconFolder,
-		IconHandStop,
 		IconLineScan,
+		IconAdjustments,
+		IconHandStop,
+		IconFilter,
 		IconPencil,
 	} from '@tabler/icons-svelte';
-	import { Step1, Step2, Step3, Step4, Step5, Step6, Step7 } from '$components/convert';
-	import { stepState } from '$states/converter.svelte';
-	import { t } from 'svelte-i18n-lingui';
-	import { type Snippet } from 'svelte';
-	import { appData } from '$stores/appdata';
-	import { keyHint } from '$states/keyhint.svelte';
-	import type { KeyCombination } from '$types/keys';
 
-	// Reset the state of the stepState
-	stepState.reset();
+	// Derived state from step machine
+	let currentStep = $derived(stepMachine.currentStep);
+	let visibleSteps = $derived(stepRegistry.getVisibleSteps());
+	let currentIndex = $derived(stepMachine.currentIndex);
+	let canGoNext = $derived(stepMachine.canGoNext);
+	let canGoBack = $derived(stepMachine.canGoBack);
+	let isTransitioning = $derived(stepMachine.isTransitioning);
 
-	let steps = $derived.by(() => {
-		return [
-			{
-				title: $t`Choose Source Material Directory`,
-				description: $t`Select the directory where the source material is located.`,
-				icon: IconFolder,
-				cmp: Step1,
-			},
-			{
-				title: $t`Analysis`,
-				description: $t`Analyze the source material for potential conversion issues and improvements.`,
-				icon: IconLineScan,
-				cmp: Step2,
-			},
-			{
-				title: $t`Set Metadata`,
-				description: $t`Set the metadata for the to be converted material.`,
-				icon: IconAdjustments,
-				cmp: Step3,
-			},
-			{
-				title: $t`Bundling`,
-				description: $t`Set the volume sizes for the conversion.`,
-				Icon: IconHandStop,
-				cmp: Step4,
-			},
-			{
-				title: $t`Filter Images`,
-				description: $t`Filter out unwanted images, change image order, and set cover images.`,
-				icon: IconFilter,
-				cmp: Step5,
-			},
-			{
-				title: $t`Review`,
-				description: $t`Review all your settings before starting the conversion.`,
-				icon: IconPencil,
-				cmp: Step6,
-			},
-			{
-				title: $t`Conversion`,
-				description: $t`Palaxy is now converting your material. Please wait.`,
-				icon: IconHandStop,
-				cmp: Step7,
-				hidden: true,
-			},
-		];
-	}) as {
-		title: string;
-		description: string;
-		icon: any;
-		cmp: Snippet;
-	}[];
+	let unregisterKeyboard: (() => void) | undefined;
 
-	let currentStep = $derived(steps[stepState.index]);
-	let activeComponent = $derived(currentStep.cmp);
+	onMount(() => {
+		// Reset to first step
+		stepMachine.reset();
 
+		// Register keyboard shortcuts
+		unregisterKeyboard = keyboard.smartRegister([
+			[
+				'shift+arrowright',
+				async () => {
+					if (canGoNext) {
+						await stepMachine.next();
+					}
+				},
+			],
+			[
+				'shift+arrowleft',
+				async () => {
+					if (canGoBack) {
+						await stepMachine.back();
+					}
+				},
+			],
+		]);
+
+		return () => {
+			if (unregisterKeyboard) unregisterKeyboard();
+		};
+	});
+
+	// Update key hints based on current state
 	$effect(() => {
 		const hints: [KeyCombination, string][] = [['tab', $t`Navigate fields`]];
 
-		if (!stepState.disablePrev) {
+		if (canGoBack) {
 			hints.push(['shift+arrowleft', $t`Previous`]);
 		}
 
-		if (!stepState.disableNext) {
+		if (canGoNext) {
 			hints.push(['shift+arrowright', $t`Next`]);
 		}
 
-		// register() adds these keys on a new layer.
-		// Returning the result tells Svelte to run the cleanup function
-		// (removing this layer) whenever dependencies change or component destroys.
 		return keyHint.register(hints);
 	});
+
+	// Get icon for current step
+	function getCurrentIcon() {
+		if (!currentStep) return IconFolder;
+		const stepId = currentStep.id;
+
+		switch (stepId) {
+			case 'select-source':
+				return IconFolder;
+			case 'analysis':
+				return IconLineScan;
+			case 'metadata':
+				return IconAdjustments;
+			case 'bundling':
+			case 'conversion':
+				return IconHandStop;
+			case 'filter':
+				return IconFilter;
+			case 'review':
+				return IconPencil;
+			default:
+				return IconFolder;
+		}
+	}
+
+	let CurrentIcon = $derived(getCurrentIcon());
 </script>
 
-<div class="flex h-full w-full flex-col">
-	<section class="glass-surface relative flex h-full w-full flex-col">
-		<div class="mb-2 ml-2 w-full">
-			<h1
-				class="text-primary from-primary via-secondary to-secondary mb-2 bg-linear-to-r via-60% bg-clip-text text-3xl dark:text-transparent"
-			>
-				{currentStep.title}
-			</h1>
-			<p class="text-lg">
-				{currentStep.description}
-			</p>
+<div class="flex h-full w-full flex-col overflow-hidden">
+	<!-- Header Section - Sticky -->
+	<div class="bg-surface-0 z-10 shrink-0 px-3 pt-4 pb-3">
+		<div class="flex items-center justify-between">
+			<VStack gap="xs">
+				<HStack gap="sm" align="center">
+					<CurrentIcon size={28} class="text-accent-500" />
+					<h1 class="text-2xl font-bold">
+						{currentStep?.title || ''}
+					</h1>
+				</HStack>
+				<p class="text-muted text-sm">
+					{currentStep?.description || ''}
+				</p>
+			</VStack>
+
+			<Badge variant="secondary" class="text-xs">
+				{$t`Step`}
+				{currentIndex + 1} / {visibleSteps.length}
+			</Badge>
 		</div>
-		<progress
-			id="step-progress"
-			class="progress h-5 w-full"
-			max={steps.length - 1}
-			value={stepState.index}
-		></progress>
-		<div class="flex w-full grow flex-col items-center justify-center">
-			{@render activeComponent()}
+
+		<!-- Progress Bar -->
+		<div class="bg-surface-2 relative mt-3 h-2 w-full overflow-hidden rounded-full">
+			<div
+				class="from-accent-500 to-accent-400 h-full bg-linear-to-r transition-all duration-500 ease-out"
+				style="width: {stepMachine.progress}%"
+			></div>
 		</div>
-		{#if $appData.mouseSupport}
-			<button
-				class="btn btn-error absolute bottom-5 left-5 shadow-lg select-none"
-				onclick={() => {
-					stepState.index -= stepState.indexDecrement;
-					stepState.indexDecrement = 1;
-				}}
-				disabled={stepState.disablePrev}
+	</div>
+
+	<!-- Step Content -->
+	<div class="flex-1 overflow-x-hidden overflow-y-auto">
+		{#if currentStep?.component}
+			{@const StepComponent = currentStep.component}
+			<StepComponent />
+		{/if}
+	</div>
+
+	<!-- Navigation Buttons -->
+	{#if $appData.mouseSupport}
+		<HStack justify="between" class="bg-surface-0 shrink-0 px-3 pt-2 pb-4">
+			<Button
+				variant="outline"
+				onclick={() => stepMachine.back()}
+				disabled={!canGoBack || isTransitioning}
+				class="min-w-[120px]"
 			>
 				{$t`Previous`}
-			</button>
-			<button
-				class="btn btn-success absolute right-5 bottom-5 shadow-lg select-none"
-				onclick={() => {
-					stepState.index += stepState.indexIncrement;
-					stepState.indexIncrement = 1;
-				}}
-				disabled={stepState.disableNext}
+			</Button>
+			<Button
+				variant="primary"
+				onclick={() => stepMachine.next()}
+				disabled={!canGoNext || isTransitioning}
+				class="min-w-[120px]"
 			>
 				{$t`Next`}
-			</button>
-		{/if}
-	</section>
+			</Button>
+		</HStack>
+	{/if}
 </div>
-
-<style>
-	@keyframes blink {
-		0% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.8;
-		}
-		100% {
-			opacity: 1;
-		}
-	}
-
-	#step-progress {
-		transition: value 0.5s ease;
-	}
-
-	#step-progress::-webkit-progress-value {
-		background: linear-gradient(to left, var(--color-primary), var(--color-secondary));
-		animation: blink 1.5s infinite;
-		transition: width 0.5s ease-in-out;
-	}
-
-	#step-progress::-moz-progress-bar {
-		background: linear-gradient(to left, var(--color-primary), var(--color-secondary));
-		animation: blink 1.5s infinite;
-		transition: width 0.5s ease-in-out;
-	}
-</style>

@@ -5,11 +5,13 @@
 		getTotalChapters,
 		step4State,
 	} from '$components/convert/step4/utils.svelte';
-	import convState, { stepState } from '$states/converter.svelte';
-	import { IconChevronRight, IconFileZip, IconPlus, IconX } from '@tabler/icons-svelte';
+	import convState from '$states/converter.svelte';
+	import { IconFileZip, IconPlus, IconX, IconChevronRight } from '@tabler/icons-svelte';
 	import { t } from 'svelte-i18n-lingui';
 	import { onMount, tick } from 'svelte';
 	import { handleKeyHint } from '$states/keyhint.svelte';
+	import { VStack, HStack } from 'waku/layout';
+	import { Badge, Label } from 'waku/components';
 
 	let volVisSelectedIdx = $state(-1);
 	let newVolumeChapters: number | undefined = $state(undefined);
@@ -17,10 +19,6 @@
 	let editingInput: HTMLInputElement | null = $state(null);
 	let newVolumeInput: HTMLInputElement | null = $state(null);
 	let isEditing = $state(false);
-
-	$effect(() => {
-		stepState.disableNext = convState.chapterSizes.length === 0;
-	});
 
 	function addVolume() {
 		if (newVolumeChapters === undefined || newVolumeChapters <= 0) {
@@ -140,58 +138,53 @@
 	});
 </script>
 
-<div class="grid h-full grid-cols-[1fr_1.5fr] gap-6 p-4">
+<div class="flex h-full w-full gap-4 overflow-hidden p-3 pb-3">
 	<!-- Left side: Stats panel -->
-	<div class="flex flex-col gap-4">
-		<div class="card">
-			<div class="card-body">
-				<h3 class="mb-4 font-semibold">{$t`Bundle Summary`}</h3>
+	<VStack gap="sm" class="w-80 shrink-0">
+		<!-- Bundle Summary -->
+		<div class="glass-subtle rounded-xl p-4">
+			<h3 class="mb-3 text-base font-semibold">{$t`Bundle Summary`}</h3>
 
-				<div class="space-y-4">
-					<div>
-						<div class="mb-2 flex items-center justify-between">
-							<span class="font-medium">{$t`Detected Chapters`}</span>
-							<span class="badge badge-primary">{step4State.result?.total_chapters ?? 0}</span>
-						</div>
+			<VStack gap="sm">
+				<HStack justify="between" align="center">
+					<span class="text-sm">{$t`Detected Chapters`}</span>
+					<Badge variant="primary">{step4State.result?.total_chapters ?? 0}</Badge>
+				</HStack>
 
-						<div class="mb-2 flex items-center justify-between">
-							<span class="font-medium">{$t`Used Chapters`}</span>
-							<span
-								class="badge"
-								class:badge-success={getTotalChapters() ===
-									(step4State.result?.total_chapters ?? 0)}
-								class:badge-warning={getTotalChapters() < (step4State.result?.total_chapters ?? 0)}
-								class:badge-error={getTotalChapters() > (step4State.result?.total_chapters ?? 0)}
-							>
-								{getTotalChapters()}
-							</span>
-						</div>
+				<HStack justify="between" align="center">
+					<span class="text-sm">{$t`Used Chapters`}</span>
+					<Badge
+						variant={getTotalChapters() === (step4State.result?.total_chapters ?? 0)
+							? 'success'
+							: getTotalChapters() < (step4State.result?.total_chapters ?? 0)
+								? 'warning'
+								: 'danger'}
+					>
+						{getTotalChapters()}
+					</Badge>
+				</HStack>
 
+				<div>
+					<div class="bg-surface-1 h-2 w-full overflow-hidden rounded-full">
 						<div
-							class="bg-background-tertiary dark:bg-background-dark-tertiary h-2 w-full overflow-hidden rounded-full"
-						>
-							<div
-								class="h-full rounded-full transition-all duration-300 ease-out"
-								class:bg-success={getTotalChapters() === (step4State.result?.total_chapters ?? 0)}
-								class:bg-warning={getTotalChapters() < (step4State.result?.total_chapters ?? 0)}
-								class:bg-error={getTotalChapters() > (step4State.result?.total_chapters ?? 0)}
-								style="width: {getChaptersPercentage()}%"
-							></div>
-						</div>
-					</div>
-
-					<div>
-						<div class="mb-2 flex items-center justify-between">
-							<span class="font-medium">{$t`Current Volumes`}</span>
-							<span class="badge badge-primary">{convState.chapterSizes.length}</span>
-						</div>
+							class="h-full rounded-full transition-all duration-300 ease-out"
+							class:bg-success={getTotalChapters() === (step4State.result?.total_chapters ?? 0)}
+							class:bg-warning={getTotalChapters() < (step4State.result?.total_chapters ?? 0)}
+							class:bg-danger={getTotalChapters() > (step4State.result?.total_chapters ?? 0)}
+							style="width: {getChaptersPercentage()}%"
+						></div>
 					</div>
 				</div>
-			</div>
+
+				<HStack justify="between" align="center">
+					<span class="text-sm">{$t`Current Volumes`}</span>
+					<Badge variant="primary">{convState.chapterSizes.length}</Badge>
+				</HStack>
+			</VStack>
 		</div>
 
+		<!-- Chapter Distribution Visualization -->
 		{#if step4State.result && step4State.result.total_chapters > 0}
-			<!-- god forgive me for this -->
 			{@const chapterToVolumeMap = (() => {
 				const map = new Array(step4State.result.total_chapters).fill(-1);
 				let chapterCount = 0;
@@ -206,112 +199,103 @@
 				return map;
 			})()}
 
-			<div class="card">
-				<div class="card-body">
-					<h3 class="mb-4 font-semibold">{$t`Chapter Distribution`}</h3>
-					<div class="flex flex-wrap gap-1">
-						<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
-						{#each Array(step4State.result.total_chapters) as _, i}
-							{@const volumeIndex = chapterToVolumeMap[i]}
-							{@const isUsed = volumeIndex !== -1}
-							{@const isExceeded =
-								getTotalChapters() > step4State.result.total_chapters &&
-								i >= step4State.result.total_chapters}
+			<div class="glass-subtle rounded-xl p-4">
+				<h3 class="mb-3 text-base font-semibold">{$t`Chapter Distribution`}</h3>
+				<div class="flex flex-wrap gap-1">
+					{#each Array(step4State.result.total_chapters) as _, i}
+						{@const volumeIndex = chapterToVolumeMap[i]}
+						{@const isUsed = volumeIndex !== -1}
+						{@const isExceeded =
+							getTotalChapters() > step4State.result.total_chapters &&
+							i >= step4State.result.total_chapters}
 
-							<div
-								class="h-3 w-3 cursor-help rounded-sm transition-colors duration-200"
-								class:bg-primary={isUsed && !isExceeded && volumeIndex % 2 === 0}
-								class:bg-secondary={isUsed && !isExceeded && volumeIndex % 2 === 1}
-								class:bg-error={isExceeded}
-								class:bg-background-tertiary={!isUsed}
-								class:dark:bg-background-dark-tertiary={!isUsed}
-								title={$t({ message: 'Chapter {chap}', values: { chap: i + 1 } }) +
-									(isUsed
-										? ' - ' + $t({ message: 'Volume {vol}', values: { vol: volumeIndex + 1 } })
-										: '')}
-							></div>
-						{/each}
-					</div>
+						<div
+							class="h-3 w-3 cursor-help rounded-sm transition-colors duration-200"
+							class:bg-accent-500={isUsed && !isExceeded && volumeIndex % 2 === 0}
+							class:bg-accent-400={isUsed && !isExceeded && volumeIndex % 2 === 1}
+							class:bg-danger={isExceeded}
+							class:bg-surface-1={!isUsed}
+							title={$t({ message: 'Chapter {chap}', values: { chap: i + 1 } }) +
+								(isUsed
+									? ' - ' + $t({ message: 'Volume {vol}', values: { vol: volumeIndex + 1 } })
+									: '')}
+						></div>
+					{/each}
 				</div>
 			</div>
 		{/if}
-	</div>
+	</VStack>
 
 	<!-- Right side: Volume management -->
-	<div class="card flex h-full flex-col">
-		<div class="card-body flex flex-col overflow-y-auto">
-			<h3 class="mb-4 font-semibold">{$t`Volume Management`}</h3>
+	<div class="glass-subtle flex h-full flex-1 flex-col overflow-hidden rounded-xl p-4">
+		<h3 class="mb-3 text-base font-semibold">{$t`Volume Management`}</h3>
 
-			<!-- Volume list -->
-			<div
-				class="focus:ring-primary mb-4 grow overflow-y-auto rounded px-1! py-1! focus:ring-2 focus:outline-none"
-				tabindex="0"
-				role="tablist"
-				bind:this={volumeListContainer}
-				onkeydown={handleVolumeListKeyDown}
-				onmousedown={preventFocusOnClick}
-				use:handleKeyHint={{
-					keys: [
-						['arrowup', $t`Navigate up`],
-						['arrowdown', $t`Navigate down`],
-						['delete', $t`Remove selected`],
-					],
-				}}
-			>
-				{#if convState.chapterSizes.length > 0}
-					<div class="space-y-3">
-						{#each convState.chapterSizes as chapters, i}
-							{@const totalChapters = step4State.result?.total_chapters || 1}
-							{@const previousChapters = convState.chapterSizes
-								.slice(0, i)
-								.reduce((sum, c) => sum + c, 0)}
-							{@const previousPercentage = (previousChapters / totalChapters) * 100}
-							{@const currentPercentage = (chapters / totalChapters) * 100}
-							{@const totalPercentage = previousPercentage + currentPercentage}
-							{@const isExceeded = totalPercentage > 100}
+		<!-- Volume list -->
+		<div
+			class="focus:ring-accent-500 mb-3 flex-1 overflow-y-auto rounded px-1 py-1 focus:ring-2 focus:outline-none"
+			tabindex="0"
+			role="tablist"
+			bind:this={volumeListContainer}
+			onkeydown={handleVolumeListKeyDown}
+			onmousedown={preventFocusOnClick}
+			use:handleKeyHint={{
+				keys: [
+					['arrowup', $t`Navigate up`],
+					['arrowdown', $t`Navigate down`],
+					['delete', $t`Remove selected`],
+				],
+			}}
+		>
+			{#if convState.chapterSizes.length > 0}
+				<VStack gap="sm">
+					{#each convState.chapterSizes as chapters, i}
+						{@const totalChapters = step4State.result?.total_chapters || 1}
+						{@const previousChapters = convState.chapterSizes
+							.slice(0, i)
+							.reduce((sum, c) => sum + c, 0)}
+						{@const previousPercentage = (previousChapters / totalChapters) * 100}
+						{@const currentPercentage = (chapters / totalChapters) * 100}
+						{@const totalPercentage = previousPercentage + currentPercentage}
+						{@const isExceeded = totalPercentage > 100}
 
-							<div
-								class="volume-item flex items-center gap-3 rounded-lg border p-3 transition-colors duration-150"
-								class:border-primary={volVisSelectedIdx === i}
-								class:bg-background-secondary={volVisSelectedIdx === i}
-								class:dark:bg-background-dark-secondary={volVisSelectedIdx === i}
-								class:border-background-tertiary={volVisSelectedIdx !== i}
-								class:dark:border-background-dark-tertiary={volVisSelectedIdx !== i}
-								onclick={(evt) => {
-									evt.preventDefault();
-									volVisSelectedIdx = i;
-								}}
-								tabindex="-1"
-								onkeydown={() => {}}
-								role="button"
-							>
+						<div
+							class="volume-item glass-subtle group rounded-lg p-3 transition-all duration-150"
+							class:ring-2={volVisSelectedIdx === i}
+							class:ring-accent-500={volVisSelectedIdx === i}
+							onclick={(evt) => {
+								evt.preventDefault();
+								volVisSelectedIdx = i;
+							}}
+							tabindex="-1"
+							onkeydown={() => {}}
+							role="button"
+						>
+							<HStack gap="sm" align="center">
 								<div
-									class="flex h-10 w-10 items-center justify-center rounded-full"
-									class:bg-primary-light={i % 2 === 0}
-									class:dark:bg-primary-dark-light={i % 2 === 0}
-									class:bg-secondary-light={i % 2 === 1}
-									class:dark:bg-secondary-dark-light={i % 2 === 1}
+									class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full {i % 2 ===
+									0
+										? 'bg-accent-500/20'
+										: 'bg-accent-400/20'}"
 								>
-									<IconFileZip class="text-primary" size={20} />
+									<IconFileZip size={20} class="text-accent-500" />
 								</div>
 
-								<div class="flex-1">
-									<div class="flex items-center">
-										<span class="font-medium">{$t`Volume` + ' ' + (i + 1)}</span>
-										<IconChevronRight size={16} class="mx-1 opacity-60" />
-										<span class="">{chapters} {chapters === 1 ? $t`chapter` : $t`chapters`}</span>
-									</div>
+								<VStack gap="xs" class="flex-1 overflow-hidden">
+									<HStack gap="xs" align="center" class="text-sm">
+										<span class="font-medium">{$t`Volume`} {i + 1}</span>
+										<IconChevronRight size={14} class="text-muted" />
+										<span class="text-muted"
+											>{chapters} {chapters === 1 ? $t`chapter` : $t`chapters`}</span
+										>
+									</HStack>
 
-									<div
-										class="bg-background-tertiary dark:bg-background-dark-tertiary mt-1 h-1.5 w-full overflow-hidden rounded-full"
-									>
+									<div class="bg-surface-2 h-1.5 w-full overflow-hidden rounded-full">
 										<div class="relative h-full w-full">
 											<!-- Previous chapters (grey) -->
 											<div
 												class="absolute h-full rounded-full transition-all"
-												class:bg-background-secondary={!isExceeded}
-												class:dark:bg-background-dark-tertiary={!isExceeded}
-												class:bg-error={isExceeded}
+												class:bg-surface-1={!isExceeded}
+												class:bg-danger={isExceeded}
 												style="width: {isExceeded
 													? (previousChapters / (previousChapters + chapters)) * 100
 													: previousPercentage}%"
@@ -320,8 +304,8 @@
 											<!-- Current chapter (blue) -->
 											<div
 												class="absolute h-full rounded-full transition-all"
-												class:bg-primary={!isExceeded}
-												class:bg-error={isExceeded}
+												class:bg-accent-500={!isExceeded}
+												class:bg-danger={isExceeded}
 												style="width: {isExceeded
 													? (chapters / (previousChapters + chapters)) * 100
 													: currentPercentage}%;
@@ -331,20 +315,19 @@
 											></div>
 										</div>
 									</div>
-								</div>
+								</VStack>
 
-								<div class="flex items-center gap-2">
+								<HStack gap="xs" align="center">
 									{#if isEditing && volVisSelectedIdx === i}
 										<!-- Editing mode -->
 										<input
 											bind:this={editingInput}
-											class="input h-9 w-16 px-2 text-center"
 											type="number"
 											min="1"
 											max="999"
+											class="input h-9 w-16 rounded text-center"
 											bind:value={convState.chapterSizes[i]}
 											onblur={finishEditing}
-											tabindex="-1"
 											onkeydown={(e) => {
 												if (e.key === 'Enter' || e.key === 'Escape') {
 													finishEditing();
@@ -355,7 +338,7 @@
 									{:else}
 										<!-- Display mode -->
 										<button
-											class="input flex h-9 w-16 items-center justify-center px-2 text-center"
+											class="bg-surface-2 hover:bg-surface-1 flex h-9 w-16 items-center justify-center rounded-lg text-center font-medium transition-colors"
 											onclick={(e) => {
 												e.stopPropagation();
 												volVisSelectedIdx = i;
@@ -368,60 +351,57 @@
 									{/if}
 
 									<button
-										class="btn btn-soft-lighter h-9 w-12 p-0"
+										class="btn btn-ghost text-danger hover:bg-danger/10 h-9 w-9 p-0"
 										onclick={(e) => {
 											e.stopPropagation();
 											volVisSelectedIdx = i;
 											deleteSelectedVolume();
 										}}
-										tabindex="-1"
 									>
-										<IconX class="stroke-error" />
+										<IconX size={18} />
 									</button>
-								</div>
-							</div>
-						{/each}
-					</div>
-				{:else}
-					<div
-						class="border-background-tertiary dark:border-background-dark-tertiary flex h-24 items-center justify-center rounded-lg border border-dashed p-4"
-					>
-						<p class="text-content-secondary dark:text-content-dark-secondary">
-							{$t`No volumes added yet. Add your first volume below.`}
-						</p>
-					</div>
-				{/if}
-			</div>
-
-			<!-- Add new volume -->
-			<div class="mt-auto">
-				<div class="flex-1">
-					<label for="new-volume" class="mb-2 block font-medium">{$t`Add new volume`}</label>
-					<div class="flex gap-3">
-						<input
-							id="new-volume"
-							class="input flex-1"
-							type="number"
-							min="1"
-							max="999"
-							placeholder={$t`Chapters in volume`}
-							bind:value={newVolumeChapters}
-							bind:this={newVolumeInput}
-							onkeydown={handleKeyDown}
-							use:handleKeyHint={{ keys: [['enter', $t`Add Volume`]] }}
-						/>
-
-						<button
-							class="btn btn-primary"
-							onclick={addVolume}
-							disabled={newVolumeChapters === undefined || newVolumeChapters <= 0}
-						>
-							<IconPlus size={18} class="mr-1" />
-							{$t`Add Volume`}
-						</button>
-					</div>
+								</HStack>
+							</HStack>
+						</div>
+					{/each}
+				</VStack>
+			{:else}
+				<div
+					class="border-waku-border/50 flex h-24 items-center justify-center rounded-lg border border-dashed p-4"
+				>
+					<p class="text-muted text-center text-sm">
+						{$t`No volumes added yet. Add your first volume below.`}
+					</p>
 				</div>
-			</div>
+			{/if}
+		</div>
+
+		<!-- Add new volume -->
+		<div class="bg-surface-2 rounded-lg p-3">
+			<Label text={$t`Add new volume`} for="new-volume" class="mb-2!" />
+			<HStack gap="sm">
+				<input
+					id="new-volume"
+					type="number"
+					min="1"
+					max="999"
+					class="input flex-1 rounded pl-2"
+					placeholder={$t`Chapters in volume` || ''}
+					bind:value={newVolumeChapters}
+					bind:this={newVolumeInput}
+					onkeydown={handleKeyDown}
+					use:handleKeyHint={{ keys: [['enter', $t`Add Volume`]] }}
+				/>
+
+				<button
+					class="btn btn-primary"
+					onclick={addVolume}
+					disabled={newVolumeChapters === undefined || newVolumeChapters <= 0}
+				>
+					<IconPlus size={18} />
+					{$t`Add Volume`}
+				</button>
+			</HStack>
 		</div>
 	</div>
 </div>
@@ -430,11 +410,6 @@
 	/* Improved volume item styling */
 	.volume-item {
 		cursor: pointer;
-		transition: all 0.15s ease;
-	}
-
-	.volume-item:hover:not([class*='border-primary']) {
-		border-color: var(--color-primary-hover);
 	}
 
 	/* Smooth scrolling for the volume list */

@@ -1,183 +1,218 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
-	import { IconBook } from '@tabler/icons-svelte';
+	import { appData } from '$stores/appdata';
+	import convState from '$states/converter.svelte';
+	import { commands, type Direction, type FileFormat, type ImageOutputFormat } from '$types';
 	import { t } from 'svelte-i18n-lingui';
-	import { stepState } from '$states/converter.svelte';
-	import { commands } from '$types';
+	import { onDestroy, onMount } from 'svelte';
 	import { wrapper } from '$lib/utils';
 	import { keyHint } from '$states/keyhint.svelte';
-	import LoadingSpinner from '$components/LoadingSpinner.svelte';
-	import Chapter from '$components/convert/step5/Chapter.svelte';
+	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
+	import { Input, Select, Toggle, Badge } from 'waku/components';
+	import { IconFileText, IconPhoto, IconSeparator, IconDirection } from '@tabler/icons-svelte';
 
-	let images: string[][] = $state([]);
-	let selectedImages: (string | null)[][] = $state([]);
-	let isVisibleState: boolean[][] = $state([]); // true = visible (included), false = hidden (excluded)
-	let coverState: boolean[][] = $state([]); // Track cover images
-	let imageLoadErrorState: boolean[][] = $state([]); // Track image loading errors
-	let unregisterKeyHint: () => void;
-	let isGlobalLoading = $state(true);
+	let fileFormat: FileFormat = $state(
+		$appData.autoPop.enabled ? ($appData.autoPop.converter.conversionType ?? 'CBZ') : 'CBZ'
+	);
+	let readingDirection: Direction = $state('Left to Right');
+	let imageFormat: ImageOutputFormat = $state(
+		$appData.autoPop.enabled ? ($appData.autoPop.converter.imageFormat ?? 'WebP') : 'WebP'
+	);
+	let hideSingleVolumeNumber = $state(
+		$appData.autoPop.enabled ? $appData.autoPop.converter.hideSingleVolumeNumber : false
+	);
+	let volumeSeparator = $state(
+		$appData.autoPop.enabled ? $appData.autoPop.converter.volumeSeparator : ' | '
+	);
 
-	// Volume-specific data
-	let volumeSizes: number[] = $state([]);
-	let volumeChapters: number[][] = $state([]); // Tracks which chapters belong to which volume
+	const formatOptions = [
+		{ value: 'CBZ', label: 'CBZ' },
+		{ value: 'EPUB', label: 'EPUB' },
+	];
 
-	function updateCoverStates() {
-		// Reset all cover states
-		coverState = coverState.map((row) => row.map(() => false));
+	const directionOptions = [
+		{ value: 'Left to Right', label: $t`Left to Right` },
+		{ value: 'Right to Left', label: $t`Right to Left` },
+	];
 
-		// Assign cover images for each volume
-		if (volumeChapters.length > 0) {
-			// For each volume
-			for (let volumeIndex = 0; volumeIndex < volumeChapters.length; volumeIndex++) {
-				const chaptersInVolume = volumeChapters[volumeIndex];
-				let coverFound = false;
+	const imageFormatOptions = [
+		{ value: 'None', label: $t`Original (No Conversion)` },
+		{ value: 'WebP', label: 'WebP' },
+		{ value: 'AVIF', label: 'AVIF' },
+	];
 
-				// Look through each chapter in this volume for a visible image to use as cover
-				for (const chapterIndex of chaptersInVolume) {
-					if (coverFound) break;
-
-					// Look at each image in this chapter
-					for (let imageIndex = 0; imageIndex < images[chapterIndex].length; imageIndex++) {
-						// If this image is visible (included), mark it as the cover and stop looking
-						if (isVisibleState[chapterIndex][imageIndex]) {
-							coverState[chapterIndex][imageIndex] = true;
-							coverFound = true;
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// Get the total number of images in a chapter
-	function getChapterImageCount(chapterIndex: number): number {
-		return images[chapterIndex]?.length || 0;
-	}
-
-	// Get the total number of images in a volume
-	function getVolumeImageCount(volumeIndex: number): number {
-		if (!volumeChapters[volumeIndex]) return 0;
-
-		return volumeChapters[volumeIndex].reduce((total, chapterIndex) => {
-			return total + getChapterImageCount(chapterIndex);
-		}, 0);
-	}
-
-	onMount(async () => {
-		unregisterKeyHint = keyHint.smartAdd([
-			['tab', $t`Navigate`],
-			['shift+tab', $t`Navigate`],
-		]);
-
-		// Initialize state
-		stepState.disablePrev = false;
-		stepState.disableNext = false;
-
-		// Get data from the backend
-		const result = await wrapper(commands.convStateGet());
-
-		if (result !== null && result.payload !== null) {
-			images = result.payload.data || [];
-			volumeSizes = result.payload.volume_sizes || [];
-
-			// Create the arrays for tracking state
-			selectedImages = $state.snapshot(images); // Deep copy
-			isVisibleState = images.map((row) => row.map(() => true));
-			coverState = images.map((row) => row.map(() => false));
-			imageLoadErrorState = images.map((row) => row.map(() => false));
-
-			// Organize chapters into volumes
-			if (volumeSizes.length > 0) {
-				volumeChapters = [];
-				let chapterIndex = 0;
-
-				// For each volume, allocate the specified number of chapters
-				for (let vol = 0; vol < volumeSizes.length; vol++) {
-					const chaptersInThisVolume = [];
-					const chapterCount = volumeSizes[vol];
-
-					for (let i = 0; i < chapterCount && chapterIndex < images.length; i++) {
-						chaptersInThisVolume.push(chapterIndex);
-						chapterIndex++;
-					}
-
-					volumeChapters.push(chaptersInThisVolume);
-				}
-			} else {
-				// If no volumes defined, treat all chapters as one volume
-				volumeChapters = [Array.from(images.keys())];
-			}
-			// Initialize cover images
-			updateCoverStates();
-		}
-
-		const totalImages = images.reduce((sum, ch) => sum + ch.length, 0);
-		const loadTime = 800 + totalImages;
-		setTimeout(() => (isGlobalLoading = false), loadTime);
+	onMount(() => {
+		return keyHint.register([['tab', $t`Navigate fields`]]);
 	});
 
 	onDestroy(async () => {
-		// Unregister key hint
-		if (unregisterKeyHint) unregisterKeyHint();
-
-		// Filter out null entries and save selected images
-		const filteredImages = selectedImages.map((row) => row.filter((image) => image !== null));
-		await wrapper(commands.convStateSet({ EditedData: filteredImages }));
+		// Set Tauri AppState
+		await wrapper(commands.convStateSet({ Direction: readingDirection }));
+		await wrapper(commands.convStateSet({ Format: fileFormat }));
+		await wrapper(commands.convStateSet({ ImageFormat: imageFormat }));
+		await wrapper(commands.convStateSet({ HideSingleVolumeNumber: hideSingleVolumeNumber }));
+		await wrapper(commands.convStateSet({ VolumeSeparator: volumeSeparator }));
 	});
 </script>
 
-{#if isGlobalLoading}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<LoadingSpinner text={$t`Loading Images...`} />
-	</div>
-{/if}
+<div class="flex w-full p-3 pb-3">
+	<VStack gap="md" class="mx-auto w-full max-w-5xl">
+		<BentoGrid cols={2} density="compact">
+			<!-- File Format -->
+			<BentoItem>
+				<HStack gap="sm" align="center" class="text-muted mb-3">
+					<IconFileText size={18} />
+					<span class="text-xs font-bold tracking-wider uppercase">{$t`File Format`}</span>
+				</HStack>
 
-<div class="relative flex h-full w-full flex-col p-4" style="max-height: calc(100vh - 8rem)">
-	<div class="flex-1 overflow-hidden">
-		<div class="grid grid-cols-1 gap-6 overflow-y-auto p-2" style="max-height: calc(100vh - 8rem)">
-			{#if volumeChapters.length > 0}
-				{#each volumeChapters as chapters, volumeIndex}
-					<div class="card bg-background-secondary dark:bg-background-dark-tertiary relative">
-						<div class="card-header flex items-center">
-							<IconBook class="mr-2" size={18} />
-							<h4 class="font-semibold">
-								{$t`Volume`}
-								{volumeIndex + 1} ({getVolumeImageCount(volumeIndex)}
-								{$t`Images`})
-							</h4>
-						</div>
-						<div class="card-body p-2">
-							{#each chapters as chapterIndex}
-								<Chapter
-									{chapterIndex}
-									bind:images
-									bind:selectedImages
-									bind:isVisibleState
-									bind:coverState
-									bind:imageLoadErrorState
-									onImageChange={updateCoverStates}
-								/>
-							{/each}
-						</div>
-					</div>
-				{/each}
-			{:else}
-				<!-- Single volume case, showing all chapters -->
-				<div class="card bg-background-secondary dark:bg-background-dark-tertiary relative">
-					<div class="card-body p-2">
-						<Chapter
-							chapterIndex={0}
-							bind:images
-							bind:selectedImages
-							bind:isVisibleState
-							bind:coverState
-							bind:imageLoadErrorState
-							onImageChange={updateCoverStates}
-						/>
+				<VStack gap="sm">
+					<Select
+						id="file-type"
+						options={formatOptions}
+						bind:value={fileFormat}
+						variant="seamless"
+					/>
+					<p class="text-muted text-xs">
+						{#if fileFormat === 'CBZ'}
+							{$t`Comic Book Archive format - widely supported by comic readers`}
+						{:else if fileFormat === 'EPUB'}
+							{$t`eBook format with better metadata support and reading options`}
+						{/if}
+					</p>
+				</VStack>
+			</BentoItem>
+
+			<!-- Reading Direction -->
+			<BentoItem>
+				<HStack gap="sm" align="center" class="text-muted mb-3">
+					<IconDirection size={18} />
+					<span class="text-xs font-bold tracking-wider uppercase">{$t`Reading Direction`}</span>
+					{#if fileFormat !== 'EPUB'}
+						<Badge variant="secondary" class="ml-auto text-xs">{$t`EPUB only`}</Badge>
+					{/if}
+				</HStack>
+
+				<VStack gap="sm">
+					<Select
+						id="reading-direction"
+						options={directionOptions}
+						bind:value={readingDirection}
+						disabled={fileFormat !== 'EPUB'}
+						variant="seamless"
+					/>
+					<p class="text-muted text-xs">
+						{#if fileFormat !== 'EPUB'}
+							{$t`Reading direction is only applicable to EPUB format`}
+						{:else}
+							{$t`Choose the reading direction for your manga (typically Right to Left for Japanese manga)`}
+						{/if}
+					</p>
+				</VStack>
+			</BentoItem>
+
+			<!-- Image Format -->
+			<BentoItem>
+				<HStack gap="sm" align="center" class="text-muted mb-3">
+					<IconPhoto size={18} />
+					<span class="text-xs font-bold tracking-wider uppercase">{$t`Image Format`}</span>
+				</HStack>
+
+				<VStack gap="sm">
+					<Select
+						id="image-format"
+						options={imageFormatOptions}
+						bind:value={imageFormat}
+						variant="seamless"
+					/>
+					<p class="text-muted text-xs">
+						{#if imageFormat === 'None'}
+							{$t`Images will keep their original format (fastest, larger file size)`}
+						{:else if imageFormat === 'WebP'}
+							{$t`Images will be converted to WebP (good compression, widely supported)`}
+						{:else if imageFormat === 'AVIF'}
+							{$t`Images will be converted to AVIF (best compression, slower conversion)`}
+						{/if}
+					</p>
+				</VStack>
+			</BentoItem>
+
+			<!-- Hide Single Volume Number Toggle -->
+			<BentoItem onclick={() => (hideSingleVolumeNumber = !hideSingleVolumeNumber)}>
+				<HStack gap="sm" align="center" class="text-muted mb-3">
+					<IconFileText size={18} />
+					<span class="text-xs font-bold tracking-wider uppercase">{$t`Single Volume Number`}</span>
+				</HStack>
+
+				<div
+					class="hover:bg-surface-2 group flex w-full cursor-pointer items-center justify-between rounded-lg p-3 text-left transition-colors"
+				>
+					<VStack gap="xs" class="flex-1">
+						<span class="text-sm font-medium">
+							{hideSingleVolumeNumber ? $t`Number will be hidden` : $t`Number will be shown`}
+						</span>
+						<span class="text-muted text-xs">
+							{#if hideSingleVolumeNumber}
+								{$t`Volume number won't be appended for single volumes`}
+							{:else}
+								{$t`Volume number will always be shown`}
+							{/if}
+						</span>
+					</VStack>
+					<div class="pointer-events-none ml-4">
+						<Toggle bind:checked={hideSingleVolumeNumber} tabindex={-1} />
 					</div>
 				</div>
-			{/if}
-		</div>
-	</div>
+			</BentoItem>
+
+			<!-- Volume Separator -->
+			<BentoItem colspan={2}>
+				<HStack gap="sm" align="center" class="text-muted mb-3">
+					<IconSeparator size={18} />
+					<span class="text-xs font-bold tracking-wider uppercase">{$t`Volume Separator`}</span>
+				</HStack>
+
+				<VStack gap="sm">
+					<Input
+						id="volume-separator"
+						bind:value={volumeSeparator}
+						placeholder=" | "
+						variant="seamless"
+					/>
+					<p class="text-muted text-xs">
+						{$t`Separator between volume name and volume number (e.g., "My Manga | 1")`}
+					</p>
+				</VStack>
+			</BentoItem>
+
+			<!-- Preview Section -->
+			<BentoItem colspan={2} variant="surface">
+				<HStack gap="sm" align="center" class="text-muted mb-3">
+					<div class="bg-success/20 h-1.5 w-1.5 rounded-full"></div>
+					<span class="text-xs font-bold tracking-wider uppercase">{$t`Output Preview`}</span>
+				</HStack>
+
+				<div class="grid grid-cols-2 gap-4">
+					<HStack justify="between" align="center">
+						<span class="text-muted text-sm">{$t`File Format`}</span>
+						<span class="text-sm font-medium">{fileFormat}</span>
+					</HStack>
+					{#if fileFormat === 'EPUB'}
+						<HStack justify="between" align="center">
+							<span class="text-muted text-sm">{$t`Reading Direction`}</span>
+							<span class="text-sm">{readingDirection}</span>
+						</HStack>
+					{/if}
+					<HStack justify="between" align="center">
+						<span class="text-muted text-sm">{$t`Image Format`}</span>
+						<span class="text-sm">{imageFormat}</span>
+					</HStack>
+					<HStack justify="between" align="center" class="col-span-2">
+						<span class="text-muted text-sm">{$t`Example Filename`}</span>
+						<span class="truncate font-mono text-xs">
+							{convState.name || 'Project'}{volumeSeparator}1.{fileFormat.toLowerCase()}
+						</span>
+					</HStack>
+				</div>
+			</BentoItem>
+		</BentoGrid>
+	</VStack>
 </div>

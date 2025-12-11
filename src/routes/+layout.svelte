@@ -68,131 +68,9 @@
 		},
 		{
 			name: $t`Settings`,
-			description: $t`Change the settings of the application`,
+			description: $t`Manage application preferences`,
 			icon: IconSettings,
-			subcommands: [
-				{
-					name: $t`Theme`,
-					description: $t`Change the theme of the application`,
-					icon: IconBrush,
-					subcommands: [
-						{
-							name: $t`Light`,
-							description: $t`Change the theme to light`,
-							icon: IconSun,
-							action: () => {
-								$appData.theme = Theme.Light;
-								toast($t`Theme changed to light`);
-							},
-						},
-						{
-							name: $t`Dark`,
-							description: $t`Change the theme to dark`,
-							icon: IconMoon,
-							action: () => {
-								$appData.theme = Theme.Dark;
-								toast($t`Theme changed to dark`);
-							},
-						},
-						{
-							name: $t`System`,
-							description: $t`Change the theme to system`,
-							icon: IconAutomation,
-							action: () => {
-								$appData.theme = Theme.System;
-								toast($t`Theme changed to system`);
-							},
-						},
-					],
-				},
-				{
-					name: $t`Language`,
-					description: $t`Change the language of the application`,
-					icon: IconLanguage,
-					subcommands: [
-						{
-							name: $t`English`,
-							description: $t`Change the language to English`,
-							icon: IconLanguage,
-							action: () => {
-								$appData.language = SupportedLanguages.English;
-								toast($t`Language changed to English`);
-							},
-						},
-						{
-							name: $t`German`,
-							description: $t`Change the language to German`,
-							icon: IconLanguage,
-							action: () => {
-								$appData.language = SupportedLanguages.German;
-								toast($t`Language changed to German`);
-							},
-						},
-					],
-				},
-				{
-					name: $t`Auto-Populate Fields`,
-					description: $t`Enable or disable the auto-population of fields in the application`,
-					icon: IconHighlight,
-					action: () => {
-						openDialog({
-							title: $t`Auto-Populate Settings`,
-							content: AutoPopulate,
-						});
-					},
-				},
-				{
-					name: $t`Show KeyHints`,
-					description: $t`Show the key hints of the application and their actions in the current context`,
-					icon: IconKeyboard,
-					action: () => {
-						$appData.showKeyHints = !$appData.showKeyHints;
-						toast($appData.showKeyHints ? $t`KeyHints are now shown` : $t`KeyHints are now hidden`);
-					},
-				},
-				{
-					name: $t`Mouse Support`,
-					description: $t`Enable or disable a button to show the ActionHub`,
-					icon: IconMouse,
-					action: () => {
-						$appData.mouseSupport = !$appData.mouseSupport;
-						toast(
-							$appData.mouseSupport
-								? $t`Mouse Support is now enabled`
-								: $t`Mouse Support is now disabled`
-						);
-					},
-				},
-				{
-					name: $t`System Information`,
-					description: $t`Show the system information of the application`,
-					icon: IconSettingsQuestion,
-					action: () => {
-						openDialog({
-							title: $t`Information`,
-							content: SystemInfo,
-						});
-					},
-				},
-				{
-					name: $t`Reset`,
-					description: $t`Reset the state of the application`,
-					icon: IconSettingsCode,
-					action: () => {
-						openDialog({
-							title: $t`Confirmation`,
-							content: $t`Are you sure you want to reset the state of the application?`,
-							onConfirm: () => {
-								appData.set(defaultAppData);
-								toast($t`Reset successfully`);
-							},
-							onCancel: () => {
-								toast($t`Reset canceled`);
-							},
-						});
-					},
-				},
-			],
+			action: () => goto('/settings'),
 		},
 	]);
 
@@ -230,8 +108,8 @@
 	<ActionHub {commands} bind:showPalette />
 {/if}
 
-<div class="bg-surface-0 flex min-h-screen flex-col transition-colors duration-300">
-	<main class="relative flex-1 overflow-hidden">
+<div class="bg-surface-0 flex h-screen flex-col transition-colors duration-300">
+	<main class="relative mb-10 flex-1 overflow-hidden">
 		{@render children()}
 	</main>
 

@@ -5,3 +5,4 @@ export { default as Step4 } from './Step4.svelte';
 export { default as Step5 } from './Step5.svelte';
 export { default as Step6 } from './Step6.svelte';
 export { default as Step7 } from './Step7.svelte';
+export { default as Step8 } from './Step8.svelte';

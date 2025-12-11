@@ -36,7 +36,7 @@
 </script>
 
 <div class="h-full w-full overflow-y-auto p-3 md:p-6">
-	<VStack gap="md" class="mx-auto h-full max-w-5xl">
+	<VStack gap="md" class="mx-auto h-full">
 		<!-- Header -->
 		<div class="flex items-center justify-between gap-4">
 			<HStack gap="sm" align="center">

@@ -1,394 +1,404 @@
 <script lang="ts">
-	import { onMount, onDestroy, tick } from 'svelte';
-	import {
-		IconCheck,
-		IconClock,
-		IconAlertCircle,
-		IconLoader,
-		IconCircleCheck,
-		IconCircleX,
-		IconCircle,
-		IconBolt,
-	} from '@tabler/icons-svelte';
-	import { t } from 'svelte-i18n-lingui';
-	import { wrapper } from '$lib/utils';
-	import { commands } from '$types';
-	import { stepState } from '$states/converter.svelte';
+	import { onDestroy, onMount } from 'svelte';
+	import { msg, t } from 'svelte-i18n-lingui';
+	import convState from '$states/converter.svelte';
+	import { commands, type ConvState } from '$types';
+	import { truncatePath, wrapper } from '$lib/utils';
 	import { keyHint } from '$states/keyhint.svelte';
-	import { keyboard } from '$lib/keyboard';
-	import { useConversionProgress } from '$lib/useConversionProgress.svelte';
-	import type { StatusMessage } from '$states/conversion.svelte';
-	import Confetti from '$components/Confetti.svelte';
-	import { fly } from 'svelte/transition';
+	import {
+		IconBook,
+		IconChartPie,
+		IconCopy,
+		IconPhoto,
+		IconVocabulary,
+		IconFolder,
+		IconFileText,
+		IconDirection,
+		IconFolderPlus,
+		IconPhoto as IconPhotoFormat,
+	} from '@tabler/icons-svelte';
 
-	const conversionProgress = useConversionProgress();
+	// Waku Imports
+	import { VStack, HStack, BentoGrid, BentoItem, Separator } from 'waku/layout';
+	import { Label, Badge } from 'waku/components';
 
-	let unregisterKey: () => void;
-	let showConfetti = $state(false);
-	let isComplete = $state(false);
+	let convStateData: ConvState | null = $state(null);
+	let unregisterKeyHint: () => void;
+	let totalImages = $state(0);
+	let coverImages = $state(0);
+	let maxVolumeImageCount = $state(0);
+	let images: string[][] = $state([]);
+	let scrollContainer: HTMLDivElement;
 
-	function formatTime(seconds: number): string {
-		if (seconds < 60) {
-			return `${seconds.toFixed(1)} ${$t`seconds`}`;
-		} else {
-			const minutes = Math.floor(seconds / 60);
-			const remainingSeconds = seconds % 60;
-			return `${minutes} ${minutes === 1 ? $t`minute` : $t`minutes`} ${remainingSeconds.toFixed(0)} ${$t`seconds`}`;
+	// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+	msg`Left to Right`;
+	// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+	msg`Right to Left`;
+
+	// Function to calculate the total number of images in a volume
+	function getVolumeImageCount(volumeIndex: number): number {
+		if (!convStateData?.volume_sizes || !convStateData?.data) return 0;
+
+		let chapterIndex = 0;
+		for (let i = 0; i < volumeIndex; i++) {
+			chapterIndex += convStateData.volume_sizes[i];
 		}
-	}
 
-	function getStatusClass(status: string) {
-		switch (status) {
-			case 'completed':
-				return 'text-success';
-			case 'failed':
-				return 'text-error';
-			case 'processing':
-				return 'text-primary';
-			default:
-				return 'text-base-content/30';
-		}
-	}
-
-	async function startConversion() {
-		stepState.disablePrev = true;
-		stepState.disableNext = true;
-
-		const result = await wrapper(commands.convConvert());
-
-		if (result != null) {
-			isComplete = true;
-			await tick();
-			if (conversionProgress.completed.failed === 0) {
-				setTimeout(() => {
-					showConfetti = true;
-				}, 100);
+		let count = 0;
+		for (let i = 0; i < convStateData.volume_sizes[volumeIndex]; i++) {
+			if (chapterIndex + i < images.length) {
+				count += images[chapterIndex + i].length;
 			}
-			keyHint.addKey('enter', $t`Convert another manga`);
 		}
+
+		return count;
 	}
 
-	function resetConversion() {
-		stepState.reset();
-		conversionProgress.reset();
-		isComplete = false;
-		showConfetti = false;
+	// Calculate max volume image count for chart scaling
+	function calculateMaxVolumeImageCount(): void {
+		if (!convStateData?.volume_sizes) return;
+
+		let max = 0;
+		for (let i = 0; i < convStateData.volume_sizes.length; i++) {
+			const count = getVolumeImageCount(i);
+			if (count > max) max = count;
+		}
+
+		maxVolumeImageCount = max;
+	}
+
+	// Calculate total images and cover images
+	function calculateImageStats() {
+		if (!convStateData?.data) return;
+
+		totalImages = images.reduce((sum: number, chapter: string[]) => sum + chapter.length, 0);
+		coverImages = convStateData?.volume_sizes?.length || 0;
+		calculateMaxVolumeImageCount();
 	}
 
 	onMount(async () => {
-		stepState.disablePrev = true;
-		stepState.disableNext = true;
-
-		unregisterKey = keyboard.smartRegister([
-			[
-				'enter',
-				() => {
-					if (isComplete) {
-						resetConversion();
-					}
-				},
-			],
+		unregisterKeyHint = keyHint.register([
+			['arrowup', $t`Scroll up`],
+			['arrowdown', $t`Scroll down`],
 		]);
 
-		await startConversion();
+		const result = await wrapper(commands.convStateGet());
+		if (result !== null && result.payload !== null) {
+			convStateData = result.payload;
+			images = convStateData.edited_data || convStateData.data;
+			calculateImageStats();
+		}
+
+		if (scrollContainer) {
+			scrollContainer.focus();
+		}
 	});
 
 	onDestroy(() => {
-		if (unregisterKey) unregisterKey();
-		keyHint.removeKey('enter');
-	});
-
-	// Smoother Global Progress based on image completion across all volumes
-	let overallProgress = $derived(conversionProgress.globalProgress);
-
-	function formatStatusMessage(message: StatusMessage): string {
-		switch (message.type) {
-			case 'volume_started':
-				return $t({
-					message: 'Starting Volume {volumeIdx}: {volName}',
-					values: { volumeIdx: message.volumeIndex + 1, volName: message.volumeName },
-				});
-			case 'page_added':
-				return $t({
-					message: 'Adding page {pageNum} of {pageTot} to Volume {volIdx}',
-					values: {
-						pageNum: message.pageNumber ?? 0,
-						pageTot: message.totalPages ?? 0,
-						volIdx: message.volumeIndex + 1,
-					},
-				});
-			case 'volume_finished':
-				if (message.success) {
-					return $t({
-						message: 'Finished Volume {volIdx}: {volName}',
-						values: { volIdx: message.volumeIndex + 1, volName: message.volumeName },
-					});
-				} else {
-					return $t({
-						message: 'Failed Volume {volIdx}: {volName}',
-						values: { volIdx: message.volumeIndex + 1, volName: message.volumeName },
-					});
-				}
-			default:
-				return '';
-		}
-	}
-
-	let messageLogElement = $state<HTMLDivElement | undefined>();
-	$effect(() => {
-		if (messageLogElement && conversionProgress.statusMessages.length > 0) {
-			messageLogElement.scrollTop = messageLogElement.scrollHeight;
-		}
+		if (unregisterKeyHint) unregisterKeyHint();
 	});
 </script>
 
-{#if !isComplete}
-	<div
-		class="flex h-full w-full flex-col overflow-y-auto p-4"
-		style="max-height: calc(100vh - 8rem)"
-	>
-		<div class="card">
-			<div class="card-header">
-				<div class="flex items-center gap-2">
-					<IconLoader class="text-primary animate-spin" size={20} />
-					<h3 class="text-lg font-semibold">{$t`Converting Volumes...`}</h3>
-				</div>
-			</div>
+<div class="w-full p-3 pb-3" bind:this={scrollContainer} tabindex="0" role="tab">
+	<VStack gap="md" class="mx-auto max-w-6xl pb-4">
+		<BentoGrid cols={2} density="compact">
+			<!-- General Information -->
+			<BentoItem colspan={2}>
+				<HStack align="center" gap="sm" class="text-muted mb-4">
+					<IconCopy size={18} />
+					<span class="text-xs font-bold tracking-wider uppercase">{$t`General Information`}</span>
+				</HStack>
 
-			<div class="card-body space-y-6">
-				<!-- Overall Progress -->
-				<div>
-					<div class="mb-2 flex items-center justify-between">
-						<span class="text-sm font-medium">{$t`Overall Progress`}</span>
-						<span class="text-primary text-sm font-medium">
-							{overallProgress.toFixed(1)}%
-						</span>
-					</div>
-					<progress class="progress progress-primary w-full" max="100" value={overallProgress}
-					></progress>
-					<div class="mt-2 flex justify-end gap-3 text-xs">
-						<span class="text-success flex items-center gap-1">
-							<IconCircleCheck size={14} />
-							{$t({
-								message: '{tot} successfull',
-								values: { tot: conversionProgress.completed.successful },
-							})}
-						</span>
-						<span class="text-error flex items-center gap-1">
-							<IconCircleX size={14} />
-							{$t({
-								message: '{tot} failed',
-								values: { tot: conversionProgress.completed.failed },
-							})}
-						</span>
-					</div>
-				</div>
-
-				<!-- Current Volume -->
-				{#if conversionProgress.activeVolumes.length > 0}
-					{@const volume = conversionProgress.activeVolumes[0]}
-					<div>
-						<h4 class="mb-2 text-sm font-semibold">{$t`Current Volume`}</h4>
-						<div
-							class="bg-background-tertiary dark:bg-background-dark-tertiary rounded-lg p-4 shadow-md"
-							in:fly={{ y: 10, duration: 300 }}
-						>
-							<div class="mb-3 flex items-center justify-between">
-								<span class="text-sm font-semibold">
-									{$t({ message: 'Volume {vol}', values: { vol: volume.index + 1 } })}
-								</span>
-								<span class="text-primary text-lg font-bold">{volume.progress.toFixed(0)}%</span>
-							</div>
-							<div class="mb-3 truncate text-base font-medium" title={volume.name}>
-								{volume.name}
-							</div>
-							<progress class="progress progress-primary w-full" max="100" value={volume.progress}
-							></progress>
-							<div class="mt-2 flex justify-between text-sm">
-								<span class="opacity-70">
-									{$t`Images`}
-								</span>
-								<span class="font-medium">
-									{volume.currentImage} / {volume.totalImages}
-								</span>
-							</div>
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<!-- Project Name -->
+					<VStack gap="xs">
+						<Label text={$t`Project Name`} class="mb-0!" />
+						<div class="bg-surface-2 rounded-lg px-3 py-2 font-medium opacity-75">
+							{convStateData?.name || $t`Unnamed Project`}
 						</div>
-					</div>
-				{/if}
+					</VStack>
 
-				<!-- All Volumes List -->
-				{#if conversionProgress.volumes.length > 0}
-					<div>
-						<h4 class="mb-2 text-sm font-semibold">{$t`All Volumes`}</h4>
+					<!-- Source Path -->
+					<VStack gap="xs">
+						<Label text={$t`Source Path`} class="mb-0!" />
 						<div
-							class="border-background-tertiary dark:border-background-dark-tertiary max-h-56 space-y-1 overflow-y-auto rounded-lg border p-2"
+							class="bg-surface-2 truncate rounded-lg px-3 py-2 font-mono text-sm opacity-75"
+							title={convStateData?.source || ''}
 						>
-							{#each conversionProgress.volumes as volume}
+							{truncatePath(convStateData?.source || $t`Not specified`)}
+						</div>
+					</VStack>
+
+					<!-- File Type -->
+					<VStack gap="xs">
+						<Label text={$t`File Type`} class="mb-0!" />
+						<div class="bg-surface-2 rounded-lg px-3 py-2 font-medium opacity-75">
+							{convStateData?.format || $t`Not specified`}
+						</div>
+					</VStack>
+
+					<!-- Target Location -->
+					<VStack gap="xs">
+						<Label text={$t`Target Location`} class="mb-0!" />
+						<div
+							class="bg-surface-2 truncate rounded-lg px-3 py-2 font-mono text-sm opacity-75"
+							title={convState.target || ''}
+						>
+							{truncatePath(convState.target || $t`Not specified`)}
+						</div>
+					</VStack>
+
+					<!-- Reading Direction -->
+					<VStack gap="xs">
+						<Label text={$t`Reading Direction`} class="mb-0!" />
+						<HStack align="center" gap="sm">
+							<div class="bg-surface-2 flex-1 rounded-lg px-3 py-2 opacity-75">
+								{convStateData ? $t(convStateData.direction) : $t`Left to Right`}
+							</div>
+							{#if convStateData?.format !== 'EPUB'}
+								<Badge variant="secondary">{$t`EPUB only`}</Badge>
+							{/if}
+						</HStack>
+					</VStack>
+
+					<!-- Create Folder -->
+					<VStack gap="xs">
+						<Label text={$t`Create New Folder`} class="mb-0!" />
+						<div class="bg-surface-2 flex items-center gap-3 rounded-lg px-3 py-2 opacity-75">
+							<div
+								class="h-5 w-9 rounded-full transition-colors {convStateData?.create_directory
+									? 'bg-accent-500'
+									: 'bg-surface-0'}"
+							>
 								<div
-									class="hover:bg-background-tertiary dark:hover:bg-background-dark-tertiary flex items-center justify-between rounded px-2 py-1.5 text-sm transition-colors"
-								>
-									<div class="flex min-w-0 flex-1 items-center gap-2">
-										{#if volume.status === 'completed'}
-											<IconCircleCheck size={14} class={getStatusClass(volume.status)} />
-										{:else if volume.status === 'failed'}
-											<IconCircleX size={14} class={getStatusClass(volume.status)} />
-										{:else if volume.status === 'processing'}
-											<div class="relative h-3.5 w-3.5">
-												<IconLoader
-													size={14}
-													class="{getStatusClass(volume.status)} absolute animate-spin"
-												/>
-											</div>
-										{:else}
-											<IconCircle size={14} class="opacity-20" />
-										{/if}
-										<span
-											class="truncate {volume.status === 'pending' ? 'opacity-50' : ''}"
-											title={volume.name}
-										>
-											{volume.name || `${$t`Volume`} ${volume.index + 1}`}
-										</span>
-									</div>
-									{#if volume.status !== 'pending'}
-										<div class="flex items-center gap-2">
-											{#if volume.status === 'processing'}
-												<span class="text-xs opacity-70">{volume.progress.toFixed(0)}%</span>
-											{/if}
-											{#if volume.errorMessage}
-												<span title={volume.errorMessage}>
-													<IconAlertCircle size={14} class="text-error" />
-												</span>
-											{/if}
-										</div>
-									{/if}
-								</div>
-							{/each}
+									class="h-5 w-5 rounded-full bg-white shadow-sm transition-transform {convStateData?.create_directory
+										? 'translate-x-4'
+										: 'translate-x-0'}"
+								></div>
+							</div>
+							<span class="text-sm">
+								{convStateData?.create_directory
+									? $t`Will create a new folder for output files`
+									: $t`Will save directly in target location`}
+							</span>
 						</div>
-					</div>
-				{/if}
+					</VStack>
 
-				<!-- Live Status Messages -->
-				{#if conversionProgress.statusMessages.length > 0}
-					<div>
-						<h4 class="mb-2 text-sm font-semibold">{$t`Live Log`}</h4>
-						<div
-							bind:this={messageLogElement}
-							class="bg-background-tertiary dark:bg-background-dark-tertiary max-h-32 overflow-y-auto rounded p-2 font-mono text-[10px] opacity-80"
-						>
-							{#each conversionProgress.statusMessages as message}
-								<div class="border-background-secondary border-b py-0.5 last:border-b-0">
-									{formatStatusMessage(message)}
-								</div>
-							{/each}
+					<!-- Image Output Format -->
+					<VStack gap="xs" class="md:col-span-2">
+						<Label text={$t`Image Output Format`} class="mb-0!" />
+						<div class="bg-surface-2 rounded-lg px-3 py-2">
+							<div class="mb-1 font-medium opacity-75">
+								{convStateData?.image_format ?? 'None'}
+							</div>
+							<span class="text-muted text-sm">
+								{#if convStateData?.image_format === 'None'}
+									{$t`Images will keep their original format`}
+								{:else if convStateData?.image_format === 'WebP'}
+									{$t`Images will be converted to WebP format`}
+								{:else if convStateData?.image_format === 'AVIF'}
+									{$t`Images will be converted to AVIF format (smaller, slower)`}
+								{/if}
+							</span>
 						</div>
-					</div>
-				{/if}
-			</div>
-		</div>
-	</div>
-{:else}
-	{#if showConfetti}
-		<Confetti count={300} autoStart duration={null} />
-	{/if}
-
-	<div
-		class="flex h-full w-full flex-col items-center justify-center overflow-y-auto p-4"
-		style="max-height: calc(100vh - 8rem)"
-	>
-		<div class="card w-full max-w-lg">
-			<div class="card-header">
-				<h3 class="text-lg font-semibold">{$t`Conversion Complete!`}</h3>
-			</div>
-
-			<div class="card-body">
-				<p class="mb-4 text-center text-lg">
-					{#if conversionProgress.completed.failed === 0}
-						{$t`All volumes converted successfully!`}
-					{:else if conversionProgress.completed.successful === 0}
-						{$t`Conversion completed with errors`}
-					{:else}
-						{$t`Conversion completed with some errors`}
-					{/if}
-				</p>
-
-				<!-- Statistics -->
-				<div class="mb-6 grid grid-cols-2 gap-4">
-					<div class="bg-success/10 flex flex-col items-center rounded-lg p-3">
-						<div class="flex items-center gap-2">
-							<IconCheck size={20} class="text-success" />
-							<span class="text-success text-2xl font-bold"
-								>{conversionProgress.completed.successful}</span
-							>
-						</div>
-						<span class="text-xs opacity-70">{$t`Successful`}</span>
-					</div>
-
-					<div class="bg-error/10 flex flex-col items-center rounded-lg p-3">
-						<div class="flex items-center gap-2">
-							<IconAlertCircle size={20} class="text-error" />
-							<span class="text-error text-2xl font-bold"
-								>{conversionProgress.completed.failed}</span
-							>
-						</div>
-						<span class="text-xs opacity-70">{$t`Failed`}</span>
-					</div>
+					</VStack>
 				</div>
+			</BentoItem>
 
-				<!-- Duration -->
-				{#if conversionProgress.durationSeconds !== null}
-					<div class="my-6 flex w-full flex-col items-center gap-2">
-						<div class="flex items-center gap-3">
-							<IconClock size={24} class="text-primary" />
-							<span class="text-lg font-medium">{$t`Processing Time`}</span>
-						</div>
-						<span class="text-primary text-4xl font-bold">
-							{formatTime(conversionProgress.durationSeconds)}
-						</span>
-					</div>
-				{/if}
+			<!-- Statistics Overview -->
+			<BentoItem colspan={2}>
+				<HStack align="center" gap="sm" class="text-muted mb-4">
+					<IconChartPie size={18} />
+					<span class="text-xs font-bold tracking-wider uppercase">{$t`Conversion Summary`}</span>
+				</HStack>
 
-				<!-- Errors Summary -->
-				{#if conversionProgress.errors.length > 0}
+				<!-- Summary Cards -->
+				<div class="mb-6 grid grid-cols-3 gap-4">
 					<div
-						class="bg-error/10 border-error/30 mb-4 max-h-40 overflow-y-auto rounded-lg border p-3"
+						class="bg-accent-500/10 border-accent-500/20 flex flex-col items-center rounded-lg border p-4"
 					>
-						<h4 class="text-error mb-2 flex items-center gap-2 text-sm font-semibold">
-							<IconAlertCircle size={18} />
-							{$t`Failed Volumes`}
+						<IconBook class="text-accent-500 mb-2" size={28} />
+						<span class="text-2xl font-bold">{convStateData?.volume_sizes?.length ?? 0}</span>
+						<span class="text-muted text-sm">{$t`Volumes`}</span>
+					</div>
+					<div
+						class="bg-accent-500/10 border-accent-500/20 flex flex-col items-center rounded-lg border p-4"
+					>
+						<IconVocabulary class="text-accent-500 mb-2" size={28} />
+						<span class="text-2xl font-bold">{convStateData?.data?.length ?? 0}</span>
+						<span class="text-muted text-sm">{$t`Chapters`}</span>
+					</div>
+					<div
+						class="bg-accent-500/10 border-accent-500/20 flex flex-col items-center rounded-lg border p-4"
+					>
+						<IconPhoto class="text-accent-500 mb-2" size={28} />
+						<span class="text-2xl font-bold">{totalImages - (convState.excludedImages || 0)}</span>
+						<span class="text-muted text-sm">{$t`Images`}</span>
+					</div>
+				</div>
+
+				<Separator class="my-4!" />
+
+				<!-- Image Statistics -->
+				<div class="mb-6">
+					<h4 class="mb-3 flex items-center font-medium">
+						<IconPhoto class="text-accent-500 mr-2" size={18} />
+						{$t`Image Statistics`}
+					</h4>
+					<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+						<div class="bg-surface-2 rounded-lg p-3 text-center">
+							<div class="text-muted mb-1 text-xs">{$t`Total Images`}</div>
+							<div class="text-lg font-semibold">{totalImages}</div>
+						</div>
+						<div class="bg-surface-2 rounded-lg p-3 text-center">
+							<div class="text-muted mb-1 text-xs">{$t`Cover Images`}</div>
+							<div class="text-lg font-semibold">{coverImages}</div>
+						</div>
+						<div class="bg-surface-2 rounded-lg p-3 text-center">
+							<div class="text-muted mb-1 text-xs">{$t`Excluded`}</div>
+							<div class="text-lg font-semibold">{convState.excludedImages || 0}</div>
+						</div>
+						<div class="bg-surface-2 rounded-lg p-3 text-center">
+							<div class="text-muted mb-1 text-xs">{$t`New Images`}</div>
+							<div class="text-lg font-semibold">{convState.newImages || 0}</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Volume Distribution Graph -->
+				{#if convStateData?.volume_sizes && convStateData.volume_sizes.length > 0}
+					<div>
+						<h4 class="mb-3 flex items-center font-medium">
+							<IconBook class="text-accent-500 mr-2" size={18} />
+							{$t`Volume Distribution`}
 						</h4>
-						<ul class="space-y-1 text-xs">
-							{#each conversionProgress.errors as error}
-								<li class="flex flex-col gap-1">
-									<span class="font-medium">{error.volumeName}</span>
-									<span class="pl-2 opacity-80">{error.error}</span>
-								</li>
-							{/each}
-						</ul>
+						<div class="bg-surface-2 rounded-lg p-3">
+							<div class="chart-container">
+								{#each convStateData.volume_sizes as size, index}
+									{@const imageCount = getVolumeImageCount(index)}
+									{@const percentage =
+										maxVolumeImageCount > 0 ? (imageCount / maxVolumeImageCount) * 100 : 0}
+									<div class="chart-item">
+										<div class="chart-label">{$t`Vol`} {index + 1}</div>
+										<div class="chart-bar-container">
+											<div
+												class="chart-bar"
+												style="width: {percentage}%"
+												title="{imageCount} {$t`images`}, {size} {$t`chapters`}"
+											>
+												<!-- Chapter separators -->
+												{#if images}
+													{@const chapterStartIndex = convStateData.volume_sizes
+														.slice(0, index)
+														.reduce((sum, val) => sum + val, 0)}
+													{@const volumeChapters = images.slice(
+														chapterStartIndex,
+														chapterStartIndex + size
+													)}
+													{@const chapterImageCounts = volumeChapters.map(
+														(chapter) => chapter.length
+													)}
+													{@const totalVolumeImages = chapterImageCounts.reduce(
+														(sum, val) => sum + val,
+														0
+													)}
+													<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
+													{#each chapterImageCounts as _, chapterIdx}
+														{@const chapterEndPosition =
+															(chapterImageCounts
+																.slice(0, chapterIdx + 1)
+																.reduce((sum, val) => sum + val, 0) /
+																totalVolumeImages) *
+															100}
+														{#if chapterIdx < chapterImageCounts.length - 1}
+															<div
+																class="chapter-separator"
+																style="left: {chapterEndPosition}%"
+																title="{$t`Chapter`} {chapterStartIndex + chapterIdx + 1} {$t`end`}"
+															></div>
+														{/if}
+													{/each}
+												{/if}
+												<span class="chart-value">{imageCount}</span>
+											</div>
+										</div>
+									</div>
+								{/each}
+							</div>
+							<div class="text-muted mt-2 text-center text-xs">
+								{$t`Images per volume`} | {$t`Hover for details`}
+							</div>
+						</div>
 					</div>
 				{/if}
-
-				<div class="flex justify-center">
-					<button class="btn btn-lg btn-success gap-2" onclick={resetConversion}>
-						<IconCheck size={20} />
-						<span>{$t`Convert another manga`}</span>
-					</button>
-				</div>
-			</div>
-		</div>
-	</div>
-{/if}
+			</BentoItem>
+		</BentoGrid>
+	</VStack>
+</div>
 
 <style>
-	@keyframes spin {
-		from {
-			transform: rotate(0deg);
-		}
-		to {
-			transform: rotate(360deg);
-		}
+	/* Remove focus indicators while preserving accessibility */
+	div[tabindex='0']:focus {
+		outline: none;
+		box-shadow: none;
+		border-color: transparent;
 	}
 
-	:global(.animate-spin) {
-		animation: spin 1s linear infinite;
+	/* Chart styles */
+	.chart-container {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.chart-item {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.chart-label {
+		width: 45px;
+		text-align: right;
+		font-size: 0.875rem;
+	}
+
+	.chart-bar-container {
+		flex: 1;
+		height: 24px;
+		background-color: rgba(0, 0, 0, 0.1);
+		border-radius: 4px;
+		overflow: hidden;
+	}
+
+	.chart-bar {
+		position: relative;
+		height: 100%;
+		background-color: var(--waku-accent, var(--color-primary));
+		background-size: 1rem 1rem;
+		min-width: 30px;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		padding: 0 8px;
+		border-radius: 3px;
+		transition: width 0.5s ease-in-out;
+	}
+
+	.chapter-separator {
+		position: absolute;
+		height: 100%;
+		width: 2px;
+		background-color: rgba(255, 255, 255, 0.3);
+		top: 0;
+		z-index: 1;
+	}
+
+	.chart-value {
+		color: white;
+		font-size: 0.875rem;
+		font-weight: 600;
+		position: relative;
+		z-index: 2;
 	}
 </style>

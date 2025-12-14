@@ -3,7 +3,7 @@
 	import { stepMachine } from '$states/stepMachine.svelte';
 	import { stepRegistry } from '$lib/steps/registry.svelte';
 	import '$lib/steps/definitions';
-	import { VStack, HStack } from 'waku/layout';
+	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
 	import { Button, Badge } from 'waku/components';
 	import { keyHint } from '$states/keyhint.svelte';
 	import { keyboard } from '$lib/keyboard';
@@ -100,21 +100,20 @@
 	let CurrentIcon = $derived(getCurrentIcon());
 </script>
 
-<div class="flex h-full w-full flex-col overflow-hidden">
-	<!-- Header Section - Sticky -->
-	<div class="bg-surface-0 z-10 shrink-0 px-3 pt-4 pb-3">
-		<div class="flex items-center justify-between">
-			<VStack gap="xs">
-				<HStack gap="sm" align="center">
-					<CurrentIcon size={28} class="text-accent-500" />
-					<h1 class="text-2xl font-bold">
-						{currentStep?.title || ''}
-					</h1>
-				</HStack>
+<div class="h-full w-full overflow-y-auto p-3 md:p-6">
+	<VStack gap="md" class="mx-auto h-full">
+		<!-- Header -->
+		<div class="flex items-center justify-between gap-4">
+			<HStack gap="sm" align="center">
+				<CurrentIcon size={28} class="text-accent-500" />
+				<h1 class="text-2xl font-bold">
+					{currentStep?.title || ''}
+				</h1>
+				<div class="bg-surface-2 h-4 w-px"></div>
 				<p class="text-muted text-sm">
 					{currentStep?.description || ''}
 				</p>
-			</VStack>
+			</HStack>
 
 			<Badge variant="secondary" class="text-xs">
 				{$t`Step`}
@@ -123,41 +122,41 @@
 		</div>
 
 		<!-- Progress Bar -->
-		<div class="bg-surface-2 relative mt-3 h-2 w-full overflow-hidden rounded-full">
+		<div class="bg-surface-2 relative h-2 w-full overflow-hidden rounded-full">
 			<div
 				class="from-accent-500 to-accent-400 h-full bg-linear-to-r transition-all duration-500 ease-out"
 				style="width: {stepMachine.progress}%"
 			></div>
 		</div>
-	</div>
 
-	<!-- Step Content -->
-	<div class="flex-1 overflow-x-hidden overflow-y-auto">
-		{#if currentStep?.component}
-			{@const StepComponent = currentStep.component}
-			<StepComponent />
+		<!-- Step Content with Bento Grid -->
+		<div class="flex-1 overflow-hidden">
+			{#if currentStep?.component}
+				{@const StepComponent = currentStep.component}
+				<StepComponent />
+			{/if}
+		</div>
+
+		<!-- Navigation Buttons -->
+		{#if $appData.mouseSupport}
+			<HStack justify="between" class="shrink-0">
+				<Button
+					variant="outline"
+					onclick={() => stepMachine.back()}
+					disabled={!canGoBack || isTransitioning}
+					class="min-w-[120px]"
+				>
+					{$t`Previous`}
+				</Button>
+				<Button
+					variant="primary"
+					onclick={() => stepMachine.next()}
+					disabled={!canGoNext || isTransitioning}
+					class="min-w-[120px]"
+				>
+					{$t`Next`}
+				</Button>
+			</HStack>
 		{/if}
-	</div>
-
-	<!-- Navigation Buttons -->
-	{#if $appData.mouseSupport}
-		<HStack justify="between" class="bg-surface-0 shrink-0 px-3 pt-2 pb-4">
-			<Button
-				variant="outline"
-				onclick={() => stepMachine.back()}
-				disabled={!canGoBack || isTransitioning}
-				class="min-w-[120px]"
-			>
-				{$t`Previous`}
-			</Button>
-			<Button
-				variant="primary"
-				onclick={() => stepMachine.next()}
-				disabled={!canGoNext || isTransitioning}
-				class="min-w-[120px]"
-			>
-				{$t`Next`}
-			</Button>
-		</HStack>
-	{/if}
+	</VStack>
 </div>

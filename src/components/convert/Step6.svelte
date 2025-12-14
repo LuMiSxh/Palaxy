@@ -132,58 +132,60 @@
 	</div>
 {/if}
 
-<div class="w-full p-3 pb-3">
-	<VStack gap="md" class="mx-auto max-w-6xl pb-4">
-		<BentoGrid cols={1} density="compact">
-			{#if volumeChapters.length > 0}
-				{#each volumeChapters as chapters, volumeIndex}
-					<BentoItem>
+<div class="h-full w-full p-3">
+	<div class="h-full overflow-y-auto">
+		<VStack gap="md" class="mx-auto max-w-6xl pb-4">
+			<BentoGrid cols={1} density="compact">
+				{#if volumeChapters.length > 0}
+					{#each volumeChapters as chapters, volumeIndex}
+						<BentoItem variant="glass">
+							<HStack align="center" gap="sm" class="text-muted mb-4">
+								<IconBook size={18} />
+								<span class="text-xs font-bold tracking-wider uppercase">
+									{$t`Volume`}
+									{volumeIndex + 1}
+								</span>
+								<Badge variant="secondary" class="ml-auto">
+									{getVolumeImageCount(volumeIndex)}
+									{$t`Images`}
+								</Badge>
+							</HStack>
+
+							<VStack gap="md">
+								{#each chapters as chapterIndex}
+									<Chapter
+										{chapterIndex}
+										bind:images
+										bind:selectedImages
+										bind:isVisibleState
+										bind:coverState
+										bind:imageLoadErrorState
+										onImageChange={updateCoverStates}
+									/>
+								{/each}
+							</VStack>
+						</BentoItem>
+					{/each}
+				{:else}
+					<!-- Single volume case, showing all chapters -->
+					<BentoItem variant="glass">
 						<HStack align="center" gap="sm" class="text-muted mb-4">
 							<IconBook size={18} />
-							<span class="text-xs font-bold tracking-wider uppercase">
-								{$t`Volume`}
-								{volumeIndex + 1}
-							</span>
-							<Badge variant="secondary" class="ml-auto">
-								{getVolumeImageCount(volumeIndex)}
-								{$t`Images`}
-							</Badge>
+							<span class="text-xs font-bold tracking-wider uppercase">{$t`All Chapters`}</span>
 						</HStack>
 
-						<VStack gap="md">
-							{#each chapters as chapterIndex}
-								<Chapter
-									{chapterIndex}
-									bind:images
-									bind:selectedImages
-									bind:isVisibleState
-									bind:coverState
-									bind:imageLoadErrorState
-									onImageChange={updateCoverStates}
-								/>
-							{/each}
-						</VStack>
+						<Chapter
+							chapterIndex={0}
+							bind:images
+							bind:selectedImages
+							bind:isVisibleState
+							bind:coverState
+							bind:imageLoadErrorState
+							onImageChange={updateCoverStates}
+						/>
 					</BentoItem>
-				{/each}
-			{:else}
-				<!-- Single volume case, showing all chapters -->
-				<BentoItem>
-					<HStack align="center" gap="sm" class="text-muted mb-4">
-						<IconBook size={18} />
-						<span class="text-xs font-bold tracking-wider uppercase">{$t`All Chapters`}</span>
-					</HStack>
-
-					<Chapter
-						chapterIndex={0}
-						bind:images
-						bind:selectedImages
-						bind:isVisibleState
-						bind:coverState
-						bind:imageLoadErrorState
-						onImageChange={updateCoverStates}
-					/>
-				</BentoItem>
-			{/if}
-		</BentoGrid>
-	</VStack>
+				{/if}
+			</BentoGrid>
+		</VStack>
+	</div>
 </div>

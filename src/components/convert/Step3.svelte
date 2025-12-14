@@ -3,7 +3,7 @@
 	import convState from '$states/converter.svelte';
 	import { commands } from '$types';
 	import { t } from 'svelte-i18n-lingui';
-	import { IconFolder, IconFile, IconFolderPlus } from '@tabler/icons-svelte';
+	import { IconFolder, IconFile, IconFolderPlus, IconCheck } from '@tabler/icons-svelte';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { onDestroy, onMount } from 'svelte';
 	import { truncatePath, wrapper } from '$lib/utils';
@@ -55,51 +55,69 @@
 	});
 </script>
 
-<div class="flex w-full p-3 pb-3">
-	<VStack gap="md" class="mx-auto w-full max-w-5xl">
-		<BentoGrid cols={2} density="compact">
-			<!-- Project Name -->
-			<BentoItem>
-				<HStack gap="sm" align="center" class="text-muted mb-3">
-					<IconFile size={18} />
-					<span class="text-xs font-bold tracking-wider uppercase">{$t`Project Name`}</span>
-				</HStack>
+<div class="h-full w-full p-3">
+	<BentoGrid cols={2} density="comfortable" class="h-full items-start">
+		<!-- Project Name -->
+		<BentoItem variant="glass" class="h-48">
+			<HStack gap="sm" align="center" class="text-muted mb-3">
+				<IconFile size={18} />
+				<span class="text-xs font-bold tracking-wider uppercase">{$t`Project Name`}</span>
+			</HStack>
 
-				<VStack gap="sm">
-					<Input
-						id="project-name"
-						bind:value={name}
-						placeholder={projectNamePlaceholder}
-						variant="seamless"
-						onkeydown={(e) => {
-							if (e.key === ' ') {
-								e.preventDefault();
-							}
-						}}
-					/>
-					<p class="text-muted text-xs">
-						{$t`This will be used as the base name for your output files`}
-					</p>
-				</VStack>
-			</BentoItem>
+			<VStack gap="sm">
+				<Input
+					id="project-name"
+					bind:value={name}
+					placeholder={projectNamePlaceholder}
+					variant="seamless"
+					onkeydown={(e) => {
+						if (e.key === ' ') {
+							e.preventDefault();
+						}
+					}}
+				/>
+				<p class="text-muted text-xs">
+					{$t`This will be used as the base name for your output files`}
+				</p>
+			</VStack>
+		</BentoItem>
 
-			<!-- Create Folder Toggle -->
-			<BentoItem>
-				<HStack gap="sm" align="center" class="text-muted mb-3">
-					<IconFolderPlus size={18} />
-					<span class="text-xs font-bold tracking-wider uppercase">{$t`Create New Folder`}</span>
+		<!-- Create Folder Toggle -->
+		<BentoItem
+			variant="glass"
+			onclick={() => (createFolder = !createFolder)}
+			data-keyhint={`enter;${$t`Toggle`}`}
+			class="relative h-48 overflow-hidden"
+		>
+			<div class="relative z-10">
+				<HStack gap="sm" align="center" class="mb-4">
+					<div
+						class="flex h-10 w-10 items-center justify-center rounded-full transition-colors {createFolder
+							? 'bg-accent-500/20'
+							: ''}"
+						class:text-accent-500={createFolder}
+						class:bg-surface-2={!createFolder}
+						class:text-muted={!createFolder}
+					>
+						<IconFolderPlus size={20} />
+					</div>
+					<span class="text-sm font-bold tracking-wider uppercase">{$t`Create New Folder`}</span>
 				</HStack>
 
 				<button
 					type="button"
-					class="hover:bg-surface-2 group flex w-full cursor-pointer items-center justify-between rounded-lg p-3 text-left transition-colors"
-					onclick={() => (createFolder = !createFolder)}
+					class="hover:bg-surface-2 group flex w-full cursor-pointer items-center justify-between rounded-lg border border-transparent p-4 text-left transition-all"
+					onclick={(e) => {
+						e.stopPropagation();
+						createFolder = !createFolder;
+					}}
+					tabindex={-1}
 				>
-					<VStack gap="xs" class="flex-1">
-						<span class="text-sm font-medium">
+					<VStack gap="sm" class="flex-1">
+						<span class="font-medium">
 							{createFolder ? $t`Create a new folder` : $t`Save directly in target location`}
 						</span>
-						<span class="text-muted text-xs">
+						<span class="text-muted text-sm leading-relaxed">
 							{#if createFolder}
 								{$t`A folder named after the project will be created`}
 							{:else}
@@ -111,45 +129,90 @@
 						<Toggle bind:checked={createFolder} tabindex={-1} />
 					</div>
 				</button>
-			</BentoItem>
+			</div>
+			{#if createFolder}
+				<div
+					class="from-accent-500/5 absolute inset-0 bg-linear-to-br to-transparent opacity-50"
+				></div>
+			{/if}
+		</BentoItem>
 
-			<!-- Target Location -->
-			<BentoItem colspan={2}>
-				<HStack gap="sm" align="center" class="text-muted mb-3">
-					<IconFolder size={18} />
-					<span class="text-xs font-bold tracking-wider uppercase">{$t`Output Location`}</span>
+		<!-- Target Location -->
+		<BentoItem
+			colspan={2}
+			variant="glass"
+			onclick={select}
+			data-keyhint={`enter;${$t`Select location`}`}
+			class="relative h-48 overflow-hidden"
+		>
+			<div class="relative z-10">
+				<HStack gap="sm" align="center" class="mb-4">
+					<div
+						class="flex h-10 w-10 items-center justify-center rounded-full transition-colors {targetLocation
+							? 'bg-accent-500/20'
+							: ''}"
+						class:text-accent-500={targetLocation}
+						class:bg-surface-2={!targetLocation}
+						class:text-muted={!targetLocation}
+					>
+						<IconFolder size={20} />
+					</div>
+					<span class="text-sm font-bold tracking-wider uppercase">{$t`Output Location`}</span>
+					{#if targetLocation}
+						<div
+							class="bg-success/20 ml-auto flex h-6 w-6 items-center justify-center rounded-full"
+						>
+							<IconCheck size={14} class="text-success" />
+						</div>
+					{/if}
 				</HStack>
 
-				<button
-					id="target-location"
-					class="bg-surface-2 hover:bg-surface-1 hover:border-accent-500/50 group w-full rounded-lg border border-transparent p-3 text-left transition-all"
-					use:handleKeyHint={{ keys: [['enter', $t`Select location`]] }}
-					onclick={select}
-				>
-					<HStack gap="sm" align="center">
-						<div class="text-accent-500">
-							<IconFolder size={20} />
-						</div>
-						<VStack gap="xs" class="flex-1 overflow-hidden">
-							<span class="text-sm font-medium">
-								{#if !targetLocation}
-									{$t`Select output folder`}
-								{:else}
-									{$t`Output folder selected`}
-								{/if}
-							</span>
-							{#if targetLocation}
-								<span class="text-muted truncate font-mono text-xs" title={targetLocation}>
-									{truncatePath(targetLocation, 100)}
+				<VStack gap="md">
+					<button
+						id="target-location"
+						class="bg-surface-2 hover:bg-surface-1 hover:border-accent-500/50 focus:border-accent-500 focus:ring-accent-500/20 group w-full rounded-lg border border-transparent p-4 text-left transition-all focus:ring-2 focus:outline-none"
+						onclick={(e) => {
+							e.stopPropagation();
+							select();
+						}}
+						tabindex={-1}
+					>
+						<HStack gap="md" align="center">
+							<div
+								class="from-accent-500/30 to-accent-500/10 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-linear-to-br transition-all group-hover:scale-105"
+							>
+								<IconFolder size={24} class="text-accent-500" />
+							</div>
+							<VStack gap="xs" class="flex-1 overflow-hidden">
+								<span class="font-medium">
+									{#if !targetLocation}
+										{$t`Select output folder`}
+									{:else}
+										{$t`Output folder selected`}
+									{/if}
 								</span>
-							{/if}
-						</VStack>
-					</HStack>
-				</button>
-				<p class="text-muted mt-2 text-xs">
-					{$t`Choose where the converted files will be saved`}
-				</p>
-			</BentoItem>
-		</BentoGrid>
-	</VStack>
+								{#if targetLocation}
+									<span class="text-muted truncate font-mono text-sm" title={targetLocation}>
+										{truncatePath(targetLocation, 100)}
+									</span>
+								{:else}
+									<span class="text-muted text-sm">
+										{$t`Click to browse for a folder`}
+									</span>
+								{/if}
+							</VStack>
+						</HStack>
+					</button>
+					<p class="text-muted text-xs leading-relaxed">
+						{$t`Choose where the converted files will be saved`}
+					</p>
+				</VStack>
+			</div>
+			{#if targetLocation}
+				<div
+					class="from-accent-500/5 absolute inset-0 bg-linear-to-br to-transparent opacity-50"
+				></div>
+			{/if}
+		</BentoItem>
+	</BentoGrid>
 </div>

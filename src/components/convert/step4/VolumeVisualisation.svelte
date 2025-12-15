@@ -1,108 +1,128 @@
 <script lang="ts">
+	import { IconFileZip } from '@tabler/icons-svelte';
 	import convState from '$states/converter.svelte';
 	import { t, plural } from 'svelte-i18n-lingui';
-	import {
-		getChaptersPercentage,
-		getTotalChapters,
-		step4State,
-	} from '$components/convert/step4/utils.svelte';
-	import { handleKeyHint } from '$states/keyhint.svelte';
+	import { step4State } from '$components/convert/step4/utils.svelte';
 	import { VStack, HStack } from 'waku/layout';
 	import { Badge } from 'waku/components';
 
-	let volVisFocused = $state(false);
+	interface Props {
+		scrollContainer?: HTMLDivElement | null;
+	}
+
+	let { scrollContainer = $bindable(null) }: Props = $props();
 </script>
 
-<div
-	class="glass-subtle flex h-full flex-col overflow-hidden rounded-xl"
-	class:ring-2={volVisFocused}
-	class:ring-accent-500={volVisFocused}
->
-	<div
-		class="flex flex-col overflow-y-auto p-4"
-		tabindex="0"
-		role="tabpanel"
-		onfocus={() => (volVisFocused = true)}
-		onblur={() => (volVisFocused = false)}
-		use:handleKeyHint={{
-			keys: [
-				['arrowup', $t`Scroll up`],
-				['arrowdown', $t`Scroll down`],
-			],
-		}}
-	>
-		<h3 class="mb-3 text-base font-semibold">{$t`Volume Distribution`}</h3>
+<HStack gap="sm" align="center" class="text-muted mb-3 shrink-0">
+	<IconFileZip size={18} />
+	<span class="text-xs font-bold tracking-wider uppercase">{$t`Volume Distribution`}</span>
+</HStack>
 
-		{#if convState.chapterSizes.length > 0}
-			<VStack gap="sm" class="flex-1">
-				{#each convState.chapterSizes as chapters, i}
-					<div class="bg-surface-1 hover:bg-surface-2 rounded-lg p-3 transition-all">
-						<HStack justify="between" align="center" class="mb-3">
-							<span class="font-medium"
-								>{$t({ message: 'Volume {vol}', values: { vol: i + 1 } })}</span
-							>
-							<Badge variant="secondary">
+{#if convState.chapterSizes.length > 0}
+	<div bind:this={scrollContainer} class="custom-scrollbar flex-1 space-y-3 overflow-y-auto pr-2">
+		{#each convState.chapterSizes as chapters, i}
+			{@const totalChapters = step4State.result?.total_chapters || 1}
+			{@const previousChapters = convState.chapterSizes.slice(0, i).reduce((sum, c) => sum + c, 0)}
+			{@const currentPercentage = (chapters / totalChapters) * 100}
+
+			<div class="bg-surface-2 group hover:bg-surface-1 rounded-lg p-4 transition-all">
+				<HStack justify="between" align="center" class="mb-3">
+					<HStack gap="sm" align="center">
+						<div
+							class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full {i % 2 === 0
+								? 'bg-accent-500/20'
+								: 'bg-accent-400/20'}"
+						>
+							<IconFileZip size={20} class="text-accent-500" />
+						</div>
+						<VStack gap="xs">
+							<span class="text-sm font-semibold">
+								{$t({ message: 'Volume {vol}', values: { vol: i + 1 } })}
+							</span>
+							<span class="text-muted text-xs">
 								{$plural(chapters, {
 									one: '# chapter',
 									other: '# chapters',
 								})}
-							</Badge>
-						</HStack>
-
-						<div class="flex gap-1">
-							{#each Array(chapters) as _, j}
-								<div
-									class="bg-accent-500 h-4 flex-1 rounded-sm opacity-80 transition-all hover:scale-105 hover:opacity-100"
-									style="--index: {j}; animation-delay: calc(var(--index) * 30ms);"
-									title={$t({
-										message: 'Chapter {chap} of Volume {vol}',
-										values: { chap: j + 1, vol: i + 1 },
-									})}
-								></div>
-							{/each}
-						</div>
-					</div>
-				{/each}
-			</VStack>
-		{:else}
-			<div
-				class="border-waku-border/50 flex h-24 items-center justify-center rounded-lg border border-dashed p-4"
-			>
-				<p class="text-muted text-center text-sm">
-					{$t`No volumes detected. Try running the bundler again.`}
-				</p>
-			</div>
-		{/if}
-
-		{#if step4State.result && step4State.result.total_chapters > 0}
-			<div class="border-waku-border/50 mt-4 border-t pt-3">
-				<HStack justify="between" align="center" class="mb-2">
-					<span class="text-sm font-medium">{$t`Total Chapter Usage`}</span>
-					<span class="text-sm">{getTotalChapters()}/{step4State.result.total_chapters}</span>
+							</span>
+						</VStack>
+					</HStack>
+					<Badge variant="primary" class="font-mono">
+						{currentPercentage.toFixed(1)}%
+					</Badge>
 				</HStack>
-				<div class="bg-surface-2 h-2 w-full overflow-hidden rounded-full">
+
+				<!-- Chapter Blocks -->
+				<div class="mb-3 flex flex-wrap gap-1">
+					{#each Array(Math.min(chapters, 50)) as _, j}
+						<div
+							class="bg-accent-500 h-4 w-4 rounded-sm transition-all hover:scale-110"
+							style="opacity: {0.6 + (j / chapters) * 0.4}"
+							title={$t({
+								message: 'Chapter {chap}',
+								values: { chap: previousChapters + j + 1 },
+							})}
+						></div>
+					{/each}
+					{#if chapters > 50}
+						<div
+							class="text-muted flex h-4 items-center text-xs"
+							title={$t({
+								message: '+{more} more chapters',
+								values: { more: chapters - 50 },
+							})}
+						>
+							+{chapters - 50}
+						</div>
+					{/if}
+				</div>
+
+				<!-- Progress Bar -->
+				<div class="bg-surface-0 h-2 w-full overflow-hidden rounded-full">
 					<div
-						class="h-full rounded-full transition-all duration-300 ease-out"
-						class:bg-success={getTotalChapters() === step4State.result.total_chapters}
-						class:bg-warning={getTotalChapters() < step4State.result.total_chapters}
-						class:bg-danger={getTotalChapters() > step4State.result.total_chapters}
-						style="width: {getChaptersPercentage()}%"
+						class="bg-accent-500 h-full rounded-full transition-all"
+						style="width: {Math.min(currentPercentage, 100)}%"
 					></div>
 				</div>
 			</div>
-		{/if}
+		{/each}
 	</div>
-</div>
+{:else}
+	<div
+		class="border-waku-border/50 flex flex-1 items-center justify-center rounded-lg border border-dashed p-8"
+	>
+		<VStack gap="sm" align="center" class="text-center">
+			<div class="bg-surface-2 flex h-16 w-16 items-center justify-center rounded-full">
+				<IconFileZip size={32} class="text-muted" />
+			</div>
+			<p class="text-muted max-w-xs text-sm">
+				{$t`No volumes detected. Try adjusting settings and rerunning the detection.`}
+			</p>
+		</VStack>
+	</div>
+{/if}
 
 <style>
-	/* Ensure the scrollable container has smooth scrolling */
-	[role='tabpanel'] {
-		scroll-behavior: smooth;
-		-webkit-overflow-scrolling: touch;
+	.custom-scrollbar {
+		scrollbar-width: thin;
+		scrollbar-color: var(--waku-surface-2) transparent;
 	}
 
-	/* Remove focus outline */
-	[role='tabpanel']:focus {
-		outline: none;
+	.custom-scrollbar::-webkit-scrollbar {
+		width: 8px;
+	}
+
+	.custom-scrollbar::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.custom-scrollbar::-webkit-scrollbar-thumb {
+		background-color: var(--waku-surface-2);
+		border-radius: 4px;
+		transition: background-color 0.2s;
+	}
+
+	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+		background-color: var(--waku-surface-1);
 	}
 </style>

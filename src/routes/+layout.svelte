@@ -3,34 +3,16 @@
 	import { t } from 'svelte-i18n-lingui';
 	import { goto } from '$app/navigation';
 	import { appData, appDataKey } from '$stores/appdata.js';
-	import { defaultAppData, SupportedLanguages, Theme } from '$types/appdata';
+	import { defaultAppData, Theme } from '$types/appdata';
 	import { browser, dev } from '$app/environment';
 	import { onMount } from 'svelte';
 	import { keyboard } from '$lib/keyboard';
 	import ActionHub from '$components/ActionHub.svelte';
-	import { Toast, toast } from 'waku/components';
-	import {
-		IconBrush,
-		IconHome,
-		IconKeyboard,
-		IconLanguage,
-		IconMoon,
-		IconMouse,
-		IconSettings,
-		IconSettingsCode,
-		IconSettingsQuestion,
-		IconSun,
-		IconTransform,
-		IconHighlight,
-		IconAutomation,
-		IconCommand,
-	} from '@tabler/icons-svelte';
+	import { Badge, Toast } from 'waku/components';
+	import { IconHome, IconSettings, IconTransform, IconCommand } from '@tabler/icons-svelte';
 	import Dialog from '$components/Dialog.svelte';
-	import { openDialog } from '$states/dialog.svelte';
 	import { keyHint, mountGlobalKeyHintListener } from '$states/keyhint.svelte';
-	import SystemInfo from '$components/dialogs/SystemInfo.svelte';
 	import KeyHint from '$components/KeyHint.svelte';
-	import AutoPopulate from '$components/dialogs/AutoPopulate.svelte';
 
 	let { children } = $props();
 	let showPalette = $state(false);
@@ -130,7 +112,7 @@
 </div>
 
 {#if dev}
-	<div class="badge badge-danger pointer-events-none fixed right-4 bottom-12 z-50 opacity-50">
+	<Badge variant="danger" style="subtle" class="pointer-events-none fixed right-4 bottom-12 z-50">
 		Development Build
-	</div>
+	</Badge>
 {/if}

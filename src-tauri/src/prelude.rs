@@ -174,15 +174,6 @@ pub fn get_file_info(image_path: &PathBuf) -> Result<(&'static str, &'static str
     }
 }
 
-/// Status information about the synchronization service
-#[derive(Serialize, Deserialize, Type, Debug, Clone)]
-pub struct SyncStatus {
-    /// Seconds until the next sync operation
-    pub seconds_until_next_sync: Option<u64>,
-    /// Minutes until the next sync operation
-    pub minutes_until_next_sync: Option<u64>,
-}
-
 /// Path information for application log files
 #[derive(Serialize, Deserialize, Type, Debug, Clone)]
 pub struct LogPath {

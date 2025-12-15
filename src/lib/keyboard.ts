@@ -223,7 +223,7 @@ class KeyboardManager {
 				containsLetterKey &&
 				(event.target instanceof HTMLInputElement ||
 					event.target instanceof HTMLTextAreaElement ||
-					event.target?.isContentEditable)
+					(event.target instanceof HTMLElement && event.target.isContentEditable))
 			) {
 				continue; // Skip letter key combos when focused in input
 			}

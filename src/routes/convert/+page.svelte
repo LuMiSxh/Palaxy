@@ -3,7 +3,7 @@
 	import { stepMachine } from '$states/stepMachine.svelte';
 	import { stepRegistry } from '$lib/steps/registry.svelte';
 	import '$lib/steps/definitions';
-	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
+	import { VStack, HStack } from 'waku/layout';
 	import { Button, Badge } from 'waku/components';
 	import { keyHint } from '$states/keyhint.svelte';
 	import { keyboard } from '$lib/keyboard';
@@ -115,7 +115,7 @@
 				</p>
 			</HStack>
 
-			<Badge variant="secondary" class="text-xs">
+			<Badge variant="neutral" class="text-xs">
 				{$t`Step`}
 				{currentIndex + 1} / {visibleSteps.length}
 			</Badge>
@@ -130,7 +130,7 @@
 		</div>
 
 		<!-- Step Content with Bento Grid -->
-		<div class="flex-1 overflow-hidden">
+		<div class="flex-1 overflow-y-auto">
 			{#if currentStep?.component}
 				{@const StepComponent = currentStep.component}
 				<StepComponent />
@@ -141,7 +141,7 @@
 		{#if $appData.mouseSupport}
 			<HStack justify="between" class="shrink-0">
 				<Button
-					variant="outline"
+					style="outline"
 					onclick={() => stepMachine.back()}
 					disabled={!canGoBack || isTransitioning}
 					class="min-w-[120px]"

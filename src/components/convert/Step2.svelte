@@ -61,11 +61,12 @@
 {:else}
 	<div class="h-full w-full p-3">
 		{#if negatives.length > 0 || warnings.length > 0 || positives.length > 0}
-			<BentoGrid cols={3} density="comfortable" class="h-full auto-rows-min">
+			<BentoGrid cols={3} density="comfortable" rows="auto 1fr auto" class="h-full">
 				<!-- Summary Cards Row -->
 				<BentoItem
-					variant="glass"
-					class="relative flex max-h-24 items-center justify-center overflow-hidden"
+					glass
+					padding="sm"
+					class="relative flex max-h-20 items-center justify-center overflow-hidden"
 				>
 					<div class="relative z-10 flex w-full items-center justify-between px-2">
 						<HStack gap="md" align="center">
@@ -74,7 +75,7 @@
 							>
 								<IconCircleMinus size={20} class="text-danger" />
 							</div>
-							<VStack gap="0">
+							<VStack gap="none">
 								<span class="text-muted text-xs font-medium tracking-wide uppercase"
 									>{$t`Issues`}</span
 								>
@@ -90,8 +91,9 @@
 				</BentoItem>
 
 				<BentoItem
-					variant="glass"
-					class="relative flex max-h-24 items-center justify-center overflow-hidden"
+					glass
+					padding="sm"
+					class="relative flex max-h-20 items-center justify-center overflow-hidden"
 				>
 					<div class="relative z-10 flex w-full items-center justify-between px-2">
 						<HStack gap="md" align="center">
@@ -100,7 +102,7 @@
 							>
 								<IconExclamationCircle size={20} class="text-warning" />
 							</div>
-							<VStack gap="0">
+							<VStack gap="none">
 								<span class="text-muted text-xs font-medium tracking-wide uppercase"
 									>{$t`Warnings`}</span
 								>
@@ -116,8 +118,9 @@
 				</BentoItem>
 
 				<BentoItem
-					variant="glass"
-					class="relative flex max-h-24 items-center justify-center overflow-hidden"
+					glass
+					padding="sm"
+					class="relative flex max-h-20 items-center justify-center overflow-hidden"
 				>
 					<div class="relative z-10 flex w-full items-center justify-between px-2">
 						<HStack gap="md" align="center">
@@ -126,7 +129,7 @@
 							>
 								<IconCirclePlus size={20} class="text-success" />
 							</div>
-							<VStack gap="0">
+							<VStack gap="none">
 								<span class="text-muted text-xs font-medium tracking-wide uppercase"
 									>{$t`Good`}</span
 								>
@@ -142,15 +145,11 @@
 				</BentoItem>
 
 				<!-- Detailed Results Section -->
-				<BentoItem
-					colspan={3}
-					variant="glass"
-					class="row-span-2 flex min-h-0 flex-col overflow-hidden"
-				>
+				<BentoItem colspan={3} glass class="row-span-2 flex min-h-0 flex-col overflow-hidden">
 					<HStack gap="sm" align="center" class="text-muted mb-4 shrink-0">
 						<IconChecklist size={20} />
 						<span class="text-sm font-bold tracking-wider uppercase">{$t`Analysis Details`}</span>
-						<Badge variant="secondary" class="ml-auto">
+						<Badge style="subtle" class="ml-auto">
 							{negatives.length + warnings.length + positives.length}
 						</Badge>
 					</HStack>
@@ -249,7 +248,7 @@
 			</BentoGrid>
 		{:else}
 			<BentoGrid cols={1} density="comfortable" class="h-full">
-				<BentoItem variant="glass" class="flex items-center justify-center">
+				<BentoItem glass class="flex items-center justify-center">
 					<VStack gap="md" align="center" class="text-center">
 						<div
 							class="bg-info/10 border-info/20 flex h-20 w-20 items-center justify-center rounded-full border-2"

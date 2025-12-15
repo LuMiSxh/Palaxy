@@ -190,7 +190,7 @@
 					class="placeholder:text-muted w-full border-none bg-transparent text-lg focus:outline-none"
 					autocomplete="off"
 				/>
-				<Badge variant="secondary" class="pointer-events-none ml-2">ESC</Badge>
+				<Badge variant="neutral" class="pointer-events-none ml-2">ESC</Badge>
 			</div>
 
 			<!-- Breadcrumbs -->

@@ -61,31 +61,6 @@ pub enum ImageOutputFormat {
     Avif,
 }
 
-/// Indicates the stability status of a feature
-///
-/// * `Experimental` - Feature is under testing
-/// * `Deprecated` - Feature will be removed in future versions
-/// * `Stable` - Feature is ready for production use (default)
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Default, Type)]
-pub enum StatusFlag {
-    Experimental,
-    Deprecated,
-    #[default]
-    Stable,
-}
-
-/// Represents different types of tags that can be applied
-///
-/// * `Language` - Language-specific tag with associated string
-/// * `Status` - Status indicator using StatusFlag
-/// * `Other` - Custom tag with associated string
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Type)]
-pub enum TagType {
-    Language(String),
-    Status(StatusFlag),
-    Other(String),
-}
-
 /// Keys for the conversion state data
 ///
 /// Represents various properties that can be set during the conversion process

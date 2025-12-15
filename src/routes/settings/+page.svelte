@@ -14,7 +14,7 @@
 
 	// Waku Imports
 	import { VStack, Separator, BentoGrid, BentoItem, HStack } from 'waku/layout';
-	import { Button, Toggle, Select, LoadingSpinner, Input, Label, Badge } from 'waku/components';
+	import { Button, Toggle, Select, LoadingSpinner, Input, Label } from 'waku/components';
 	import {
 		IconBrush,
 		IconKeyboard,
@@ -108,7 +108,7 @@
 		<div class="flex items-center justify-between">
 			<h1 class="text-2xl font-bold">{$t`Settings`}</h1>
 			<Button
-				variant="ghost"
+				style="ghost"
 				onclick={handleReset}
 				class="text-danger hover:bg-danger/10 h-8 px-3 text-sm"
 			>
@@ -128,12 +128,12 @@
 				<VStack gap="md">
 					<div class="flex flex-col gap-1">
 						<Label text={$t`Theme`} class="mb-0!" />
-						<Select options={themeOptions} bind:value={$appData.theme} variant="seamless" />
+						<Select options={themeOptions} bind:value={$appData.theme} style="seamless" />
 					</div>
 					<Separator class="my-0!" />
 					<div class="flex flex-col gap-1">
 						<Label text={$t`Language`} class="mb-0!" />
-						<Select options={langOptions} bind:value={$appData.language} variant="seamless" />
+						<Select options={langOptions} bind:value={$appData.language} style="seamless" />
 					</div>
 				</VStack>
 			</BentoItem>
@@ -241,7 +241,7 @@
 									<Select
 										options={formatOptions}
 										bind:value={$appData.autoPop.converter.conversionType}
-										variant="seamless"
+										style="seamless"
 									/>
 								</div>
 								<div class="flex flex-col gap-1">
@@ -249,7 +249,7 @@
 									<Select
 										options={imageOptions}
 										bind:value={$appData.autoPop.converter.imageFormat}
-										variant="seamless"
+										style="seamless"
 									/>
 								</div>
 							</VStack>
@@ -276,7 +276,7 @@
 									<Label text={$t`Volume Separator`} class="mb-1!" />
 									<Input
 										bind:value={$appData.autoPop.converter.volumeSeparator}
-										variant="seamless"
+										style="seamless"
 										placeholder=" | "
 									/>
 								</div>

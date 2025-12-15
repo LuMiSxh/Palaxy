@@ -7,7 +7,7 @@
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { onDestroy, onMount } from 'svelte';
 	import { truncatePath, wrapper } from '$lib/utils';
-	import { handleKeyHint, keyHint } from '$states/keyhint.svelte';
+	import { keyHint } from '$states/keyhint.svelte';
 	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
 	import { Input, Toggle } from 'waku/components';
 
@@ -56,9 +56,9 @@
 </script>
 
 <div class="h-full w-full p-3">
-	<BentoGrid cols={2} density="comfortable" class="h-full items-start">
+	<BentoGrid cols={2} density="comfortable" rows="auto auto">
 		<!-- Project Name -->
-		<BentoItem variant="glass" class="h-48">
+		<BentoItem glass padding="sm">
 			<HStack gap="sm" align="center" class="text-muted mb-3">
 				<IconFile size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Project Name`}</span>
@@ -69,10 +69,10 @@
 					id="project-name"
 					bind:value={name}
 					placeholder={projectNamePlaceholder}
-					variant="seamless"
+					style="seamless"
 					onkeydown={(e) => {
 						if (e.key === ' ') {
-							e.preventDefault();
+							e.stopPropagation();
 						}
 					}}
 				/>
@@ -84,66 +84,45 @@
 
 		<!-- Create Folder Toggle -->
 		<BentoItem
-			variant="glass"
+			glass
+			padding="sm"
 			onclick={() => (createFolder = !createFolder)}
 			data-keyhint={`enter;${$t`Toggle`}`}
-			class="relative h-48 overflow-hidden"
 		>
-			<div class="relative z-10">
-				<HStack gap="sm" align="center" class="mb-4">
-					<div
-						class="flex h-10 w-10 items-center justify-center rounded-full transition-colors {createFolder
-							? 'bg-accent-500/20'
-							: ''}"
-						class:text-accent-500={createFolder}
-						class:bg-surface-2={!createFolder}
-						class:text-muted={!createFolder}
-					>
-						<IconFolderPlus size={20} />
-					</div>
-					<span class="text-sm font-bold tracking-wider uppercase">{$t`Create New Folder`}</span>
-				</HStack>
+			<HStack gap="sm" align="center" class="text-muted mb-3">
+				<IconFolderPlus size={18} />
+				<span class="text-xs font-bold tracking-wider uppercase">{$t`Output Structure`}</span>
+			</HStack>
 
-				<button
-					type="button"
-					class="hover:bg-surface-2 group flex w-full cursor-pointer items-center justify-between rounded-lg border border-transparent p-4 text-left transition-all"
-					onclick={(e) => {
-						e.stopPropagation();
-						createFolder = !createFolder;
-					}}
-					tabindex={-1}
-				>
-					<VStack gap="sm" class="flex-1">
-						<span class="font-medium">
-							{createFolder ? $t`Create a new folder` : $t`Save directly in target location`}
-						</span>
-						<span class="text-muted text-sm leading-relaxed">
-							{#if createFolder}
-								{$t`A folder named after the project will be created`}
-							{:else}
-								{$t`Files will be saved directly in target`}
-							{/if}
-						</span>
-					</VStack>
-					<div class="pointer-events-none ml-4">
-						<Toggle bind:checked={createFolder} tabindex={-1} />
-					</div>
-				</button>
+			<div
+				class="hover:bg-surface-2 group flex w-full cursor-pointer items-center justify-between rounded-lg p-3 text-left transition-colors"
+			>
+				<VStack gap="xs" class="flex-1">
+					<span class="text-sm font-medium">
+						{createFolder ? $t`Create project folder` : $t`Direct output`}
+					</span>
+					<span class="text-muted text-xs">
+						{#if createFolder}
+							{$t`Files will be placed in a new folder named after the project`}
+						{:else}
+							{$t`Files will be saved directly in the target location`}
+						{/if}
+					</span>
+				</VStack>
+				<div class="pointer-events-none ml-4">
+					<Toggle bind:checked={createFolder} tabindex={-1} />
+				</div>
 			</div>
-			{#if createFolder}
-				<div
-					class="from-accent-500/5 absolute inset-0 bg-linear-to-br to-transparent opacity-50"
-				></div>
-			{/if}
 		</BentoItem>
 
 		<!-- Target Location -->
 		<BentoItem
 			colspan={2}
-			variant="glass"
+			glass
+			padding="sm"
 			onclick={select}
 			data-keyhint={`enter;${$t`Select location`}`}
-			class="relative h-48 overflow-hidden"
+			class="relative overflow-hidden"
 		>
 			<div class="relative z-10">
 				<HStack gap="sm" align="center" class="mb-4">

@@ -58,7 +58,7 @@
 			<BentoItem
 				colspan={2}
 				rowspan={2}
-				variant="glass"
+				glass
 				class="group relative min-h-[300px] overflow-hidden outline-none"
 				onclick={() => goto('/convert')}
 				data-keyhint={`enter;${$t`Invoke`}`}
@@ -125,7 +125,7 @@
 			</BentoItem>
 
 			<!-- System Status -->
-			<BentoItem variant="surface" class="justify-between">
+			<BentoItem class="justify-between">
 				<HStack justify="between" align="center">
 					<h3 class="text-sm font-semibold">System</h3>
 					<div

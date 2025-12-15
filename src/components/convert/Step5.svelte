@@ -55,16 +55,16 @@
 </script>
 
 <div class="h-full w-full p-3">
-	<BentoGrid cols={2} density="comfortable" class="h-full">
+	<BentoGrid cols={2} density="comfortable" rows="auto auto auto 1fr" class="h-full">
 		<!-- File Format -->
-		<BentoItem variant="glass">
+		<BentoItem glass padding="sm">
 			<HStack gap="sm" align="center" class="text-muted mb-3">
 				<IconFileText size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`File Format`}</span>
 			</HStack>
 
 			<VStack gap="sm">
-				<Select id="file-type" options={formatOptions} bind:value={fileFormat} variant="seamless" />
+				<Select id="file-type" options={formatOptions} bind:value={fileFormat} style="seamless" />
 				<p class="text-muted text-xs">
 					{#if fileFormat === 'CBZ'}
 						{$t`Comic Book Archive format - widely supported by comic readers`}
@@ -76,12 +76,12 @@
 		</BentoItem>
 
 		<!-- Reading Direction -->
-		<BentoItem variant="glass">
+		<BentoItem glass padding="sm">
 			<HStack gap="sm" align="center" class="text-muted mb-3">
 				<IconDirection size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Reading Direction`}</span>
 				{#if fileFormat !== 'EPUB'}
-					<Badge variant="secondary" class="ml-auto text-xs">{$t`EPUB only`}</Badge>
+					<Badge variant="neutral" class="ml-auto text-xs">{$t`EPUB only`}</Badge>
 				{/if}
 			</HStack>
 
@@ -91,7 +91,7 @@
 					options={directionOptions}
 					bind:value={readingDirection}
 					disabled={fileFormat !== 'EPUB'}
-					variant="seamless"
+					style="seamless"
 				/>
 				<p class="text-muted text-xs">
 					{#if fileFormat !== 'EPUB'}
@@ -104,7 +104,7 @@
 		</BentoItem>
 
 		<!-- Image Format -->
-		<BentoItem variant="glass">
+		<BentoItem glass padding="sm">
 			<HStack gap="sm" align="center" class="text-muted mb-3">
 				<IconPhoto size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Image Format`}</span>
@@ -115,7 +115,7 @@
 					id="image-format"
 					options={imageFormatOptions}
 					bind:value={imageFormat}
-					variant="seamless"
+					style="seamless"
 				/>
 				<p class="text-muted text-xs">
 					{#if imageFormat === 'None'}
@@ -130,10 +130,14 @@
 		</BentoItem>
 
 		<!-- Hide Single Volume Number Toggle -->
-		<BentoItem variant="glass" onclick={() => (hideSingleVolumeNumber = !hideSingleVolumeNumber)}>
+		<BentoItem
+			glass
+			padding="sm"
+			onclick={() => (hideSingleVolumeNumber = !hideSingleVolumeNumber)}
+		>
 			<HStack gap="sm" align="center" class="text-muted mb-3">
 				<IconFileText size={18} />
-				<span class="text-xs font-bold tracking-wider uppercase">{$t`Single Volume Number`}</span>
+				<span class="text-xs font-bold tracking-wider uppercase">{$t`Volume Numbering`}</span>
 			</HStack>
 
 			<div
@@ -141,13 +145,13 @@
 			>
 				<VStack gap="xs" class="flex-1">
 					<span class="text-sm font-medium">
-						{hideSingleVolumeNumber ? $t`Number will be hidden` : $t`Number will be shown`}
+						{hideSingleVolumeNumber ? $t`Hide for single volume` : $t`Always show number`}
 					</span>
 					<span class="text-muted text-xs">
 						{#if hideSingleVolumeNumber}
-							{$t`Volume number won't be appended for single volumes`}
+							{$t`Volume number won't be added when there's only one volume`}
 						{:else}
-							{$t`Volume number will always be shown`}
+							{$t`Volume number will be included regardless of volume count`}
 						{/if}
 					</span>
 				</VStack>
@@ -158,7 +162,7 @@
 		</BentoItem>
 
 		<!-- Volume Separator -->
-		<BentoItem colspan={2} variant="glass">
+		<BentoItem colspan={2} glass padding="sm">
 			<HStack gap="sm" align="center" class="text-muted mb-3">
 				<IconSeparator size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Volume Separator`}</span>
@@ -169,43 +173,17 @@
 					id="volume-separator"
 					bind:value={volumeSeparator}
 					placeholder=" | "
-					variant="seamless"
+					style="seamless"
+					onkeydown={(e) => {
+						if (e.key === ' ') {
+							e.stopPropagation();
+						}
+					}}
 				/>
 				<p class="text-muted text-xs">
 					{$t`Separator between volume name and volume number (e.g., "My Manga | 1")`}
 				</p>
 			</VStack>
-		</BentoItem>
-
-		<!-- Preview Section -->
-		<BentoItem colspan={2} variant="surface">
-			<HStack gap="sm" align="center" class="text-muted mb-3">
-				<div class="bg-success/20 h-1.5 w-1.5 rounded-full"></div>
-				<span class="text-xs font-bold tracking-wider uppercase">{$t`Output Preview`}</span>
-			</HStack>
-
-			<div class="grid grid-cols-2 gap-4">
-				<HStack justify="between" align="center">
-					<span class="text-muted text-sm">{$t`File Format`}</span>
-					<span class="text-sm font-medium">{fileFormat}</span>
-				</HStack>
-				{#if fileFormat === 'EPUB'}
-					<HStack justify="between" align="center">
-						<span class="text-muted text-sm">{$t`Reading Direction`}</span>
-						<span class="text-sm">{readingDirection}</span>
-					</HStack>
-				{/if}
-				<HStack justify="between" align="center">
-					<span class="text-muted text-sm">{$t`Image Format`}</span>
-					<span class="text-sm">{imageFormat}</span>
-				</HStack>
-				<HStack justify="between" align="center" class="col-span-2">
-					<span class="text-muted text-sm">{$t`Example Filename`}</span>
-					<span class="truncate font-mono text-xs">
-						{convState.name || 'Project'}{volumeSeparator}1.{fileFormat.toLowerCase()}
-					</span>
-				</HStack>
-			</div>
 		</BentoItem>
 	</BentoGrid>
 </div>

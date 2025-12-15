@@ -104,7 +104,7 @@
 		<VStack gap="md" class="mx-auto max-w-6xl pb-4">
 			<BentoGrid cols={2} density="compact">
 				<!-- General Information -->
-				<BentoItem colspan={2} variant="glass">
+				<BentoItem colspan={2} glass>
 					<HStack align="center" gap="sm" class="text-muted mb-4">
 						<IconCopy size={18} />
 						<span class="text-xs font-bold tracking-wider uppercase">{$t`General Information`}</span
@@ -158,7 +158,7 @@
 									{convStateData ? $t(convStateData.direction) : $t`Left to Right`}
 								</div>
 								{#if convStateData?.format !== 'EPUB'}
-									<Badge variant="secondary">{$t`EPUB only`}</Badge>
+									<Badge variant="neutral">{$t`EPUB only`}</Badge>
 								{/if}
 							</HStack>
 						</VStack>
@@ -208,7 +208,7 @@
 				</BentoItem>
 
 				<!-- Statistics Overview -->
-				<BentoItem colspan={2} variant="glass">
+				<BentoItem colspan={2} glass>
 					<HStack align="center" gap="sm" class="text-muted mb-4">
 						<IconChartPie size={18} />
 						<span class="text-xs font-bold tracking-wider uppercase">{$t`Conversion Summary`}</span>

@@ -140,9 +140,9 @@
 
 {#if !isComplete}
 	<div class="h-full w-full p-3">
-		<BentoGrid cols={3} density="comfortable" class="h-full">
+		<BentoGrid cols={3} density="comfortable" rows="auto 1fr" class="h-full">
 			<!-- Summary Cards -->
-			<BentoItem variant="glass">
+			<BentoItem glass padding="sm">
 				<VStack gap="sm" align="center" class="text-center">
 					<div
 						class="bg-accent-500/10 border-accent-500/20 flex h-16 w-16 items-center justify-center rounded-full border-2"
@@ -156,7 +156,7 @@
 				</VStack>
 			</BentoItem>
 
-			<BentoItem variant="glass">
+			<BentoItem glass padding="sm">
 				<VStack gap="sm" align="center" class="text-center">
 					<div
 						class="bg-success/10 border-success/20 flex h-16 w-16 items-center justify-center rounded-full border-2"
@@ -170,7 +170,7 @@
 				</VStack>
 			</BentoItem>
 
-			<BentoItem variant="glass">
+			<BentoItem glass padding="sm">
 				<VStack gap="sm" align="center" class="text-center">
 					<div
 						class="bg-error/10 border-error/20 flex h-16 w-16 items-center justify-center rounded-full border-2"
@@ -187,7 +187,7 @@
 			<!-- Current Volume -->
 			{#if conversionProgress.activeVolumes.length > 0}
 				{@const volume = conversionProgress.activeVolumes[0]}
-				<BentoItem colspan={2} variant="glass">
+				<BentoItem colspan={2} glass>
 					<div in:fly={{ y: 10, duration: 300 }}>
 						<HStack gap="sm" align="center" class="text-muted mb-3">
 							<IconLoader class="animate-spin" size={18} />
@@ -221,7 +221,7 @@
 					</div>
 				</BentoItem>
 			{:else}
-				<BentoItem colspan={2} variant="glass">
+				<BentoItem colspan={2} glass>
 					<HStack gap="sm" align="center" class="text-muted mb-3">
 						<IconLoader class="animate-spin" size={18} />
 						<span class="text-xs font-bold tracking-wider uppercase">{$t`Current Volume`}</span>
@@ -234,7 +234,7 @@
 
 			<!-- Live Status Messages -->
 			{#if conversionProgress.statusMessages.length > 0}
-				<BentoItem variant="glass">
+				<BentoItem glass>
 					<HStack gap="sm" align="center" class="text-muted mb-3">
 						<IconBolt size={18} />
 						<span class="text-xs font-bold tracking-wider uppercase">{$t`Live Log`}</span>
@@ -254,11 +254,11 @@
 
 			<!-- All Volumes List -->
 			{#if conversionProgress.volumes.length > 0}
-				<BentoItem colspan={3} variant="glass">
+				<BentoItem colspan={3} glass>
 					<HStack gap="sm" align="center" class="text-muted mb-3">
 						<IconChartPie size={18} />
 						<span class="text-xs font-bold tracking-wider uppercase">{$t`All Volumes`}</span>
-						<Badge variant="secondary" class="ml-auto">{conversionProgress.volumes.length}</Badge>
+						<Badge variant="neutral" class="ml-auto">{conversionProgress.volumes.length}</Badge>
 					</HStack>
 					<div class="bg-surface-2 max-h-64 space-y-1 overflow-y-auto rounded-lg p-2">
 						{#each conversionProgress.volumes as volume}
@@ -314,7 +314,7 @@
 	<div class="flex h-full w-full flex-col items-center justify-center p-3">
 		<BentoGrid cols={1} density="comfortable" class="w-full max-w-2xl">
 			<!-- Header -->
-			<BentoItem variant="glass" class="text-center">
+			<BentoItem glass class="text-center">
 				<div class="mb-2 inline-flex items-center justify-center">
 					{#if conversionProgress.completed.failed === 0}
 						<div
@@ -343,7 +343,7 @@
 			</BentoItem>
 
 			<!-- Statistics -->
-			<BentoItem variant="glass">
+			<BentoItem glass>
 				<HStack align="center" gap="sm" class="text-muted mb-4">
 					<IconChartPie size={18} />
 					<span class="text-xs font-bold tracking-wider uppercase">{$t`Results`}</span>
@@ -376,7 +376,7 @@
 
 			<!-- Duration -->
 			{#if conversionProgress.durationSeconds !== null}
-				<BentoItem variant="glass" class="text-center">
+				<BentoItem glass class="text-center">
 					<HStack align="center" justify="center" gap="sm" class="mb-3">
 						<IconClock size={24} class="text-accent-500" />
 						<span class="text-lg font-medium">{$t`Processing Time`}</span>
@@ -389,7 +389,7 @@
 
 			<!-- Errors Summary -->
 			{#if conversionProgress.errors.length > 0}
-				<BentoItem variant="glass">
+				<BentoItem glass>
 					<h4 class="text-error mb-3 flex items-center gap-2 font-semibold">
 						<IconAlertCircle size={18} />
 						{$t`Failed Volumes`}
@@ -408,7 +408,7 @@
 			{/if}
 
 			<!-- Action Button -->
-			<BentoItem variant="glass" class="text-center">
+			<BentoItem glass class="text-center">
 				<Button variant="primary" size="lg" onclick={resetConversion} class="w-full">
 					<HStack align="center" gap="sm">
 						<IconBolt size={20} />

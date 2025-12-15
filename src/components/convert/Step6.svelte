@@ -138,14 +138,14 @@
 			<BentoGrid cols={1} density="compact">
 				{#if volumeChapters.length > 0}
 					{#each volumeChapters as chapters, volumeIndex}
-						<BentoItem variant="glass">
+						<BentoItem glass>
 							<HStack align="center" gap="sm" class="text-muted mb-4">
 								<IconBook size={18} />
 								<span class="text-xs font-bold tracking-wider uppercase">
 									{$t`Volume`}
 									{volumeIndex + 1}
 								</span>
-								<Badge variant="secondary" class="ml-auto">
+								<Badge variant="neutral" class="ml-auto">
 									{getVolumeImageCount(volumeIndex)}
 									{$t`Images`}
 								</Badge>
@@ -168,7 +168,7 @@
 					{/each}
 				{:else}
 					<!-- Single volume case, showing all chapters -->
-					<BentoItem variant="glass">
+					<BentoItem glass>
 						<HStack align="center" gap="sm" class="text-muted mb-4">
 							<IconBook size={18} />
 							<span class="text-xs font-bold tracking-wider uppercase">{$t`All Chapters`}</span>

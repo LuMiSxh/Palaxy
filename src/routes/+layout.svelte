@@ -103,8 +103,15 @@
 				<KeyHint />
 			{/if}
 			{#if $appData.mouseSupport}
-				<button class="btn btn-ghost btn-sm" onclick={() => (showPalette = !showPalette)}>
-					<IconCommand size={16} class="mr-2" /> ActionHub
+				<button
+					class="hover:bg-accent-500/10 flex items-center gap-2 rounded-lg px-3 py-1.5 transition-colors"
+					onclick={() => (showPalette = !showPalette)}
+				>
+					<div class="bg-accent-500/20 flex h-6 w-6 items-center justify-center rounded-md">
+						<IconCommand size={14} class="text-accent-500" />
+					</div>
+					<span class="text-sm font-medium">ActionHub</span>
+					<kbd class="kbd kbd-xs ml-1 opacity-50">␣</kbd>
 				</button>
 			{/if}
 		</div>

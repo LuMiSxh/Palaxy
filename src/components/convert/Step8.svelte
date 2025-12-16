@@ -409,7 +409,13 @@
 
 			<!-- Action Button -->
 			<BentoItem glass class="text-center">
-				<Button variant="primary" size="lg" onclick={resetConversion} class="w-full">
+				<Button
+					variant="primary"
+					size="lg"
+					onclick={resetConversion}
+					style="seamless"
+					class="w-full"
+				>
 					<HStack align="center" gap="sm">
 						<IconBolt size={20} />
 						<span>{$t`Convert another manga`}</span>

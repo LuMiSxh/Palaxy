@@ -85,6 +85,7 @@
 							e.stopPropagation();
 							goto('/convert');
 						}}
+						style="seamless"
 						class="shadow-accent-500/20 mt-2 self-start shadow-lg"
 						tabindex={-1}
 						data-keyhint={`enter;${$t`Invoke`}`}

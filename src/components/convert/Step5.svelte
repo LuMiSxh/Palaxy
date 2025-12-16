@@ -156,7 +156,7 @@
 					</span>
 				</VStack>
 				<div class="pointer-events-none ml-4">
-					<Toggle bind:checked={hideSingleVolumeNumber} tabindex={-1} />
+					<Toggle bind:checked={hideSingleVolumeNumber} tabindex={-1} style="seamless" />
 				</div>
 			</div>
 		</BentoItem>

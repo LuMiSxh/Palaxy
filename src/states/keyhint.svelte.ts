@@ -125,8 +125,20 @@ function handleFocusIn(event: FocusEvent) {
 }
 
 function handleFocusOut(event: FocusEvent) {
-	// If focus is lost completely (clicked outside window or body), cleanup
-	if (!event.relatedTarget && activeCleanup) {
+	// Always clean up when an element with data-keyhint loses focus
+	// This ensures hints are removed when navigating between pages/steps
+	if (activeCleanup) {
+		activeCleanup();
+		activeCleanup = null;
+	}
+}
+
+/**
+ * Manually clear the active keyhint cleanup.
+ * Useful when navigating between pages/steps.
+ */
+export function clearActiveKeyHint() {
+	if (activeCleanup) {
 		activeCleanup();
 		activeCleanup = null;
 	}

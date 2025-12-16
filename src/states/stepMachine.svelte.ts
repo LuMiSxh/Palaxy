@@ -1,5 +1,6 @@
 import { stepRegistry } from '$lib/steps/registry.svelte';
 import type { StepConfig, StepTransition } from '$types/step';
+import { clearActiveKeyHint } from '$states/keyhint.svelte';
 
 /**
  * Step Machine - Manages the state and navigation of the conversion wizard
@@ -144,6 +145,9 @@ class StepMachine {
 
 		try {
 			const oldStepId = this.currentStepId;
+
+			// Clear any active keyhints from the previous step
+			clearActiveKeyHint();
 
 			// Exit current step
 			if (this.currentStep?.onExit) {

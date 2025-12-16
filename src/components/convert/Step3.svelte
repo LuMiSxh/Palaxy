@@ -110,88 +110,52 @@
 					</span>
 				</VStack>
 				<div class="pointer-events-none ml-4">
-					<Toggle bind:checked={createFolder} tabindex={-1} />
+					<Toggle bind:checked={createFolder} tabindex={-1} style="seamless" />
 				</div>
 			</div>
 		</BentoItem>
 
 		<!-- Target Location -->
-		<BentoItem
-			colspan={2}
-			glass
-			padding="sm"
-			onclick={select}
-			data-keyhint={`enter;${$t`Select location`}`}
-			class="relative overflow-hidden"
-		>
-			<div class="relative z-10">
-				<HStack gap="sm" align="center" class="mb-4">
-					<div
-						class="flex h-10 w-10 items-center justify-center rounded-full transition-colors {targetLocation
-							? 'bg-accent-500/20'
-							: ''}"
-						class:text-accent-500={targetLocation}
-						class:bg-surface-2={!targetLocation}
-						class:text-muted={!targetLocation}
-					>
-						<IconFolder size={20} />
+		<BentoItem colspan={2} glass onclick={select} data-keyhint={`enter;${$t`Select location`}`}>
+			<HStack gap="sm" align="center" class="text-muted mb-3">
+				<IconFolder size={18} />
+				<span class="text-xs font-bold tracking-wider uppercase">{$t`Output Location`}</span>
+				{#if targetLocation}
+					<div class="bg-success/20 ml-auto flex h-6 w-6 items-center justify-center rounded-full">
+						<IconCheck size={14} class="text-success" />
 					</div>
-					<span class="text-sm font-bold tracking-wider uppercase">{$t`Output Location`}</span>
-					{#if targetLocation}
-						<div
-							class="bg-success/20 ml-auto flex h-6 w-6 items-center justify-center rounded-full"
-						>
-							<IconCheck size={14} class="text-success" />
-						</div>
-					{/if}
-				</HStack>
+				{/if}
+			</HStack>
 
-				<VStack gap="md">
-					<button
-						id="target-location"
-						class="bg-surface-2 hover:bg-surface-1 hover:border-accent-500/50 focus:border-accent-500 focus:ring-accent-500/20 group w-full rounded-lg border border-transparent p-4 text-left transition-all focus:ring-2 focus:outline-none"
-						onclick={(e) => {
-							e.stopPropagation();
-							select();
-						}}
-						tabindex={-1}
-					>
-						<HStack gap="md" align="center">
-							<div
-								class="from-accent-500/30 to-accent-500/10 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-linear-to-br transition-all group-hover:scale-105"
-							>
-								<IconFolder size={24} class="text-accent-500" />
-							</div>
-							<VStack gap="xs" class="flex-1 overflow-hidden">
-								<span class="font-medium">
-									{#if !targetLocation}
-										{$t`Select output folder`}
-									{:else}
-										{$t`Output folder selected`}
-									{/if}
-								</span>
-								{#if targetLocation}
-									<span class="text-muted truncate font-mono text-sm" title={targetLocation}>
-										{truncatePath(targetLocation, 100)}
-									</span>
-								{:else}
-									<span class="text-muted text-sm">
-										{$t`Click to browse for a folder`}
-									</span>
-								{/if}
-							</VStack>
-						</HStack>
-					</button>
-					<p class="text-muted text-xs leading-relaxed">
-						{$t`Choose where the converted files will be saved`}
-					</p>
-				</VStack>
-			</div>
-			{#if targetLocation}
+			<VStack gap="sm">
 				<div
-					class="from-accent-500/5 absolute inset-0 bg-linear-to-br to-transparent opacity-50"
-				></div>
-			{/if}
+					class="bg-surface-2 hover:bg-surface-1 group w-full cursor-pointer rounded-lg p-3 transition-colors"
+				>
+					<HStack gap="sm" align="center">
+						<div
+							class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full {targetLocation
+								? 'bg-accent-500/20'
+								: 'bg-surface-1'}"
+						>
+							<IconFolder size={20} class={targetLocation ? 'text-accent-500' : 'text-muted'} />
+						</div>
+						<VStack gap="xs" class="flex-1 overflow-hidden">
+							{#if targetLocation}
+								<span class="text-sm font-medium">{$t`Location selected`}</span>
+								<span class="text-muted truncate font-mono text-xs" title={targetLocation}>
+									{truncatePath(targetLocation, 80)}
+								</span>
+							{:else}
+								<span class="text-sm font-medium">{$t`No location selected`}</span>
+								<span class="text-muted text-xs">{$t`Click to choose output folder`}</span>
+							{/if}
+						</VStack>
+					</HStack>
+				</div>
+				<p class="text-muted text-xs">
+					{$t`Choose where the converted files will be saved`}
+				</p>
+			</VStack>
 		</BentoItem>
 	</BentoGrid>
 </div>

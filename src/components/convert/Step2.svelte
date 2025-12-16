@@ -11,7 +11,7 @@
 	} from '@tabler/icons-svelte';
 	import { commands } from '$types';
 	import { wrapper } from '$lib/utils';
-	import { keyHint } from '$states/keyhint.svelte';
+	import { keyboard } from '$lib/keyboard';
 	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
 	import { LoadingSpinner, Badge } from 'waku/components';
 
@@ -19,9 +19,32 @@
 	let negatives: string[] = $state([]);
 	let warnings: string[] = $state([]);
 	let isLoading: boolean = $state(true);
-	let cleanupKeyHint: (() => void) | null = null;
+	let analysisDetailsContainer: HTMLDivElement | null = $state(null);
+	let analysisDetailsBentoFocused = $state(false);
+	let cleanupKeyboard: (() => void) | null = null;
 
 	onMount(async () => {
+		cleanupKeyboard = keyboard.smartRegister([
+			[
+				'arrowdown',
+				(event) => {
+					if (analysisDetailsBentoFocused && analysisDetailsContainer) {
+						event.preventDefault();
+						analysisDetailsContainer.scrollTop += 40;
+					}
+				},
+			],
+			[
+				'arrowup',
+				(event) => {
+					if (analysisDetailsBentoFocused && analysisDetailsContainer) {
+						event.preventDefault();
+						analysisDetailsContainer.scrollTop -= 40;
+					}
+				},
+			],
+		]);
+
 		const result = await wrapper(commands.convAnalyze());
 		isLoading = false;
 
@@ -36,17 +59,11 @@
 			convState.analysisWarnings = warnings;
 			convState.analysisPositives = positives;
 		}
-
-		// Show the key hint for navigating
-		cleanupKeyHint = keyHint.register([
-			['arrowdown', $t`Scroll down`],
-			['arrowup', $t`Scroll up`],
-		]);
 	});
 
 	onDestroy(() => {
-		if (cleanupKeyHint) {
-			cleanupKeyHint();
+		if (cleanupKeyboard) {
+			cleanupKeyboard();
 		}
 	});
 </script>
@@ -145,7 +162,15 @@
 				</BentoItem>
 
 				<!-- Detailed Results Section -->
-				<BentoItem colspan={3} glass class="row-span-2 flex min-h-0 flex-col overflow-hidden">
+				<BentoItem
+					colspan={3}
+					glass
+					class="row-span-2 flex min-h-0 flex-col overflow-hidden"
+					onclick={() => {}}
+					onfocus={() => (analysisDetailsBentoFocused = true)}
+					onblur={() => (analysisDetailsBentoFocused = false)}
+					data-keyhint={`arrowup;${$t`Scroll details`}|arrowdown;${$t`Scroll details`}`}
+				>
 					<HStack gap="sm" align="center" class="text-muted mb-4 shrink-0">
 						<IconChecklist size={20} />
 						<span class="text-sm font-bold tracking-wider uppercase">{$t`Analysis Details`}</span>
@@ -154,7 +179,10 @@
 						</Badge>
 					</HStack>
 
-					<div class="custom-scrollbar flex-1 space-y-6 overflow-y-auto pr-2">
+					<div
+						bind:this={analysisDetailsContainer}
+						class="custom-scrollbar flex-1 space-y-6 overflow-y-auto pr-2"
+					>
 						<!-- Issues Section -->
 						{#if negatives.length > 0}
 							<div>

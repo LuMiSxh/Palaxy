@@ -290,7 +290,13 @@
 				<VStack gap="xs" class="flex-1">
 					<span class="text-xs font-bold tracking-wider uppercase">{$t`Redetect Volumes`}</span>
 					<HStack gap="sm">
-						<Button variant="primary" onclick={runBundler} tabindex={-1} class="w-full">
+						<Button
+							variant="primary"
+							onclick={runBundler}
+							tabindex={-1}
+							style="seamless"
+							class="w-full"
+						>
 							<HStack gap="sm" align="center">
 								<IconRefresh size={18} />
 								<span>{$t`Rerun Detection`}</span>

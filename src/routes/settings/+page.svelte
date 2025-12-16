@@ -13,8 +13,8 @@
 	import { slide } from 'svelte/transition';
 
 	// Waku Imports
-	import { VStack, Separator, BentoGrid, BentoItem, HStack } from 'waku/layout';
-	import { Button, Toggle, Select, LoadingSpinner, Input, Label } from 'waku/components';
+	import { VStack, BentoGrid, BentoItem, HStack } from 'waku/layout';
+	import { Toggle, Select, LoadingSpinner, Input } from 'waku/components';
 	import {
 		IconBrush,
 		IconKeyboard,
@@ -36,7 +36,7 @@
 	});
 
 	onMount(async () => {
-		keyHint.register([
+		const unregisterKeyHint = keyHint.register([
 			['tab', $t`Navigate`],
 			['shift+tab', $t`Navigate`],
 			['enter', $t`Toggle`],
@@ -63,6 +63,11 @@
 			console.error(e);
 			sysInfo.loading = false;
 		}
+
+		return new Promise<void>((resolve) => {
+			unregisterKeyHint();
+			resolve();
+		});
 	});
 
 	async function selectTargetLocation() {
@@ -102,89 +107,97 @@
 	];
 </script>
 
-<div class="h-full w-full overflow-y-auto p-4">
-	<VStack gap="lg" class="mx-auto max-w-6xl pb-20">
-		<!-- Compact Header -->
-		<div class="flex items-center justify-between">
-			<h1 class="text-2xl font-bold">{$t`Settings`}</h1>
-			<Button
-				style="ghost"
-				onclick={handleReset}
-				class="text-danger hover:bg-danger/10 h-8 px-3 text-sm"
-			>
-				<IconRestore size={16} />
-				{$t`Reset`}
-			</Button>
-		</div>
-
-		<BentoGrid cols={2} density="comfortable">
-			<!-- 1. GENERAL (Theme/Lang) -->
-			<BentoItem class="z-20 overflow-visible">
-				<HStack align="center" gap="sm" class="text-muted mb-4">
+<div class="h-full w-full p-3">
+	<VStack gap="md" class="mx-auto h-full max-w-6xl">
+		<BentoGrid cols={3} density="comfortable" rows="auto auto 1fr">
+			<!-- General Settings -->
+			<BentoItem glass>
+				<HStack gap="sm" align="center" class="text-muted mb-3">
 					<IconBrush size={18} />
 					<span class="text-xs font-bold tracking-wider uppercase">{$t`General`}</span>
 				</HStack>
 
-				<VStack gap="md">
-					<div class="flex flex-col gap-1">
-						<Label text={$t`Theme`} class="mb-0!" />
-						<Select options={themeOptions} bind:value={$appData.theme} style="seamless" />
+				<VStack gap="sm">
+					<div>
+						<label for="theme" class="text-muted mb-2 block text-xs font-medium uppercase">
+							{$t`Theme`}
+						</label>
+						<Select
+							id="theme"
+							options={themeOptions}
+							bind:value={$appData.theme}
+							style="seamless"
+						/>
 					</div>
-					<Separator class="my-0!" />
-					<div class="flex flex-col gap-1">
-						<Label text={$t`Language`} class="mb-0!" />
-						<Select options={langOptions} bind:value={$appData.language} style="seamless" />
+					<div>
+						<label for="language" class="text-muted mb-2 block text-xs font-medium uppercase">
+							{$t`Language`}
+						</label>
+						<Select
+							id="language"
+							options={langOptions}
+							bind:value={$appData.language}
+							style="seamless"
+						/>
 					</div>
 				</VStack>
 			</BentoItem>
 
-			<!-- 2. INPUT (Toggles) -->
-			<BentoItem>
-				<HStack align="center" gap="sm" class="text-muted mb-4">
+			<!-- Input Settings -->
+			<BentoItem glass>
+				<HStack gap="sm" align="center" class="text-muted mb-3">
 					<IconKeyboard size={18} />
 					<span class="text-xs font-bold tracking-wider uppercase">{$t`Input`}</span>
 				</HStack>
 
-				<VStack gap="xs">
-					<!-- Row 1: KeyHints -->
+				<VStack gap="sm">
 					<button
-						class="hover:bg-surface-2 group -mx-2 flex w-full cursor-pointer items-center justify-between rounded-md p-2 text-left transition-colors"
+						type="button"
+						class="hover:bg-surface-2 group flex w-full cursor-pointer items-center justify-between rounded-lg p-3 text-left transition-colors"
 						onclick={() => ($appData.showKeyHints = !$appData.showKeyHints)}
+						onkeydown={(e) => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								$appData.showKeyHints = !$appData.showKeyHints;
+							}
+						}}
+						data-keyhint={`enter;${$t`Toggle`}`}
 					>
-						<div class="flex flex-col">
-							<span class="group-hover:text-accent-500 text-sm font-medium transition-colors"
-								>{$t`KeyHints`}</span
-							>
-							<span class="text-muted text-[10px]">Footer shortcuts</span>
-						</div>
+						<VStack gap="xs" class="flex-1">
+							<span class="text-sm font-medium">{$t`KeyHints`}</span>
+							<span class="text-muted text-xs">{$t`Show keyboard shortcuts in footer`}</span>
+						</VStack>
 						<div class="pointer-events-none">
-							<Toggle bind:checked={$appData.showKeyHints} tabindex={-1} />
+							<Toggle bind:checked={$appData.showKeyHints} tabindex={-1} style="seamless" />
 						</div>
 					</button>
 
-					<Separator class="my-1!" />
-
-					<!-- Row 2: Mouse Support -->
 					<button
-						class="hover:bg-surface-2 group -mx-2 flex w-full cursor-pointer items-center justify-between rounded-md p-2 text-left transition-colors"
+						type="button"
+						class="hover:bg-surface-2 group flex w-full cursor-pointer items-center justify-between rounded-lg p-3 text-left transition-colors"
 						onclick={() => ($appData.mouseSupport = !$appData.mouseSupport)}
+						onkeydown={(e) => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								$appData.mouseSupport = !$appData.mouseSupport;
+							}
+						}}
+						data-keyhint={`enter;${$t`Toggle`}`}
 					>
-						<div class="flex flex-col">
-							<span class="group-hover:text-accent-500 text-sm font-medium transition-colors"
-								>{$t`Mouse Support`}</span
-							>
-							<span class="text-muted text-[10px]">ActionHub button</span>
-						</div>
+						<VStack gap="xs" class="flex-1">
+							<span class="text-sm font-medium">{$t`Mouse Support`}</span>
+							<span class="text-muted text-xs">{$t`Show ActionHub button`}</span>
+						</VStack>
 						<div class="pointer-events-none">
-							<Toggle bind:checked={$appData.mouseSupport} tabindex={-1} />
+							<Toggle bind:checked={$appData.mouseSupport} tabindex={-1} style="seamless" />
 						</div>
 					</button>
 				</VStack>
 			</BentoItem>
 
-			<!-- 3. SYSTEM (Read Only) -->
-			<BentoItem>
-				<HStack align="center" gap="sm" class="text-muted mb-4">
+			<!-- System Info -->
+			<BentoItem glass>
+				<HStack gap="sm" align="center" class="text-muted mb-3">
 					<IconDeviceDesktop size={18} />
 					<span class="text-xs font-bold tracking-wider uppercase">{$t`System`}</span>
 				</HStack>
@@ -192,147 +205,246 @@
 				{#if sysInfo.loading}
 					<div class="flex h-full items-center justify-center"><LoadingSpinner size="sm" /></div>
 				{:else}
-					<div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-						<span class="text-muted">App</span>
-						<span class="text-right font-mono">{sysInfo.appName} v{sysInfo.appVersion}</span>
-						<span class="text-muted">Tauri</span>
-						<span class="text-right font-mono">v{sysInfo.tauriVersion}</span>
-						<Separator class="col-span-2 my-1!" />
-						<span class="text-muted">OS</span>
-						<span class="text-right font-mono">{sysInfo.osName}</span>
-						<span class="text-muted">Kernel</span>
-						<span class="text-right font-mono">{sysInfo.osVersion}</span>
-					</div>
+					<VStack gap="sm">
+						<div class="bg-surface-2 rounded-lg p-3">
+							<VStack gap="xs">
+								<HStack justify="between" class="text-xs">
+									<span class="text-muted">{$t`Application`}</span>
+									<span class="font-mono">{sysInfo.appName} v{sysInfo.appVersion}</span>
+								</HStack>
+								<HStack justify="between" class="text-xs">
+									<span class="text-muted">Tauri</span>
+									<span class="font-mono">v{sysInfo.tauriVersion}</span>
+								</HStack>
+							</VStack>
+						</div>
+						<div class="bg-surface-2 rounded-lg p-3">
+							<VStack gap="xs">
+								<HStack justify="between" class="text-xs">
+									<span class="text-muted">{$t`Platform`}</span>
+									<span class="font-mono">{sysInfo.osName}</span>
+								</HStack>
+								<HStack justify="between" class="text-xs">
+									<span class="text-muted">{$t`Architecture`}</span>
+									<span class="font-mono">{sysInfo.osArch}</span>
+								</HStack>
+							</VStack>
+						</div>
+					</VStack>
 				{/if}
 			</BentoItem>
 
-			<!-- 4. AUTOMATION (Full Width Module) -->
-			<BentoItem colspan={3} class="z-10 overflow-visible transition-all duration-300">
-				<div class="mb-2 flex items-center justify-between">
-					<HStack align="center" gap="sm" class="text-muted">
-						<IconAutomation size={18} />
-						<span class="text-xs font-bold tracking-wider uppercase">{$t`Automation`}</span>
-					</HStack>
-
-					<!-- Master Toggle inside Header -->
-					<div class="flex items-center gap-3">
+			<!-- Automation Section -->
+			<BentoItem colspan={3} glass>
+				<HStack gap="sm" align="center" class="text-muted mb-3">
+					<IconAutomation size={18} />
+					<span class="text-xs font-bold tracking-wider uppercase">{$t`Automation`}</span>
+					<button
+						type="button"
+						class="ml-auto flex items-center gap-2"
+						onclick={() => ($appData.autoPop.enabled = !$appData.autoPop.enabled)}
+						onkeydown={(e) => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								$appData.autoPop.enabled = !$appData.autoPop.enabled;
+							}
+						}}
+						data-keyhint={`enter;${$t`Toggle automation`}`}
+					>
 						<span
 							class="text-sm font-medium {$appData.autoPop.enabled ? 'text-success' : 'text-muted'}"
 						>
-							{$appData.autoPop.enabled ? 'Enabled' : 'Disabled'}
+							{$appData.autoPop.enabled ? $t`Enabled` : $t`Disabled`}
 						</span>
-						<div class="pointer-events-auto">
-							<!-- Ensure this toggle is clickable -->
-							<Toggle variant="success" bind:checked={$appData.autoPop.enabled} />
-						</div>
-					</div>
-				</div>
+						<Toggle
+							variant="success"
+							bind:checked={$appData.autoPop.enabled}
+							tabindex={-1}
+							style="seamless"
+						/>
+					</button>
+				</HStack>
 
 				{#if $appData.autoPop.enabled}
-					<div
-						transition:slide={{ duration: 300 }}
-						class="border-waku-border/50 mt-4 border-t pt-4"
-					>
-						<div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-							<!-- Col 1: Formats -->
-							<VStack gap="md">
-								<div class="flex flex-col gap-1">
-									<Label text={$t`File Type`} class="mb-0!" />
+					<div transition:slide={{ duration: 300 }}>
+						<VStack gap="sm">
+							<p class="text-muted text-xs">
+								{$t`Automatically apply these settings when selecting a new source folder`}
+							</p>
+
+							<div class="grid grid-cols-3 gap-3">
+								<!-- Conversion Settings -->
+								<div>
+									<label
+										for="file-type"
+										class="text-muted mb-2 block text-xs font-medium uppercase"
+									>
+										{$t`File Type`}
+									</label>
 									<Select
+										id="file-type"
 										options={formatOptions}
 										bind:value={$appData.autoPop.converter.conversionType}
 										style="seamless"
 									/>
 								</div>
-								<div class="flex flex-col gap-1">
-									<Label text={$t`Image Format`} class="mb-0!" />
+
+								<div>
+									<label
+										for="image-format"
+										class="text-muted mb-2 block text-xs font-medium uppercase"
+									>
+										{$t`Image Format`}
+									</label>
 									<Select
+										id="image-format"
 										options={imageOptions}
 										bind:value={$appData.autoPop.converter.imageFormat}
 										style="seamless"
 									/>
 								</div>
-							</VStack>
 
-							<!-- Col 2: Output Path -->
-							<VStack gap="sm">
-								<Label text={$t`Target Location`} class="mb-0!" />
-								<button
-									class="bg-surface-2 hover:bg-surface-0 hover:border-accent-500/50 group w-full rounded-lg border border-transparent p-3 text-left transition-all"
-									onclick={selectTargetLocation}
-								>
-									<div class="text-accent-500 mb-1 flex items-center gap-2">
-										<IconFolder size={16} />
-										<span class="text-xs font-bold uppercase">Browse</span>
-									</div>
-									<div class="truncate font-mono text-sm opacity-70 group-hover:opacity-100">
-										{$appData.autoPop.converter.targetLocation
-											? truncatePath($appData.autoPop.converter.targetLocation)
-											: $t`Select folder...`}
-									</div>
-								</button>
-
-								<div class="mt-2">
-									<Label text={$t`Volume Separator`} class="mb-1!" />
+								<div>
+									<label
+										for="vol-separator"
+										class="text-muted mb-2 block text-xs font-medium uppercase"
+									>
+										{$t`Volume Separator`}
+									</label>
 									<Input
+										id="vol-separator"
 										bind:value={$appData.autoPop.converter.volumeSeparator}
 										style="seamless"
 										placeholder=" | "
 									/>
 								</div>
-							</VStack>
+							</div>
 
-							<!-- Col 3: Behaviors -->
-							<VStack gap="xs">
-								<Label text="Behavior" class="mb-1!" />
-
+							<!-- Target Location -->
+							<div>
+								<label for="target-loc" class="text-muted mb-2 block text-xs font-medium uppercase">
+									{$t`Target Location`}
+								</label>
 								<button
-									class="hover:bg-surface-2 group -mx-2 flex w-full cursor-pointer items-center justify-between rounded-md p-2 text-left transition-colors"
+									type="button"
+									id="target-loc"
+									class="bg-surface-2 hover:bg-surface-1 group w-full cursor-pointer rounded-lg p-3 text-left transition-colors"
+									onclick={selectTargetLocation}
+								>
+									<HStack gap="sm" align="center">
+										<div
+											class="bg-accent-500/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+										>
+											<IconFolder size={20} class="text-accent-500" />
+										</div>
+										<VStack gap="xs" class="flex-1 overflow-hidden">
+											{#if $appData.autoPop.converter.targetLocation}
+												<span class="text-sm font-medium">{$t`Location selected`}</span>
+												<span
+													class="text-muted truncate font-mono text-xs"
+													title={$appData.autoPop.converter.targetLocation}
+												>
+													{truncatePath($appData.autoPop.converter.targetLocation, 100)}
+												</span>
+											{:else}
+												<span class="text-sm font-medium">{$t`No location selected`}</span>
+												<span class="text-muted text-xs">{$t`Click to choose output folder`}</span>
+											{/if}
+										</VStack>
+									</HStack>
+								</button>
+							</div>
+
+							<!-- Behavior Toggles -->
+							<div class="grid grid-cols-2 gap-3">
+								<button
+									type="button"
+									class="hover:bg-surface-2 group flex w-full cursor-pointer items-center justify-between rounded-lg p-3 text-left transition-colors"
 									onclick={() =>
 										($appData.autoPop.converter.createNewFolder =
 											!$appData.autoPop.converter.createNewFolder)}
+									onkeydown={(e) => {
+										if (e.key === 'Enter') {
+											e.preventDefault();
+											$appData.autoPop.converter.createNewFolder =
+												!$appData.autoPop.converter.createNewFolder;
+										}
+									}}
+									data-keyhint={`enter;${$t`Toggle`}`}
 								>
-									<div class="flex flex-col">
-										<span class="group-hover:text-accent-500 text-sm font-medium transition-colors"
-											>{$t`Create Folder`}</span
-										>
-										<span class="text-muted text-[10px]">New subfolder for output</span>
-									</div>
+									<VStack gap="xs" class="flex-1">
+										<span class="text-sm font-medium">{$t`Create Folder`}</span>
+										<span class="text-muted text-xs">{$t`Create new subfolder for output`}</span>
+									</VStack>
 									<div class="pointer-events-none">
 										<Toggle
 											bind:checked={$appData.autoPop.converter.createNewFolder}
 											tabindex={-1}
+											style="seamless"
 										/>
 									</div>
 								</button>
 
 								<button
-									class="hover:bg-surface-2 group -mx-2 flex w-full cursor-pointer items-center justify-between rounded-md p-2 text-left transition-colors"
+									type="button"
+									class="hover:bg-surface-2 group flex w-full cursor-pointer items-center justify-between rounded-lg p-3 text-left transition-colors"
 									onclick={() =>
 										($appData.autoPop.converter.hideSingleVolumeNumber =
 											!$appData.autoPop.converter.hideSingleVolumeNumber)}
+									onkeydown={(e) => {
+										if (e.key === 'Enter') {
+											e.preventDefault();
+											$appData.autoPop.converter.hideSingleVolumeNumber =
+												!$appData.autoPop.converter.hideSingleVolumeNumber;
+										}
+									}}
+									data-keyhint={`enter;${$t`Toggle`}`}
 								>
-									<div class="flex flex-col">
-										<span class="group-hover:text-accent-500 text-sm font-medium transition-colors"
-											>{$t`Hide Numbers`}</span
-										>
-										<span class="text-muted text-[10px]">If only one volume exists</span>
-									</div>
+									<VStack gap="xs" class="flex-1">
+										<span class="text-sm font-medium">{$t`Hide Volume Number`}</span>
+										<span class="text-muted text-xs">{$t`When only one volume exists`}</span>
+									</VStack>
 									<div class="pointer-events-none">
 										<Toggle
 											bind:checked={$appData.autoPop.converter.hideSingleVolumeNumber}
 											tabindex={-1}
+											style="seamless"
 										/>
 									</div>
 								</button>
-							</VStack>
-						</div>
+							</div>
+						</VStack>
 					</div>
 				{:else}
-					<div transition:slide={{ duration: 300 }} class="text-muted mt-2 text-sm">
-						{$t`Enable to automatically apply these settings when selecting a new source folder.`}
+					<div transition:slide={{ duration: 300 }}>
+						<p class="text-muted text-sm">
+							{$t`Enable to automatically apply these settings when selecting a new source folder`}
+						</p>
 					</div>
 				{/if}
+			</BentoItem>
+
+			<!-- Reset Button -->
+			<BentoItem
+				colspan={3}
+				glass
+				onclick={handleReset}
+				data-keyhint={`enter;${$t`Reset settings`}`}
+				class="cursor-pointer"
+			>
+				<HStack gap="sm" align="center" class="text-danger">
+					<div
+						class="bg-danger/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+					>
+						<IconRestore size={20} class="text-danger" />
+					</div>
+					<VStack gap="xs" class="flex-1">
+						<span class="text-sm font-semibold">{$t`Reset All Settings`}</span>
+						<span class="text-muted text-xs"
+							>{$t`Restore all settings to their default values`}</span
+						>
+					</VStack>
+				</HStack>
 			</BentoItem>
 		</BentoGrid>
 	</VStack>

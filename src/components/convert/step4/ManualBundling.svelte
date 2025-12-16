@@ -24,32 +24,6 @@
 	let volumeListContainer: HTMLDivElement | null = $state(null);
 	let editingInput: HTMLInputElement | null = $state(null);
 	let isEditing = $state(false);
-	let bentoItemElement: HTMLElement | null = $state(null);
-
-	function handleBentoItemKeyDown(event: KeyboardEvent) {
-		if (!volumeListContainer) return;
-
-		// Handle scrolling when BentoItem is focused
-		if (event.key === 'ArrowDown') {
-			event.preventDefault();
-			volumeListContainer.scrollTop += 40; // Scroll down by 40px
-		} else if (event.key === 'ArrowUp') {
-			event.preventDefault();
-			volumeListContainer.scrollTop -= 40; // Scroll up by 40px
-		} else if (event.key === 'PageDown') {
-			event.preventDefault();
-			volumeListContainer.scrollTop += volumeListContainer.clientHeight;
-		} else if (event.key === 'PageUp') {
-			event.preventDefault();
-			volumeListContainer.scrollTop -= volumeListContainer.clientHeight;
-		} else if (event.key === 'Home') {
-			event.preventDefault();
-			volumeListContainer.scrollTop = 0;
-		} else if (event.key === 'End') {
-			event.preventDefault();
-			volumeListContainer.scrollTop = volumeListContainer.scrollHeight;
-		}
-	}
 
 	function addVolume() {
 		const chapters = Number(newVolumeChapters);
@@ -232,15 +206,7 @@
 		</BentoItem>
 
 		<!-- Main Content Area -->
-		<BentoItem
-			colspan={2}
-			glass
-			class="flex min-h-0 flex-col"
-			bind:ref={bentoItemElement}
-			onclick={() => {}}
-			onkeydown={handleBentoItemKeyDown}
-			data-keyhint={`arrowup,arrowdown;${$t`Scroll`} | pageup,pagedown;${$t`Page scroll`}`}
-		>
+		<BentoItem colspan={2} glass class="flex min-h-0 flex-col">
 			<HStack gap="sm" align="center" class="text-muted mb-3 shrink-0">
 				<IconFileZip size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Volume Management`}</span>
@@ -474,7 +440,7 @@
 							}}
 							class="flex-1"
 						/>
-						<Button variant="primary" onclick={addVolume}>
+						<Button variant="primary" onclick={addVolume} style="seamless">
 							<HStack gap="sm" align="center">
 								<IconPlus size={18} />
 								<span>{$t`Add`}</span>

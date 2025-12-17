@@ -270,8 +270,8 @@ impl Collector {
             );
             book_start_chapters.remove(0);
         } else {
-            error!("No chapters found for volume size calculation");
-            return Err(Error::NotFound("No chapters found".to_string()));
+            warn!("No start chapters detected - returning empty volume sizes");
+            return Ok(Vec::new());
         }
 
         let mut prev_chapter = 0;

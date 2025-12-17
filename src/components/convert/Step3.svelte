@@ -1,26 +1,22 @@
 <script lang="ts">
 	import { appData } from '$stores/appdata';
-	import convState, { stepState } from '$states/converter.svelte';
-	import {
-		type BundleFlag,
-		commands,
-		type Direction,
-		type FileFormat,
-		type ImageOutputFormat,
-	} from '$types';
+	import convState from '$states/converter.svelte';
+	import { commands } from '$types';
 	import { t } from 'svelte-i18n-lingui';
-	import { IconFolder } from '@tabler/icons-svelte';
+	import { IconFolder, IconFile, IconFolderPlus, IconCheck } from '@tabler/icons-svelte';
 	import { open } from '@tauri-apps/plugin-dialog';
-	import { onDestroy, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import { truncatePath, wrapper } from '$lib/utils';
-	import { handleKeyHint, keyHint } from '$states/keyhint.svelte';
+	import { keyHint } from '$states/keyhint.svelte';
+	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
+	import { Input, Toggle } from 'waku/components';
 
 	let name = $state(
 		convState.name === ''
 			? convState.source
-				? (convState.source.split('/').pop() ?? convState.name)
-				: convState.name
-			: convState.name
+				? (convState.source.split('/').pop() ?? '')
+				: ''
+			: (convState.name ?? '')
 	);
 	let targetLocation = $state(
 		$appData.autoPop.enabled
@@ -30,22 +26,8 @@
 	let createFolder = $state(
 		$appData.autoPop.enabled ? ($appData.autoPop.converter.createNewFolder ?? true) : true
 	);
-	let fileFormat: FileFormat = $state(
-		$appData.autoPop.enabled ? ($appData.autoPop.converter.conversionType ?? 'CBZ') : 'CBZ'
-	);
-	let readingDirection: Direction = $state('Left to Right');
-	let imageFormat: ImageOutputFormat = $state(
-		$appData.autoPop.enabled ? ($appData.autoPop.converter.imageFormat ?? 'WebP') : 'WebP'
-	);
-	let bundleFlag: BundleFlag = $state(
-		convState.bundle ? convState.bundle : convState.bundleRecommendation
-	);
-	let hideSingleVolumeNumber = $state(
-		$appData.autoPop.enabled ? $appData.autoPop.converter.hideSingleVolumeNumber : false
-	);
-	let volumeSeparator = $state(
-		$appData.autoPop.enabled ? $appData.autoPop.converter.volumeSeparator : ' | '
-	);
+
+	let projectNamePlaceholder = $derived(($t`Enter project name` || '') as string);
 
 	async function select() {
 		targetLocation =
@@ -56,292 +38,133 @@
 	}
 
 	onMount(() => {
-		return keyHint.smartAdd([['tab', $t`Navigate fields`]]);
+		return keyHint.register([['tab', $t`Navigate fields`]]);
 	});
 
-	onDestroy(async () => {
-		// Set convState values
+	// Update convState immediately when values change
+	$effect(() => {
 		convState.name = name;
-		convState.bundle = bundleFlag;
 		convState.target = targetLocation;
+	});
 
-		// Set Tauri AppState
-		await wrapper(commands.convStateSet({ BundleFlag: bundleFlag }));
-		await wrapper(commands.convStateSet({ Name: name ?? '' }));
-		await wrapper(commands.convStateSet({ Direction: readingDirection }));
-		await wrapper(commands.convStateSet({ Format: fileFormat }));
-		await wrapper(commands.convStateSet({ CreateDirectory: createFolder }));
-		await wrapper(commands.convStateSet({ ImageFormat: imageFormat }));
-		await wrapper(commands.convStateSet({ Target: targetLocation }));
-		await wrapper(commands.convStateSet({ HideSingleVolumeNumber: hideSingleVolumeNumber }));
-		await wrapper(commands.convStateSet({ VolumeSeparator: volumeSeparator }));
+	// Save state immediately when values change instead of in onDestroy
+	$effect(() => {
+		if (name !== null && name !== undefined) {
+			wrapper(commands.convStateSet({ Name: name ?? '' }));
+		}
 	});
 
 	$effect(() => {
-		stepState.disableNext =
-			targetLocation === '' ||
-			(bundleFlag === 'IMAGE' && convState.bundleRecommendation === 'MANUAL') ||
-			name === '';
+		wrapper(commands.convStateSet({ CreateDirectory: createFolder }));
+	});
+
+	$effect(() => {
+		if (targetLocation !== null && targetLocation !== undefined) {
+			wrapper(commands.convStateSet({ Target: targetLocation }));
+		}
 	});
 </script>
 
-<div class="flex h-full w-full flex-col overflow-y-auto p-4" style="max-height: calc(100vh - 8rem)">
-	<div class="grid w-full grid-cols-1 gap-4">
-		<!-- Basic Settings Card -->
-		<div class="card">
-			<div class="card-header">
-				<h3 class="font-semibold">{$t`Project Settings`}</h3>
-			</div>
-			<div class="card-body">
-				<div class="grid grid-cols-2 gap-4">
-					<!-- Project Name -->
-					<div class="">
-						<label for="project-name" class="mb-2 block font-medium">{$t`Project Name`}</label>
-						<input
-							id="project-name"
-							type="text"
-							class="input input-primary"
-							bind:value={name}
-							placeholder={$t`Enter project name`}
-						/>
-					</div>
+<div class="h-full w-full p-3">
+	<BentoGrid cols={2} density="comfortable" rows="auto auto">
+		<!-- Project Name -->
+		<BentoItem glass>
+			<HStack gap="sm" align="center" class="text-muted mb-3">
+				<IconFile size={18} />
+				<span class="text-xs font-bold tracking-wider uppercase">{$t`Project Name`}</span>
+			</HStack>
 
-					<!-- Bundle Type -->
-					<div class="">
-						<label for="bundle-type" class="mb-2 block font-medium">{$t`Bundle Type`}</label>
-						<select
-							id="bundle-type"
-							class="select select-primary"
-							use:handleKeyHint={{
-								keys: [
-									['arrowup', $t`Select up`],
-									['arrowdown', $t`Select down`],
-									['enter', $t`Select`],
-								],
-								reset: true,
-							}}
-							bind:value={bundleFlag}
-						>
-							<option selected={bundleFlag === 'MANUAL'} value="MANUAL">{$t`Manual`}</option>
-							<option selected={bundleFlag === 'IMAGE'} value="IMAGE">{$t`Image`}</option>
-							{#if convState.bundleRecommendation !== 'MANUAL'}
-								<option selected={bundleFlag === 'NAME'} value="NAME">{$t`Automatic`}</option>
-							{/if}
-						</select>
-					</div>
-				</div>
-			</div>
-		</div>
+			<VStack gap="sm">
+				<Input
+					id="project-name"
+					bind:value={name}
+					placeholder={projectNamePlaceholder}
+					style="seamless"
+					onkeydown={(e) => {
+						if (e.key === ' ') {
+							e.stopPropagation();
+						}
+					}}
+				/>
+				<p class="text-muted text-xs">
+					{$t`This will be used as the base name for your output files`}
+				</p>
+			</VStack>
+		</BentoItem>
 
-		<!-- Output Settings Card -->
-		<div class="card overflow-hidden">
-			<div class="card-header">
-				<h3 class="font-semibold">{$t`Output Settings`}</h3>
-			</div>
-			<div class="card-body overflow-y-auto pb-6" style="max-height: calc(100vh - 25rem);">
-				<div class="grid grid-cols-2 gap-4">
-					<!-- File Type -->
-					<div class="">
-						<label for="file-type" class="mb-2 block font-medium">{$t`File Type`}</label>
-						<select
-							id="file-type"
-							class="select select-primary"
-							use:handleKeyHint={{
-								keys: [
-									['arrowup', $t`Select up`],
-									['arrowdown', $t`Select down`],
-									['enter', $t`Select`],
-								],
-								reset: true,
-							}}
-							bind:value={fileFormat}
-						>
-							<option selected={fileFormat === 'EPUB'} value="EPUB">{$t`EPUB`}</option>
-							<option selected={fileFormat === 'CBZ'} value="CBZ">{$t`CBZ`}</option>
-						</select>
-					</div>
+		<!-- Create Folder Toggle -->
+		<BentoItem
+			glass
+			onclick={() => (createFolder = !createFolder)}
+			data-keyhint={`enter;${$t`Toggle`}`}
+		>
+			<HStack gap="sm" align="center" class="text-muted mb-3">
+				<IconFolderPlus size={18} />
+				<span class="text-xs font-bold tracking-wider uppercase">{$t`Output Structure`}</span>
+			</HStack>
 
-					<!-- Reading Direction -->
-					<div class="">
-						<label for="reading-direction" class="mb-2 block font-medium">
-							<span class="flex items-center">
-								<span>{$t`Reading Direction`}</span>
-								{#if fileFormat !== 'EPUB'}
-									<span class="badge badge-secondary ml-2">{$t`EPUB only`}</span>
-								{/if}
-							</span>
-						</label>
-						<select
-							id="reading-direction"
-							class="select select-primary"
-							disabled={fileFormat !== 'EPUB'}
-							use:handleKeyHint={{
-								keys: [
-									['arrowup', $t`Select up`],
-									['arrowdown', $t`Select down`],
-									['enter', $t`Select`],
-								],
-								reset: true,
-							}}
-							bind:value={readingDirection}
-						>
-							<option selected={readingDirection === 'Left to Right'} value="Left to Right">
-								{$t`Left to Right`}
-							</option>
-							<option selected={readingDirection === 'Right to Left'} value="Right to Left">
-								{$t`Right to Left`}
-							</option>
-						</select>
-					</div>
-
-					<!-- Image Output Format -->
-					<div class="">
-						<label for="image-format" class="mb-2 block font-medium"
-							>{$t`Image Output Format`}</label
-						>
-						<select
-							id="image-format"
-							class="select select-primary"
-							use:handleKeyHint={{
-								keys: [
-									['arrowup', $t`Select up`],
-									['arrowdown', $t`Select down`],
-								],
-							}}
-							bind:value={imageFormat}
-						>
-							<option value="None">{$t`Original (No Conversion)`}</option>
-							<option value="WebP">WebP</option>
-							<option value="AVIF">AVIF</option>
-						</select>
-						<span class="mt-2 block text-sm">
-							{#if imageFormat === 'None'}
-								{$t`Images will keep their original format`}
-							{:else if imageFormat === 'WebP'}
-								{$t`Images will be converted to WebP format`}
-							{:else if imageFormat === 'AVIF'}
-								{$t`Images will be converted to AVIF format (smaller, slower)`}
-							{/if}
-						</span>
-					</div>
-
-					<!-- Volume Separator -->
-					<div class="">
-						<label for="volume-separator" class="mb-2 block font-medium"
-							>{$t`Volume Separator`}</label
-						>
-						<input
-							id="volume-separator"
-							type="text"
-							class="input input-primary"
-							bind:value={volumeSeparator}
-							onkeydown={(evt) => {
-								if (evt.key === ' ') {
-									evt.stopImmediatePropagation();
-								}
-							}}
-							placeholder=" | "
-						/>
-						<p class="text-content-secondary dark:text-content-dark-secondary mt-1 text-xs">
-							{$t`Separator between volume name and volume number (e.g., "My Manga | 1")`}
-						</p>
-					</div>
-
-					<!-- Target Location -->
-					<div class="col-span-2">
-						<label for="target-location" class="mb-2 block font-medium">{$t`Target Location`}</label
-						>
-						<div class="flex gap-3">
-							<button
-								id="target-location"
-								class="btn btn-primary flex-1 justify-between overflow-hidden"
-								use:handleKeyHint={{ keys: [['enter', $t`Select location`]] }}
-								onclick={select}
-							>
-								<span class="flex items-center">
-									<IconFolder class="mr-2" size={20} />
-									{#if !targetLocation}
-										<span>{$t`Select output folder`}</span>
-									{:else}
-										<span class="overflow-hidden text-ellipsis"
-											>{truncatePath(targetLocation).split('/').pop()}</span
-										>
-									{/if}
-								</span>
-							</button>
-						</div>
-						{#if targetLocation}
-							<p
-								class="text-content-secondary dark:text-content-dark-secondary mt-1 truncate text-xs"
-								title={targetLocation}
-							>
-								{truncatePath(targetLocation, 60)}
-							</p>
+			<div
+				class="hover:bg-surface-2 group flex w-full cursor-pointer items-center justify-between rounded-lg p-3 text-left transition-colors"
+			>
+				<VStack gap="xs" class="flex-1">
+					<span class="text-sm font-medium">
+						{createFolder ? $t`Create project folder` : $t`Direct output`}
+					</span>
+					<span class="text-muted text-xs">
+						{#if createFolder}
+							{$t`Files will be placed in a new folder named after the project`}
+						{:else}
+							{$t`Files will be saved directly in the target location`}
 						{/if}
-					</div>
-
-					<!-- Create Folder -->
-					<div class="">
-						<label for="create-folder" class="mb-2 block font-medium">{$t`Create New Folder`}</label
-						>
-						<div class="flex items-center gap-4">
-							<label class="toggle toggle-lg">
-								<input
-									id="create-folder"
-									type="checkbox"
-									class="toggle-input"
-									use:handleKeyHint={{ keys: [['enter', $t`Toggle`]] }}
-									bind:checked={createFolder}
-									onkeydown={(evt) => {
-										if (evt.key === 'Enter') {
-											createFolder = !createFolder;
-										}
-									}}
-								/>
-								<span class="toggle-track">
-									<span class="toggle-thumb"></span>
-								</span>
-							</label>
-							<span class="text-sm">
-								{createFolder
-									? $t`Will create a new folder for output files`
-									: $t`Will save directly in target location`}
-							</span>
-						</div>
-					</div>
-
-					<!-- Hide Single Volume Number -->
-					<div class="">
-						<label for="hide-single-volume" class="mb-2 block font-medium"
-							>{$t`Hide Single Volume Number`}</label
-						>
-						<div class="flex items-center gap-4">
-							<label class="toggle toggle-lg">
-								<input
-									id="hide-single-volume"
-									type="checkbox"
-									class="toggle-input"
-									use:handleKeyHint={{ keys: [['enter', $t`Toggle`]] }}
-									bind:checked={hideSingleVolumeNumber}
-									onkeydown={(evt) => {
-										if (evt.key === 'Enter') {
-											hideSingleVolumeNumber = !hideSingleVolumeNumber;
-										}
-									}}
-								/>
-								<span class="toggle-track">
-									<span class="toggle-thumb"></span>
-								</span>
-							</label>
-							<span class="text-sm">
-								{hideSingleVolumeNumber
-									? $t`Will hide volume number when only one volume exists`
-									: $t`Will always show volume number`}
-							</span>
-						</div>
-					</div>
+					</span>
+				</VStack>
+				<div class="pointer-events-none ml-4">
+					<Toggle bind:checked={createFolder} tabindex={-1} style="seamless" />
 				</div>
 			</div>
-		</div>
-	</div>
+		</BentoItem>
+
+		<!-- Target Location -->
+		<BentoItem colspan={2} glass onclick={select} data-keyhint={`enter;${$t`Select location`}`}>
+			<HStack gap="sm" align="center" class="text-muted mb-3">
+				<IconFolder size={18} />
+				<span class="text-xs font-bold tracking-wider uppercase">{$t`Output Location`}</span>
+				{#if targetLocation}
+					<div class="bg-success/20 ml-auto flex h-6 w-6 items-center justify-center rounded-full">
+						<IconCheck size={14} class="text-success" />
+					</div>
+				{/if}
+			</HStack>
+
+			<VStack gap="sm">
+				<div
+					class="bg-surface-2 hover:bg-surface-1 group w-full cursor-pointer rounded-lg p-3 transition-colors"
+				>
+					<HStack gap="sm" align="center">
+						<div
+							class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full {targetLocation
+								? 'bg-accent-500/20'
+								: 'bg-surface-1'}"
+						>
+							<IconFolder size={20} class={targetLocation ? 'text-accent-500' : 'text-muted'} />
+						</div>
+						<VStack gap="xs" class="flex-1 overflow-hidden">
+							{#if targetLocation}
+								<span class="text-sm font-medium">{$t`Location selected`}</span>
+								<span class="text-muted truncate font-mono text-xs" title={targetLocation}>
+									{truncatePath(targetLocation, 80)}
+								</span>
+							{:else}
+								<span class="text-sm font-medium">{$t`No location selected`}</span>
+								<span class="text-muted text-xs">{$t`Click to choose output folder`}</span>
+							{/if}
+						</VStack>
+					</HStack>
+				</div>
+				<p class="text-muted text-xs">
+					{$t`Choose where the converted files will be saved`}
+				</p>
+			</VStack>
+		</BentoItem>
+	</BentoGrid>
 </div>

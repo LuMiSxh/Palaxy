@@ -60,6 +60,24 @@ class ConverterState {
 	newImages: number = $state(0);
 
 	/**
+	 * Analysis results - negative issues that block proceeding
+	 * @type {string[]}
+	 */
+	analysisNegatives: string[] = $state([]);
+
+	/**
+	 * Analysis results - warnings
+	 * @type {string[]}
+	 */
+	analysisWarnings: string[] = $state([]);
+
+	/**
+	 * Analysis results - positive findings
+	 * @type {string[]}
+	 */
+	analysisPositives: string[] = $state([]);
+
+	/**
 	 * Resets the converter state to default values.
 	 * @returns {void}
 	 */
@@ -71,57 +89,10 @@ class ConverterState {
 		this.bundleRecommendation = 'MANUAL';
 		this.chapterSizes = [];
 		this.excludedImages = 0;
+		this.analysisNegatives = [];
+		this.analysisWarnings = [];
+		this.analysisPositives = [];
 	}
 }
 
 export default new ConverterState();
-
-/**
- * Manages step-based navigation state, including current index
- * and navigation controls.
- */
-class ConverterStepState {
-	/**
-	 * The current step index.
-	 * @type {number}
-	 */
-	index: number = $state(0);
-
-	/**
-	 * Increment value for advancing the step index.
-	 * @type {number}
-	 */
-	indexIncrement: number = $state(1);
-
-	/**
-	 * Decrement value for reversing the step index.
-	 * @type {number}
-	 */
-	indexDecrement: number = $state(1);
-
-	/**
-	 * Whether the user can navigate to the previous step.
-	 * @type {boolean}
-	 */
-	disablePrev: boolean = $state(true);
-
-	/**
-	 * Whether the user can navigate to the next step.
-	 * @type {boolean}
-	 */
-	disableNext: boolean = $state(true);
-
-	/**
-	 * Resets the step state to its default values.
-	 * @returns {void}
-	 */
-	reset(): void {
-		this.index = 0;
-		this.indexIncrement = 1;
-		this.indexDecrement = 1;
-		this.disablePrev = true;
-		this.disableNext = true;
-	}
-}
-
-export const stepState = new ConverterStepState();

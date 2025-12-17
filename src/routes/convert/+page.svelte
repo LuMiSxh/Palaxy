@@ -1,212 +1,165 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { stepMachine } from '$states/stepMachine.svelte';
+	import { stepRegistry } from '$lib/steps/registry.svelte';
+	import '$lib/steps/definitions';
+	import { VStack, HStack } from 'waku/layout';
+	import { Button, Badge } from 'waku/components';
+	import { keyHint, clearActiveKeyHint } from '$states/keyhint.svelte';
+	import { keyboard } from '$lib/keyboard';
+	import { t } from 'svelte-i18n-lingui';
+	import { appData } from '$stores/appdata';
+	import type { KeyCombination } from '$types/keys';
 	import {
-		IconAdjustments,
-		IconFilter,
 		IconFolder,
-		IconHandStop,
 		IconLineScan,
+		IconAdjustments,
+		IconHandStop,
+		IconFilter,
 		IconPencil,
 	} from '@tabler/icons-svelte';
-	import { Step1, Step2, Step3, Step4, Step5, Step6, Step7 } from '$components/convert';
-	import { stepState } from '$states/converter.svelte';
-	import { t } from 'svelte-i18n-lingui';
-	import { onMount, type Snippet, untrack } from 'svelte';
-	import { appData } from '$stores/appdata';
-	import { keyboard } from '$lib/keyboard';
-	import { addToast } from '$states/toast.svelte';
-	import { keyHint } from '$states/keyhint.svelte';
 
-	// Reset the state of the stepState
-	stepState.reset();
+	// Derived state from step machine
+	let currentStep = $derived(stepMachine.currentStep);
+	let visibleSteps = $derived(stepRegistry.getVisibleSteps());
+	let currentIndex = $derived(stepMachine.currentIndex);
+	let canGoNext = $derived(stepMachine.canGoNext);
+	let canGoBack = $derived(stepMachine.canGoBack);
+	let isTransitioning = $derived(stepMachine.isTransitioning);
 
-	let steps = $derived.by(() => {
-		return [
-			{
-				title: $t`Choose Source Material Directory`,
-				description: $t`Select the directory where the source material is located.`,
-				icon: IconFolder,
-				cmp: Step1,
-			},
-			{
-				title: $t`Analysis`,
-				description: $t`Analyze the source material for potential conversion issues and improvements.`,
-				icon: IconLineScan,
-				cmp: Step2,
-			},
-			{
-				title: $t`Set Metadata`,
-				description: $t`Set the metadata for the to be converted material.`,
-				icon: IconAdjustments,
-				cmp: Step3,
-			},
-			{
-				title: $t`Bundling`,
-				description: $t`Set the volume sizes for the conversion.`,
-				Icon: IconHandStop,
-				cmp: Step4,
-			},
-			{
-				title: $t`Filter Images`,
-				description: $t`Filter out unwanted images, change image order, and set cover images.`,
-				icon: IconFilter,
-				cmp: Step5,
-			},
-			{
-				title: $t`Review`,
-				description: $t`Review all your settings before starting the conversion.`,
-				icon: IconPencil,
-				cmp: Step6,
-			},
-			{
-				title: $t`Conversion`,
-				description: $t`Palaxy is now converting your material. Please wait.`,
-				icon: IconHandStop,
-				cmp: Step7,
-				hidden: true,
-			},
-		];
-	}) as {
-		title: string;
-		description: string;
-		icon: any;
-		cmp: Snippet;
-	}[];
-
-	let currentStep = $derived(steps[stepState.index]);
-	let activeComponent = $derived(currentStep.cmp);
+	let unregisterKeyboard: (() => void) | undefined;
 
 	onMount(() => {
-		return keyboard.smartRegister([
+		// Reset to first step
+		stepMachine.reset();
+
+		// Register keyboard shortcuts
+		unregisterKeyboard = keyboard.smartRegister([
 			[
-				'shift+arrowleft',
-				(event) => {
-					event.preventDefault();
-					if (stepState.disablePrev) {
-						if (stepState.index === 0) {
-							addToast($t`This is the first step. There are no previous steps.`, 'warning');
-						} else {
-							addToast($t`You cannot return to the previous step.`, 'warning');
-						}
-						return;
+				'shift+arrowright',
+				async () => {
+					if (canGoNext) {
+						await stepMachine.next();
 					}
-					stepState.index -= stepState.indexDecrement;
-					stepState.indexDecrement = 1;
 				},
 			],
 			[
-				'shift+arrowright',
-				(event) => {
-					event.preventDefault();
-					if (stepState.disableNext) {
-						if (stepState.index === steps.length - 1) {
-							addToast($t`This is the last step. There are no more steps.`, 'warning');
-						} else {
-							addToast($t`You cannot proceed to the next step.`, 'warning');
-						}
-						return;
+				'shift+arrowleft',
+				async () => {
+					if (canGoBack) {
+						await stepMachine.back();
 					}
-					stepState.index += stepState.indexIncrement;
-					stepState.indexIncrement = 1;
 				},
 			],
 		]);
+
+		return () => {
+			if (unregisterKeyboard) unregisterKeyboard();
+		};
 	});
 
-	function keyHintEffect() {
-		if (stepState.disablePrev) {
-			keyHint.removeKey('shift+arrowleft');
-		} else {
-			keyHint.addKey('shift+arrowleft', $t`Previous`);
+	// Update key hints based on current state and clear old hints when step changes
+	$effect(() => {
+		// Clear any active keyhints from previous step's focused elements
+		clearActiveKeyHint();
+
+		const hints: [KeyCombination, string][] = [['tab', $t`Navigate fields`]];
+
+		if (canGoBack) {
+			hints.push(['shift+arrowleft', $t`Previous`]);
 		}
 
-		if (stepState.disableNext) {
-			keyHint.removeKey('shift+arrowright');
-		} else {
-			keyHint.addKey('shift+arrowright', $t`Next`);
+		if (canGoNext) {
+			hints.push(['shift+arrowright', $t`Next`]);
+		}
+
+		return keyHint.register(hints);
+	});
+
+	// Get icon for current step
+	function getCurrentIcon() {
+		if (!currentStep) return IconFolder;
+		const stepId = currentStep.id;
+
+		switch (stepId) {
+			case 'select-source':
+				return IconFolder;
+			case 'analysis':
+				return IconLineScan;
+			case 'metadata':
+				return IconAdjustments;
+			case 'bundling':
+			case 'conversion':
+				return IconHandStop;
+			case 'filter':
+				return IconFilter;
+			case 'review':
+				return IconPencil;
+			default:
+				return IconFolder;
 		}
 	}
 
-	$effect(() => {
-		untrack(() => keyHintEffect());
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		stepState.disablePrev;
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		stepState.disableNext;
-	});
+	let CurrentIcon = $derived(getCurrentIcon());
 </script>
 
-<div class="flex h-full w-full flex-col">
-	<section class="glass-surface relative flex h-full w-full flex-col">
-		<div class="mb-2 ml-2 w-full">
-			<h1
-				class="text-primary from-primary via-secondary to-secondary mb-2 bg-gradient-to-r via-60% bg-clip-text text-3xl dark:text-transparent"
-			>
-				{currentStep.title}
-			</h1>
-			<p class="text-lg">
-				{currentStep.description}
-			</p>
+<div class="h-full w-full overflow-y-auto p-3 md:p-6">
+	<VStack gap="sm" class="mx-auto h-full">
+		<!-- Header -->
+		<div class="flex items-center justify-between gap-4">
+			<HStack gap="sm" align="center">
+				<CurrentIcon size={28} class="text-accent-500" />
+				<h1 class="text-2xl font-bold">
+					{currentStep?.title || ''}
+				</h1>
+				<div class="bg-surface-2 h-4 w-px"></div>
+				<p class="text-muted text-sm">
+					{currentStep?.description || ''}
+				</p>
+			</HStack>
+
+			<Badge variant="neutral" class="text-xs">
+				{$t`Step`}
+				{currentIndex + 1} / {visibleSteps.length}
+			</Badge>
 		</div>
-		<progress
-			id="step-progress"
-			class="progress h-5 w-full"
-			max={steps.length - 1}
-			value={stepState.index}
-		></progress>
-		<div class="flex w-full grow flex-col items-center justify-center">
-			{@render activeComponent()}
+
+		<!-- Progress Bar -->
+		<div class="bg-surface-2 relative h-2 w-full overflow-hidden rounded-full">
+			<div
+				class="from-accent-500 to-accent-400 h-full bg-linear-to-r transition-all duration-500 ease-out"
+				style="width: {stepMachine.progress}%"
+			></div>
 		</div>
+
+		<!-- Step Content with Bento Grid -->
+		<div class="flex-1 overflow-y-auto">
+			{#if currentStep?.component}
+				{@const StepComponent = currentStep.component}
+				<StepComponent />
+			{/if}
+		</div>
+
+		<!-- Navigation Buttons -->
 		{#if $appData.mouseSupport}
-			<button
-				class="btn btn-error absolute bottom-5 left-5 shadow-lg select-none"
-				onclick={() => {
-					stepState.index -= stepState.indexDecrement;
-					stepState.indexDecrement = 1;
-				}}
-				disabled={stepState.disablePrev}
-			>
-				{$t`Previous`}
-			</button>
-			<button
-				class="btn btn-success absolute right-5 bottom-5 shadow-lg select-none"
-				onclick={() => {
-					stepState.index += stepState.indexIncrement;
-					stepState.indexIncrement = 1;
-				}}
-				disabled={stepState.disableNext}
-			>
-				{$t`Next`}
-			</button>
+			<HStack justify="between" class="shrink-0">
+				<Button
+					style="outline"
+					onclick={() => stepMachine.back()}
+					disabled={!canGoBack || isTransitioning}
+					class="min-w-[120px]"
+				>
+					{$t`Previous`}
+				</Button>
+				<Button
+					variant="primary"
+					onclick={() => stepMachine.next()}
+					disabled={!canGoNext || isTransitioning}
+					class="min-w-[120px]"
+				>
+					{$t`Next`}
+				</Button>
+			</HStack>
 		{/if}
-	</section>
+	</VStack>
 </div>
-
-<style>
-	@keyframes blink {
-		0% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.8;
-		}
-		100% {
-			opacity: 1;
-		}
-	}
-
-	#step-progress {
-		transition: value 0.5s ease;
-	}
-
-	#step-progress::-webkit-progress-value {
-		background: linear-gradient(to left, var(--color-primary), var(--color-secondary));
-		animation: blink 1.5s infinite;
-		transition: width 0.5s ease-in-out;
-	}
-
-	#step-progress::-moz-progress-bar {
-		background: linear-gradient(to left, var(--color-primary), var(--color-secondary));
-		animation: blink 1.5s infinite;
-		transition: width 0.5s ease-in-out;
-	}
-</style>

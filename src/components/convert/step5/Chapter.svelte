@@ -2,11 +2,12 @@
 	import { convertFileSrc } from '@tauri-apps/api/core';
 	import { IconEyeClosed, IconNotes, IconPhoto, IconPhotoPlus } from '@tabler/icons-svelte';
 	import { flip } from 'svelte/animate';
-	import { fade } from 'svelte/transition';
 	import { t } from 'svelte-i18n-lingui';
 	import { handleKeyHint } from '$states/keyhint.svelte';
 	import convState from '$states/converter.svelte';
 	import { open } from '@tauri-apps/plugin-dialog';
+	import { Badge } from 'waku/components';
+	import { HStack } from 'waku/layout';
 
 	interface Props {
 		onImageChange: () => void;
@@ -20,7 +21,7 @@
 
 	let {
 		onImageChange = () => {},
-		chapterIndex = $bindable(0),
+		chapterIndex = 0,
 		images = $bindable(),
 		selectedImages = $bindable(),
 		isVisibleState = $bindable(),
@@ -30,17 +31,17 @@
 
 	let draggedOverIndex: number | null = $state(null);
 
-	function toggleOverlay(chapIndex: number, imageIndex: number) {
+	function toggleOverlay(imageIndex: number) {
 		// Toggle visibility state
-		isVisibleState[chapIndex][imageIndex] = !isVisibleState[chapIndex][imageIndex];
+		isVisibleState[chapterIndex][imageIndex] = !isVisibleState[chapterIndex][imageIndex];
 
 		// Toggle selection (null = excluded)
-		selectedImages[chapIndex][imageIndex] = isVisibleState[chapIndex][imageIndex]
-			? images[chapIndex][imageIndex]
+		selectedImages[chapterIndex][imageIndex] = isVisibleState[chapterIndex][imageIndex]
+			? images[chapterIndex][imageIndex]
 			: null;
 
 		// Add excluded +1 to convState
-		if (selectedImages[chapIndex][imageIndex] === null) {
+		if (selectedImages[chapterIndex][imageIndex] === null) {
 			// Exclude image
 			convState.excludedImages += 1;
 		} else {
@@ -52,26 +53,22 @@
 		onImageChange();
 	}
 
-	function handleImageError(chapIndex: number, imageIndex: number) {
-		imageLoadErrorState[chapIndex][imageIndex] = true;
+	function handleImageError(imageIndex: number) {
+		imageLoadErrorState[chapterIndex][imageIndex] = true;
 	}
 
-	function handleKeyboardNavigation(event: KeyboardEvent, chapIndex: number, imageIndex: number) {
+	function handleKeyboardNavigation(event: KeyboardEvent, imageIndex: number) {
 		if (event.key === 'Enter') {
-			toggleOverlay(chapIndex, imageIndex);
+			toggleOverlay(imageIndex);
 			event.preventDefault();
 		} else if (event.key === 'ArrowRight') {
 			const isLast = imageIndex === images[chapterIndex].length - 1;
-			moveImage(chapterIndex, imageIndex, isLast ? 0 : imageIndex + 1);
+			moveImage(imageIndex, isLast ? 0 : imageIndex + 1);
 			convState.changedOrder = true;
 			event.preventDefault();
 		} else if (event.key === 'ArrowLeft') {
 			const isFirst = imageIndex === 0;
-			moveImage(
-				chapterIndex,
-				imageIndex,
-				isFirst ? images[chapterIndex].length - 1 : imageIndex - 1
-			);
+			moveImage(imageIndex, isFirst ? images[chapterIndex].length - 1 : imageIndex - 1);
 			convState.changedOrder = true;
 			event.preventDefault();
 		}
@@ -82,7 +79,7 @@
 	}
 
 	// Function to reorder an image within a chapter
-	function moveImage(chapterIndex: number, fromIndex: number, toIndex: number) {
+	function moveImage(fromIndex: number, toIndex: number) {
 		// Remove and re-insert the element at the new position in all arrays
 		const item = images[chapterIndex].splice(fromIndex, 1)[0];
 		images[chapterIndex].splice(toIndex, 0, item);
@@ -107,7 +104,7 @@
 		onImageChange();
 	}
 
-	async function addImage(chapterIndex: number) {
+	async function addImage() {
 		const selection = await open({
 			multiple: true,
 			filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
@@ -188,32 +185,36 @@
 		// Only process if it's our specific drag type
 		if (event.dataTransfer?.types.includes('application/image-drag')) {
 			const fromIndex = parseInt(event.dataTransfer?.getData('text/plain') || '0');
-			moveImage(chapterIndex, fromIndex, imageIndex);
+			moveImage(fromIndex, imageIndex);
 			convState.changedOrder = true;
 		}
 		draggedOverIndex = null;
 	}
 </script>
 
-<div class="mb-4">
-	<div
-		class="border-background-tertiary dark:border-background-dark-tertiary mb-2 flex items-center border-b pb-1"
-	>
-		<IconNotes class="mr-2" size={16} />
-		<h5 class="text-sm font-medium">
+<div>
+	<HStack gap="sm" align="center" class="text-muted mb-3">
+		<IconNotes size={16} />
+		<span class="text-xs font-medium">
 			{$t`Chapter`}
-			{chapterIndex + 1} ({getChapterImageCount()}
-			{$t`images`})
-		</h5>
-	</div>
+			{chapterIndex + 1}
+		</span>
+		<Badge variant="neutral" class="ml-auto">
+			{getChapterImageCount()}
+			{$t`images`}
+		</Badge>
+	</HStack>
 	<div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
 		{#each images[chapterIndex] as imagePath, imageIndex (imagePath)}
 			<div
-				class="relative h-40 w-full cursor-grab overflow-hidden rounded select-none"
-				class:drag-over={draggedOverIndex === imageIndex}
+				class="group relative h-40 w-full cursor-grab overflow-hidden rounded-lg transition-all select-none"
+				class:ring-2={draggedOverIndex === imageIndex}
+				class:ring-accent-500={draggedOverIndex === imageIndex}
+				class:ring-offset-2={draggedOverIndex === imageIndex}
+				class:ring-offset-surface-0={draggedOverIndex === imageIndex}
 				animate:flip={{ duration: 300 }}
-				onclick={() => toggleOverlay(chapterIndex, imageIndex)}
-				onkeydown={(e) => handleKeyboardNavigation(e, chapterIndex, imageIndex)}
+				onclick={() => toggleOverlay(imageIndex)}
+				onkeydown={(e) => handleKeyboardNavigation(e, imageIndex)}
 				role="button"
 				tabindex={0}
 				use:handleKeyHint={{
@@ -233,62 +234,52 @@
 			>
 				{#if imageLoadErrorState[chapterIndex][imageIndex]}
 					<div
-						class="bg-background-tertiary dark:bg-background-dark-tertiary text-content-secondary dark:text-content-dark-secondary flex h-full w-full items-center justify-center"
+						class="bg-surface-2 text-muted flex h-full w-full flex-col items-center justify-center gap-2"
 					>
 						<IconPhoto size={32} opacity={0.5} />
-						<span class="mt-2 text-xs">{$t`Image Error`}</span>
+						<span class="text-xs">{$t`Image Error`}</span>
 					</div>
 				{:else}
 					<img
 						src={convertFileSrc(imagePath)}
 						alt={`Chapter ${chapterIndex + 1}, Image ${imageIndex + 1}`}
-						class="bg-background-tertiary dark:bg-background-dark-tertiary h-full w-full object-contain shadow-inner"
-						onerror={() => handleImageError(chapterIndex, imageIndex)}
+						class="bg-surface-2 h-full w-full object-contain"
+						onerror={() => handleImageError(imageIndex)}
 						draggable="false"
 					/>
 				{/if}
 
 				{#if !isVisibleState[chapterIndex][imageIndex]}
-					<div class="absolute top-0 left-0 z-10 h-full w-full">
-						<div class="bg-secondary/20 absolute inset-0 flex items-center justify-center">
-							<IconEyeClosed size={32} class="stroke-black" />
-						</div>
+					<div
+						class="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+					>
+						<IconEyeClosed size={32} class="text-white drop-shadow-lg" />
 					</div>
 				{/if}
 
 				{#if coverState[chapterIndex][imageIndex]}
-					<div
-						transition:fade={{ duration: 150 }}
-						class="badge badge-primary absolute top-2 left-2"
-					>
+					<Badge variant="primary" style="solid" class="absolute top-2 left-2">
 						{$t`Cover`}
-					</div>
+					</Badge>
 				{/if}
 			</div>
 		{/each}
 		<div
-			class="border-content-tertiary text-content-tertiary relative flex h-40 w-full cursor-pointer items-center justify-center rounded border border-dashed"
+			class="hover:bg-surface-2 border-muted text-muted group relative flex h-40 w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed transition-colors"
 			tabindex={0}
 			role="button"
-			onclick={async () => await addImage(chapterIndex)}
+			onclick={async () => await addImage()}
 			use:handleKeyHint={{
 				keys: [['enter', $t`Add Image`]],
 			}}
 			onkeydown={async (e) => {
 				if (e.key === 'Enter') {
 					e.preventDefault();
-					await addImage(chapterIndex);
+					await addImage();
 				}
 			}}
 		>
-			<IconPhotoPlus size={32} />
+			<IconPhotoPlus size={32} class="group-hover:text-accent-500 transition-colors" />
 		</div>
 	</div>
 </div>
-
-<style>
-	.drag-over {
-		outline: 2px solid var(--color-primary);
-		outline-offset: -2px;
-	}
-</style>

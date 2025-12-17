@@ -4,24 +4,29 @@
 	import { t } from 'svelte-i18n-lingui';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import converter from '$states/converter.svelte';
-	import convState, { stepState } from '$states/converter.svelte';
+	import convState from '$states/converter.svelte';
 	import { truncatePath, wrapper } from '$lib/utils';
-	import { IconFolder } from '@tabler/icons-svelte';
-	import { handleKeyHint } from '$states/keyhint.svelte';
-	import { keyboard } from '$lib/keyboard';
+	import { IconFolder, IconFolderOpen, IconCheck } from '@tabler/icons-svelte';
 
-	let btn: HTMLButtonElement | null = $state(null);
+	import { keyboard } from '$lib/keyboard';
+	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
+	import { Badge } from 'waku/components';
+
 	let unregisterKeyboard: () => void;
 
 	onMount(async () => {
 		// Reset
 		await wrapper(commands.convStateReset());
 		converter.reset();
-		stepState.reset();
 
-		// Set Keyboard etc.
-		btn?.focus();
+		// Set Keyboard
 		unregisterKeyboard = keyboard.smartRegister([['enter', select]]);
+
+		// Auto-focus the BentoItem for keyboard-first navigation
+		setTimeout(() => {
+			const bentoItem = document.querySelector('.bento-item[data-keyhint]') as HTMLElement;
+			bentoItem?.focus();
+		}, 100);
 	});
 
 	onDestroy(() => {
@@ -42,49 +47,117 @@
 			await wrapper(commands.convStateSet({ Source: convState.source ?? '' }));
 		}
 	}
-
-	$effect(() => {
-		stepState.disableNext = converter.source === null;
-	});
 </script>
 
-<div class="card">
-	<div class="card-header">
-		<h3 class="text-lg font-bold">
-			{$t`Select a folder to convert`}
-		</h3>
-	</div>
-	<div class="card-body">
-		<div class="">
-			<label for="source-location" class="mb-2 block font-medium">{$t`Source Location`}</label>
-			<div class="flex gap-3">
-				<button
-					id="source-location"
-					class="btn btn-primary flex-1 justify-between overflow-hidden"
-					bind:this={btn}
-					use:handleKeyHint={{ keys: [['enter', $t`Select location`]] }}
-					onclick={select}
+<div class="h-full w-full p-3">
+	<BentoGrid cols={3} density="comfortable" rows="auto 1fr" class="h-full">
+		<!-- Summary Cards Row -->
+		<BentoItem glass>
+			<HStack gap="md" align="center">
+				<div
+					class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full {convState.source
+						? 'bg-success/10'
+						: 'bg-surface-2'}"
 				>
-					<span class="flex items-center">
-						<IconFolder class="mr-2" size={20} />
-						{#if !convState.source}
-							<span>{$t`Select input folder`}</span>
-						{:else}
-							<span class="overflow-hidden text-ellipsis"
-								>{truncatePath(convState.source).split('/').pop()}</span
-							>
-						{/if}
-					</span>
-				</button>
-			</div>
+					<IconCheck size={20} class={convState.source ? 'text-success' : 'text-muted'} />
+				</div>
+				<VStack gap="none">
+					<span class="text-muted text-xs font-medium tracking-wide uppercase">{$t`Status`}</span>
+					<div
+						class="text-2xl leading-tight font-bold {convState.source
+							? 'text-success'
+							: 'text-muted'}"
+					>
+						{convState.source ? $t`Ready` : $t`Waiting`}
+					</div>
+				</VStack>
+			</HStack>
+		</BentoItem>
+
+		<BentoItem glass colspan={2}>
+			<HStack gap="md" align="center">
+				<div
+					class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full {convState.source
+						? 'bg-accent-500/10'
+						: 'bg-surface-2'}"
+				>
+					<IconFolderOpen size={20} class={convState.source ? 'text-accent-500' : 'text-muted'} />
+				</div>
+				<VStack gap="none">
+					<span class="text-muted text-xs font-medium tracking-wide uppercase">{$t`Source`}</span>
+					<div class="text-2xl leading-tight font-bold">
+						{convState.source ? $t`Selected` : $t`None`}
+					</div>
+				</VStack>
+			</HStack>
+		</BentoItem>
+
+		<!-- Main Source Selection Card -->
+		<BentoItem
+			colspan={3}
+			glass
+			onclick={select}
+			onkeydown={(e) => {
+				if (e.key === ' ') {
+					e.preventDefault();
+					e.stopPropagation();
+				}
+			}}
+			data-keyhint={`enter;${$t`Select source folder`}`}
+			class="flex min-h-0 flex-col"
+		>
+			<HStack gap="sm" align="center" class="text-muted mb-3 shrink-0">
+				<IconFolder size={18} />
+				<span class="text-xs font-bold tracking-wider uppercase">{$t`Source Folder`}</span>
+				{#if convState.source}
+					<div class="bg-success/20 ml-auto flex h-6 w-6 items-center justify-center rounded-full">
+						<IconCheck size={14} class="text-success" />
+					</div>
+				{/if}
+			</HStack>
+
 			{#if convState.source}
-				<p
-					class="text-content-secondary dark:text-content-dark-secondary mt-1 truncate text-xs"
-					title={convState.source}
-				>
-					{truncatePath(convState.source, 60)}
-				</p>
+				<VStack gap="sm">
+					<div
+						class="bg-surface-2 hover:bg-surface-1 group w-full cursor-pointer rounded-lg p-3 transition-colors"
+					>
+						<HStack gap="sm" align="center">
+							<div
+								class="bg-accent-500/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+							>
+								<IconFolderOpen size={20} class="text-accent-500" />
+							</div>
+							<VStack gap="xs" class="flex-1 overflow-hidden">
+								<span class="text-sm font-medium">{$t`Source selected`}</span>
+								<span class="text-muted truncate font-mono text-xs" title={convState.source}>
+									{truncatePath(convState.source, 80)}
+								</span>
+							</VStack>
+						</HStack>
+					</div>
+					<p class="text-muted text-xs">
+						{$t`Click to change the source folder or press Next to analyze`}
+					</p>
+				</VStack>
+			{:else}
+				<div class="flex h-full items-center justify-center p-8">
+					<VStack gap="md" align="center" class="max-w-md text-center">
+						<div class="bg-surface-2 flex h-16 w-16 items-center justify-center rounded-full">
+							<IconFolder size={32} class="text-muted" />
+						</div>
+						<VStack gap="xs" align="center">
+							<h3 class="text-lg font-semibold">{$t`No Source Selected`}</h3>
+							<p class="text-muted text-sm">
+								{$t`Choose the directory containing your manga images to begin the conversion process`}
+							</p>
+						</VStack>
+						<div class="text-muted flex items-center gap-2 text-xs">
+							<Badge variant="primary" class="text-xs">⏎ {$t`Enter`}</Badge>
+							<span>{$t`or click to browse`}</span>
+						</div>
+					</VStack>
+				</div>
 			{/if}
-		</div>
-	</div>
+		</BentoItem>
+	</BentoGrid>
 </div>

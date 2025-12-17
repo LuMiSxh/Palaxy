@@ -1,4 +1,4 @@
-import { type AppData, defaultAppData } from '$types/appdata';
+import { defaultAppData, type AppData } from '$types/appdata';
 import { setLocale, setTheme } from '$lib/utils';
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';

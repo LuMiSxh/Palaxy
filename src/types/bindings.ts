@@ -332,11 +332,7 @@ export type Error =
 /**
  * Error for unsupported operations or formats
  */
-{ type: "Unsupported"; data: string } | 
-/**
- * Error for resources that couldn't be found
- */
-{ type: "NotFound"; data: string }
+{ type: "Unsupported"; data: string }
 /**
  * Supported file formats for conversion
  * 

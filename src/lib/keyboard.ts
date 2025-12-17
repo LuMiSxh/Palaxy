@@ -213,9 +213,21 @@ class KeyboardManager {
 		// Check if we have handlers for this combination
 		const handlers = this.handlers.get(keyCombo) || [];
 
-		// Call all matching handlers in the order newest to oldest
+		// Call all matching handlers in the order newest to oldest - Ignoring letter key combos when focused in input
 		for (let i = handlers.length - 1; i >= 0; i--) {
-			// If there is a result, and if it is true, don't call the other handlers
+			const isLetterKey = /^[KeyA-KeyZ]$/.test(event.code);
+			const containsLetterKey = keyCombo.split('+').some((part) => /^[KeyA-KeyZ]$/.test(part));
+
+			if (
+				isLetterKey &&
+				containsLetterKey &&
+				(event.target instanceof HTMLInputElement ||
+					event.target instanceof HTMLTextAreaElement ||
+					(event.target instanceof HTMLElement && event.target.isContentEditable))
+			) {
+				continue; // Skip letter key combos when focused in input
+			}
+
 			if (handlers[i].callback(event) === true) {
 				break;
 			}

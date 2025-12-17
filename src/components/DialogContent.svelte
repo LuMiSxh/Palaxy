@@ -7,6 +7,10 @@
 	import { onMount } from 'svelte';
 	import { handleKeyHint, keyHint } from '$states/keyhint.svelte';
 
+	// Waku Imports
+	import { VStack, HStack, Separator } from 'waku/layout';
+	import { Button } from 'waku/components';
+
 	let { dialog }: { dialog: Dialog } = $props();
 	let confirmButton: HTMLButtonElement | null = $state(null);
 	let cancelButton: HTMLButtonElement | null = $state(null);
@@ -52,13 +56,10 @@
 
 		const unregisterKeyboard = keyboard.smartRegister([['escape', handleEscapeKey]]);
 
-		const unregisterKeyHint = keyHint.smartAdd(
-			[
-				['escape', $t`Close`],
-				['tab', $t`Navigate fields`],
-			],
-			['enter']
-		); // Ignore enter key hint
+		const unregisterKeyHint = keyHint.register([
+			['escape', $t`Close`],
+			['tab', $t`Navigate fields`],
+		]);
 
 		return () => {
 			unregisterKeyboard();
@@ -76,73 +77,83 @@
 ></button>
 
 <div
-	class="bg-background dark:bg-background-dark card fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 overflow-y-auto shadow-lg"
+	class="bg-waku-surface backdrop-blur-glass border-waku-border fixed top-1/2 left-1/2 z-50 max-h-[88vh] min-h-[10vh] min-w-[50vw] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border shadow-2xl"
 	transition:scale={{ duration: 200, start: 0.95 }}
 	role="dialog"
 	aria-modal="true"
 >
-	<div class="flex items-center justify-between p-2">
-		<h2 class="text-content-primary text-lg font-semibold">{dialog.title}</h2>
-		{#if dialog.showClose !== false}
-			<button
-				class="btn btn-ghost btn-sm p-0.5"
-				onclick={() => dialogManager.closeDialog(dialog.id)}
-				tabIndex="-1"
-			>
-				<IconX size="20" />
-			</button>
-		{/if}
-	</div>
-
-	<div class="divider mx-4 my-0"></div>
-
-	<div class="max-h-[70vh] overflow-y-auto px-2 pb-6">
-		{#if typeof dialog.content === 'string'}
-			<p class="text-content-tertiary">{dialog.content}</p>
-		{:else}
-			<dialog.content {...dialog.contentProps || {}} bind:id={dialog.id} />
-		{/if}
-	</div>
-
-	{#if dialog.onCancel || dialog.onConfirm}
-		<div class="flex justify-end gap-2 p-4">
-			{#if dialog.onCancel}
-				<button
-					class="btn btn-neutral"
-					use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
-					bind:this={cancelButton}
-					onclick={() => {
-						dialog.onCancel?.();
-						dialogManager.closeDialog(dialog.id);
-					}}
+	<VStack gap="none" class="h-full">
+		<!-- Header -->
+		<HStack align="center" justify="between" class="p-4">
+			<h2 class="text-lg font-semibold">{dialog.title}</h2>
+			{#if dialog.showClose !== false}
+				<Button
+					variant="ghost"
+					size="sm"
+					onclick={() => dialogManager.closeDialog(dialog.id)}
+					tabIndex="-1"
+					class="h-8 w-8 p-0"
 				>
-					{dialog.cancelText || $t`Cancel`}
-				</button>
+					<IconX size={20} />
+				</Button>
 			{/if}
+		</HStack>
 
-			{#if dialog.onConfirm}
-				<button
-					class="btn btn-primary"
-					use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
-					bind:this={confirmButton}
-					onclick={() => {
-						dialog.onConfirm?.();
-						dialogManager.closeDialog(dialog.id);
-					}}
-				>
-					{dialog.confirmText || $t`Confirm`}
-				</button>
+		<Separator class="my-0!" />
+
+		<!-- Content -->
+		<div class="max-h-[70vh] flex-1 overflow-y-auto p-4">
+			{#if typeof dialog.content === 'string'}
+				<p class="text-muted">{dialog.content}</p>
+			{:else}
+				<dialog.content {...dialog.contentProps || {}} bind:id={dialog.id} />
 			{/if}
 		</div>
-	{/if}
+
+		<!-- Actions -->
+		{#if dialog.onCancel || dialog.onConfirm}
+			<div class="border-waku-border border-t p-4">
+				<HStack align="center" justify="end" gap="sm">
+					{#if dialog.onCancel}
+						<button
+							class="waku-button waku-button--ghost"
+							use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
+							bind:this={cancelButton}
+							onclick={() => {
+								dialog.onCancel?.();
+								dialogManager.closeDialog(dialog.id);
+							}}
+						>
+							{dialog.cancelText || $t`Cancel`}
+						</button>
+					{/if}
+
+					{#if dialog.onConfirm}
+						<button
+							class="waku-button waku-button--accent"
+							use:handleKeyHint={{ keys: [['enter', $t`Invoke`]] }}
+							bind:this={confirmButton}
+							onclick={() => {
+								dialog.onConfirm?.();
+								dialogManager.closeDialog(dialog.id);
+							}}
+						>
+							{dialog.confirmText || $t`Confirm`}
+						</button>
+					{/if}
+				</HStack>
+			</div>
+		{/if}
+	</VStack>
 </div>
 
 <style>
-	.card {
-		min-width: 50vw;
-		min-height: 10vh;
-		max-height: 88vh;
-		padding: 12px;
-		border-radius: 8px;
+	.backdrop-blur-glass {
+		backdrop-filter: blur(20px);
+		background: rgba(var(--waku-surface-rgb, 255, 255, 255), 0.95);
+	}
+
+	:global(.dark) .backdrop-blur-glass {
+		background: rgba(var(--waku-surface-rgb, 0, 0, 0), 0.95);
 	}
 </style>

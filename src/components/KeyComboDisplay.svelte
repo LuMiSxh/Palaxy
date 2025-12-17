@@ -1,17 +1,16 @@
 <script lang="ts">
 	import { type } from '@tauri-apps/plugin-os';
-	import { t } from 'svelte-i18n-lingui';
 	import type { KeyCombination } from '$types/keys';
 	import { onMount } from 'svelte';
 
 	let { keyCombination }: { keyCombination: KeyCombination } = $props();
 
-	let osName = $state('default');
+	let osName = $state('windows');
 
 	onMount(() => (osName = type()));
 
-	let keySymbols: Record<string, Record<string, string>> = $derived({
-		darwin: {
+	const keySymbols: Record<string, Record<string, string>> = {
+		macos: {
 			ctrl: '⌃',
 			control: '⌃',
 			cmd: '⌘',
@@ -24,40 +23,40 @@
 			return: '↩',
 			backspace: '⌫',
 			delete: '⌦',
-			escape: $t`Esc`,
+			escape: 'Esc',
 			arrowup: '↑',
 			arrowdown: '↓',
 			arrowleft: '←',
 			arrowright: '→',
-			space: $t`Space`,
+			space: '␣',
 			plus: '+',
 			minus: '-',
 		},
 		default: {
-			ctrl: $t`Ctrl`,
-			control: $t`Ctrl`,
-			cmd: $t`Win`,
-			command: $t`Win`,
-			alt: $t`Alt`,
-			option: $t`Alt`,
-			shift: $t`Shift`,
-			tab: 'Tab',
-			enter: $t`Enter`,
-			return: $t`Enter`,
-			backspace: 'Backspace',
-			delete: $t`Delete`,
-			escape: $t`Esc`,
+			ctrl: 'Ctrl',
+			control: 'Ctrl',
+			cmd: 'Win',
+			command: 'Win',
+			alt: 'Alt',
+			option: 'Alt',
+			shift: '⇧',
+			tab: '⭾',
+			enter: '⏎',
+			return: '⏎',
+			backspace: '⌫',
+			delete: 'Del',
+			escape: 'Esc',
 			arrowup: '↑',
 			arrowdown: '↓',
 			arrowleft: '←',
 			arrowright: '→',
-			space: $t`Space`,
+			space: '␣',
 			plus: '+',
 			minus: '-',
 		},
-	});
+	};
 
-	let symbolMap = $derived(osName === 'macos' ? keySymbols.darwin : keySymbols.default);
+	let symbolMap = $derived(keySymbols[osName] || keySymbols.default);
 	let formatted = $derived.by(() => {
 		return keyCombination
 			.toLowerCase()

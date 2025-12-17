@@ -25,8 +25,7 @@ export enum Theme {
 }
 
 // Translations for the theme
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _ = [msg`Light`, msg`Dark`, msg`System`];
+const _themeTranslations = [msg`Light`, msg`Dark`, msg`System`];
 
 /**
  * Enumerates supported languages for the application.
@@ -44,8 +43,7 @@ export enum SupportedLanguages {
 }
 
 // Translations for the languages
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const __ = [msg`English`, msg`German`];
+const _languageTranslations = [msg`English`, msg`German`];
 
 /**
  * Defines the structure for storing application data.
@@ -132,7 +130,7 @@ export const defaultAppData: AppData = {
 			createNewFolder: true,
 			imageFormat: null,
 			hideSingleVolumeNumber: false,
-			volumeSeparator: ' | ',
+			volumeSeparator: ' - ',
 		},
 	},
 };

@@ -1,24 +1,49 @@
 <script lang="ts">
-	import { onDestroy, onMount, tick } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { t } from 'svelte-i18n-lingui';
-	import convState, { stepState } from '$states/converter.svelte';
-	import { IconCircleMinus, IconCirclePlus, IconExclamationCircle } from '@tabler/icons-svelte';
+	import convState from '$states/converter.svelte';
+	import {
+		IconCircleMinus,
+		IconCirclePlus,
+		IconExclamationCircle,
+		IconAlertTriangle,
+		IconChecklist,
+	} from '@tabler/icons-svelte';
 	import { commands } from '$types';
 	import { wrapper } from '$lib/utils';
-	import { keyHint } from '$states/keyhint.svelte';
-	import LoadingSpinner from '$components/LoadingSpinner.svelte';
+	import { keyboard } from '$lib/keyboard';
+	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
+	import { LoadingSpinner, Badge } from 'waku/components';
 
 	let positives: string[] = $state([]);
 	let negatives: string[] = $state([]);
 	let warnings: string[] = $state([]);
 	let isLoading: boolean = $state(true);
-	let resultsContainer: HTMLElement | null = $state(null);
-	let cleanupKeyHint: (() => void) | null = null;
+	let analysisDetailsContainer: HTMLDivElement | null = $state(null);
+	let analysisDetailsBentoFocused = $state(false);
+	let cleanupKeyboard: (() => void) | null = null;
 
 	onMount(async () => {
-		// Disable the next button, enable the previous button
-		stepState.disableNext = true;
-		stepState.disablePrev = false;
+		cleanupKeyboard = keyboard.smartRegister([
+			[
+				'arrowdown',
+				(event) => {
+					if (analysisDetailsBentoFocused && analysisDetailsContainer) {
+						event.preventDefault();
+						analysisDetailsContainer.scrollTop += 40;
+					}
+				},
+			],
+			[
+				'arrowup',
+				(event) => {
+					if (analysisDetailsBentoFocused && analysisDetailsContainer) {
+						event.preventDefault();
+						analysisDetailsContainer.scrollTop -= 40;
+					}
+				},
+			],
+		]);
 
 		const result = await wrapper(commands.convAnalyze());
 		isLoading = false;
@@ -29,161 +54,258 @@
 			negatives = result.payload.negative;
 			warnings = result.payload.warning;
 
-			// When there are no negatives, enable the next button
-			if (negatives.length === 0) {
-				stepState.disableNext = false;
-			}
+			// Store in convState for validation
+			convState.analysisNegatives = negatives;
+			convState.analysisWarnings = warnings;
+			convState.analysisPositives = positives;
 		}
-
-		// Focus on the results container after ui render pass
-		await tick();
-		resultsContainer?.focus();
-
-		// Show the key hint for navigating
-		cleanupKeyHint = keyHint.smartAdd([
-			['arrowdown', $t`Scroll down`],
-			['arrowup', $t`Scroll up`],
-		]);
 	});
 
 	onDestroy(() => {
-		if (cleanupKeyHint) {
-			cleanupKeyHint();
+		if (cleanupKeyboard) {
+			cleanupKeyboard();
 		}
 	});
 </script>
 
 {#if isLoading}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<LoadingSpinner text={$t`Loading Images...`} />
+	<div class="flex h-full w-full items-center justify-center p-3">
+		<VStack gap="sm" align="center">
+			<LoadingSpinner size="lg" />
+			<span class="text-muted text-sm">{$t`Analyzing source material...`}</span>
+		</VStack>
+	</div>
+{:else}
+	<div class="h-full w-full p-3">
+		{#if negatives.length > 0 || warnings.length > 0 || positives.length > 0}
+			<BentoGrid cols={3} density="comfortable" rows="auto 1fr auto" class="h-full">
+				<!-- Summary Cards Row -->
+				<BentoItem glass class="relative flex max-h-20 items-center justify-center overflow-hidden">
+					<div class="relative z-10 flex w-full items-center justify-between px-2">
+						<HStack gap="md" align="center">
+							<div
+								class="bg-danger/10 border-danger/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border"
+							>
+								<IconCircleMinus size={20} class="text-danger" />
+							</div>
+							<VStack gap="none">
+								<span class="text-muted text-xs font-medium tracking-wide uppercase"
+									>{$t`Issues`}</span
+								>
+								<div class="text-danger text-2xl leading-tight font-bold">{negatives.length}</div>
+							</VStack>
+						</HStack>
+					</div>
+					{#if negatives.length > 0}
+						<div
+							class="from-danger/5 absolute inset-0 bg-linear-to-br to-transparent opacity-50"
+						></div>
+					{/if}
+				</BentoItem>
+
+				<BentoItem glass class="relative flex max-h-20 items-center justify-center overflow-hidden">
+					<div class="relative z-10 flex w-full items-center justify-between px-2">
+						<HStack gap="md" align="center">
+							<div
+								class="bg-warning/10 border-warning/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border"
+							>
+								<IconExclamationCircle size={20} class="text-warning" />
+							</div>
+							<VStack gap="none">
+								<span class="text-muted text-xs font-medium tracking-wide uppercase"
+									>{$t`Warnings`}</span
+								>
+								<div class="text-warning text-2xl leading-tight font-bold">{warnings.length}</div>
+							</VStack>
+						</HStack>
+					</div>
+					{#if warnings.length > 0}
+						<div
+							class="from-warning/5 absolute inset-0 bg-linear-to-br to-transparent opacity-50"
+						></div>
+					{/if}
+				</BentoItem>
+
+				<BentoItem glass class="relative flex max-h-20 items-center justify-center overflow-hidden">
+					<div class="relative z-10 flex w-full items-center justify-between px-2">
+						<HStack gap="md" align="center">
+							<div
+								class="bg-success/10 border-success/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border"
+							>
+								<IconCirclePlus size={20} class="text-success" />
+							</div>
+							<VStack gap="none">
+								<span class="text-muted text-xs font-medium tracking-wide uppercase"
+									>{$t`Good`}</span
+								>
+								<div class="text-success text-2xl leading-tight font-bold">{positives.length}</div>
+							</VStack>
+						</HStack>
+					</div>
+					{#if positives.length > 0}
+						<div
+							class="from-success/5 absolute inset-0 bg-linear-to-br to-transparent opacity-50"
+						></div>
+					{/if}
+				</BentoItem>
+
+				<!-- Detailed Results Section -->
+				<BentoItem
+					colspan={3}
+					glass
+					class="row-span-2 flex min-h-0 flex-col overflow-hidden"
+					onclick={() => {}}
+					onfocus={() => (analysisDetailsBentoFocused = true)}
+					onblur={() => (analysisDetailsBentoFocused = false)}
+					data-keyhint={`arrowup;${$t`Scroll details`}|arrowdown;${$t`Scroll details`}`}
+				>
+					<HStack gap="sm" align="center" class="text-muted mb-4 shrink-0">
+						<IconChecklist size={20} />
+						<span class="text-sm font-bold tracking-wider uppercase">{$t`Analysis Details`}</span>
+						<Badge style="subtle" class="ml-auto">
+							{negatives.length + warnings.length + positives.length}
+						</Badge>
+					</HStack>
+
+					<div
+						bind:this={analysisDetailsContainer}
+						class="custom-scrollbar flex-1 space-y-6 overflow-y-auto pr-2"
+					>
+						<!-- Issues Section -->
+						{#if negatives.length > 0}
+							<div>
+								<HStack gap="sm" align="center" class="mb-3">
+									<IconCircleMinus size={18} class="text-danger" />
+									<span class="font-semibold">{$t`Critical Issues`}</span>
+									<Badge variant="danger" class="ml-auto text-xs">{negatives.length}</Badge>
+								</HStack>
+
+								<ul class="space-y-2">
+									{#each negatives as negative, i (i)}
+										<li
+											class="bg-danger/5 hover:bg-danger/10 group flex gap-3 rounded-lg p-3 transition-colors"
+										>
+											<div
+												class="bg-danger mt-1 h-1.5 w-1.5 shrink-0 rounded-full opacity-60"
+											></div>
+											<span class="text-sm leading-relaxed">{negative}</span>
+										</li>
+									{/each}
+								</ul>
+							</div>
+						{/if}
+
+						<!-- Warnings Section -->
+						{#if warnings.length > 0}
+							<div>
+								<HStack gap="sm" align="center" class="mb-3">
+									<IconExclamationCircle size={18} class="text-warning" />
+									<span class="font-semibold">{$t`Warnings`}</span>
+									<Badge variant="warning" class="ml-auto text-xs">{warnings.length}</Badge>
+								</HStack>
+
+								<ul class="space-y-2">
+									{#each warnings as warning, i (i)}
+										<li
+											class="bg-warning/5 hover:bg-warning/10 group flex gap-3 rounded-lg p-3 transition-colors"
+										>
+											<div
+												class="bg-warning mt-1 h-1.5 w-1.5 shrink-0 rounded-full opacity-60"
+											></div>
+											<span class="text-sm leading-relaxed">{warning}</span>
+										</li>
+									{/each}
+								</ul>
+							</div>
+						{/if}
+
+						<!-- Positives Section -->
+						{#if positives.length > 0}
+							<div>
+								<HStack gap="sm" align="center" class="mb-3">
+									<IconCirclePlus size={18} class="text-success" />
+									<span class="font-semibold">{$t`Quality Indicators`}</span>
+									<Badge variant="success" class="ml-auto text-xs">{positives.length}</Badge>
+								</HStack>
+
+								<ul class="space-y-2">
+									{#each positives as positive, i (i)}
+										<li
+											class="bg-success/5 hover:bg-success/10 group flex gap-3 rounded-lg p-3 transition-colors"
+										>
+											<div
+												class="bg-success mt-1 h-1.5 w-1.5 shrink-0 rounded-full opacity-60"
+											></div>
+											<span class="text-sm leading-relaxed">{positive}</span>
+										</li>
+									{/each}
+								</ul>
+							</div>
+						{/if}
+					</div>
+				</BentoItem>
+
+				<!-- Error Block at Bottom -->
+				{#if negatives.length > 0}
+					<BentoItem colspan={3} variant="danger" class="max-h-24">
+						<HStack gap="sm" align="center">
+							<div class="bg-danger/20 flex h-10 w-10 items-center justify-center rounded-full">
+								<IconAlertTriangle size={20} class="text-danger" />
+							</div>
+							<VStack gap="xs" class="flex-1">
+								<p class="font-semibold">{$t`Action Required`}</p>
+								<p class="text-sm opacity-90">
+									{$t`Please resolve the critical issues above before continuing with the conversion process.`}
+								</p>
+							</VStack>
+						</HStack>
+					</BentoItem>
+				{/if}
+			</BentoGrid>
+		{:else}
+			<BentoGrid cols={1} density="comfortable" class="h-full">
+				<BentoItem glass class="flex items-center justify-center">
+					<VStack gap="md" align="center" class="text-center">
+						<div
+							class="bg-info/10 border-info/20 flex h-20 w-20 items-center justify-center rounded-full border-2"
+						>
+							<IconAlertTriangle size={40} class="text-info" />
+						</div>
+						<VStack gap="sm" align="center">
+							<h3 class="text-lg font-semibold">{$t`No Analysis Results`}</h3>
+							<p class="text-muted max-w-md text-sm">
+								{$t`No analysis results found. There might be an issue with the source material or the analysis process.`}
+							</p>
+						</VStack>
+					</VStack>
+				</BentoItem>
+			</BentoGrid>
+		{/if}
 	</div>
 {/if}
 
-<div class="flex h-full w-full flex-col p-4" style="max-height: calc(100vh - 8rem)">
-	{#if !isLoading}
-		<div class="card">
-			<div class="card-header">
-				<h3 class="font-semibold">
-					{$t`Analysis Results`}
-				</h3>
-			</div>
-			<div class="card-body">
-				<div
-					class="results-container !focus:outline-none"
-					bind:this={resultsContainer}
-					tabindex="0"
-					role="tab"
-					style="max-height: calc(100vh - 14rem)"
-				>
-					{#if negatives.length > 0 || warnings.length > 0 || positives.length > 0}
-						<div class="space-y-6">
-							{#if negatives.length > 0}
-								<div>
-									<h3 class="text-error mb-3 flex items-center text-lg font-semibold">
-										<IconCircleMinus size={20} class="mr-2" />
-										{$t`Issues Found`}
-									</h3>
-									<div class="space-y-2">
-										{#each negatives as negative, i (i)}
-											<div
-												class="list-row bg-error/10 border-error items-center rounded border-l-3 px-4 py-3"
-												style="--index: {i}"
-											>
-												<span class="list-col-grow text-md">{negative}</span>
-											</div>
-										{/each}
-									</div>
-								</div>
-							{/if}
-
-							{#if warnings.length > 0}
-								<div>
-									<h3 class="text-warning mb-3 flex items-center text-lg font-semibold">
-										<IconExclamationCircle size={20} class="mr-2" />
-										{$t`Warnings`}
-									</h3>
-									<div class="space-y-2">
-										{#each warnings as warning, i (i)}
-											<div
-												class="list-row bg-warning/10 border-warning items-center rounded border-l-3 px-4 py-3"
-												style="--index: {i + negatives.length}"
-											>
-												<span class="list-col-grow text-md">{warning}</span>
-											</div>
-										{/each}
-									</div>
-								</div>
-							{/if}
-
-							{#if positives.length > 0}
-								<div>
-									<h3 class="text-success mb-3 flex items-center text-lg font-semibold">
-										<IconCirclePlus size={20} class="mr-2" />
-										{$t`Good Points`}
-									</h3>
-									<div class="space-y-2">
-										{#each positives as positive, i (i)}
-											<div
-												class="list-row bg-success/10 border-success items-center rounded border-l-3 px-4 py-3"
-												style="--index: {i + negatives.length + warnings.length}"
-											>
-												<span class="list-col-grow text-md">{positive}</span>
-											</div>
-										{/each}
-									</div>
-								</div>
-							{/if}
-						</div>
-					{:else}
-						<div class="alert alert-info">
-							<p>
-								{$t`No analysis results found. There might be an issue with the source material.`}
-							</p>
-						</div>
-					{/if}
-				</div>
-
-				{#if negatives.length > 0}
-					<div class="alert alert-error mt-6">
-						<p class="flex items-center">
-							<IconCircleMinus size={20} class="mr-2" />
-							{$t`Please resolve these issues before continuing.`}
-						</p>
-					</div>
-				{/if}
-			</div>
-		</div>
-	{/if}
-</div>
-
 <style>
-	.results-container {
-		overflow-y: auto;
-		padding-right: 0.5rem;
-		outline: none;
-		scroll-behavior: smooth;
+	/* Custom scrollbar */
+	.custom-scrollbar {
+		scrollbar-width: thin;
+		scrollbar-color: var(--waku-surface-2) transparent;
 	}
 
-	/* Forcefully remove all focus indicators */
-	.results-container:focus {
-		outline: none !important;
-		box-shadow: none !important;
-		-webkit-box-shadow: none !important;
-		-moz-box-shadow: none !important;
+	.custom-scrollbar::-webkit-scrollbar {
+		width: 8px;
 	}
 
-	.list-row {
-		display: flex;
-		align-items: center;
+	.custom-scrollbar::-webkit-scrollbar-track {
+		background: transparent;
 	}
 
-	.list-col-grow {
-		flex-grow: 1;
+	.custom-scrollbar::-webkit-scrollbar-thumb {
+		background-color: var(--waku-surface-2);
+		border-radius: 4px;
+		transition: background-color 0.2s;
 	}
 
-	/* Border color styles */
-	.border-l-3 {
-		border-left-width: 3px;
-		border-left-style: solid;
+	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+		background-color: var(--waku-surface-1);
 	}
 </style>

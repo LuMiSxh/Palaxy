@@ -74,9 +74,6 @@ pub enum Error {
     /// Error for unsupported operations or formats
     #[error("Unsupported: {0}")]
     Unsupported(String),
-    /// Error for resources that couldn't be found
-    #[error("Not found: {0}")]
-    NotFound(String),
 }
 
 /// Implementation for serializing Error types to strings
@@ -175,15 +172,6 @@ pub fn get_file_info(image_path: &PathBuf) -> Result<(&'static str, &'static str
         Some("avif") => Ok(("avif", "image/avif")),
         _ => Err(Error::Unsupported(format!("Image format {:#?}", path))),
     }
-}
-
-/// Status information about the synchronization service
-#[derive(Serialize, Deserialize, Type, Debug, Clone)]
-pub struct SyncStatus {
-    /// Seconds until the next sync operation
-    pub seconds_until_next_sync: Option<u64>,
-    /// Minutes until the next sync operation
-    pub minutes_until_next_sync: Option<u64>,
 }
 
 /// Path information for application log files

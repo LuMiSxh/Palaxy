@@ -19,7 +19,7 @@ Convert your manga directories into CBZ or EPUB formats with intelligent auto-de
 
 ### Intelligent Auto-Detection
 
-![Auto-Detection](./assets/ui-auto-detection.png)
+![Auto-Detection](.github/assets/ui-auto-detection.png)
 
 Palaxy automatically analyzes your manga directories and provides smart recommendations:
 
@@ -74,7 +74,7 @@ Palaxy automatically analyzes your manga directories and provides smart recommen
 
 **Live Progress Tracking**
 
-![Conversion Progress](./assets/ui-conversion-progress.png)
+![Conversion Progress](.github/assets/ui-conversion-progress.png)
 
 Real-time conversion monitoring with:
 
@@ -85,13 +85,13 @@ Real-time conversion monitoring with:
 
 **Theme Support**
 
-![Light and Dark Mode](./assets/ui-theme.png)
+![Light and Dark Mode](.github/assets/ui-theme.png)
 
 Choose between light mode, dark mode, or system default with seamless switching.
 
 **Internationalization**
 
-![Language Support](./assets/ui-i18n.png)
+![Language Support](.github/assets/ui-i18n.png)
 
 Currently available in English and German, with more languages coming soon.
 

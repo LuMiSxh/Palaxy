@@ -107,7 +107,7 @@
 
 				<!-- Character Art Decoration with Rotation Effect -->
 				<img
-					src="/holo/watame.png"
+					src="/watame.png"
 					alt="Character"
 					class="pointer-events-none absolute -right-6 -bottom-10 h-[125%] object-contain opacity-15 grayscale transition-all
                            duration-500 group-focus-within:scale-105 group-focus-within:rotate-3 group-focus-within:opacity-50

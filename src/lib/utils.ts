@@ -1,7 +1,7 @@
 import { SupportedLanguages, Theme } from '$types/appdata';
 import { browser } from '$app/environment';
 import type { Error, Result } from '$types';
-import { addToast } from '$states/toast.svelte';
+import { toast } from 'waku/components';
 import { gt, locale } from 'svelte-i18n-lingui';
 
 const LIGHT = 'alya';
@@ -70,7 +70,11 @@ export async function wrapper<T>(input: Promise<Result<T, Error>>): Promise<T | 
 		message = (output.error as { data: string }).data;
 	}
 
-	addToast(`${output.error.type ? output.error.type + ': ' : ''}${message}`, 'error', 3600);
+	toast({
+		title: `${output.error.type ? output.error.type + ': ' : ''}${message}`,
+		type: 'error',
+		timeout: 3600,
+	});
 	return null;
 }
 

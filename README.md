@@ -1,51 +1,242 @@
 ![Palaxy](./assets/palaxy-banner.png)
 
-> A lightweight and fast manga converter for Windows, Linux and MacOS.
+<div align="center">
 
-# Installation
+**A blazingly fast manga converter for Windows, Linux and MacOS**
 
-You can install Palaxy by going to the [releases page](https://github.com/LuMiSxh/Palaxy/releases) and downloading the latest version for your
-operating system. Please keep in mind that Palaxy is still in development and may have bugs. An
-automatic updater is planned for the future but is not available at the moment, you therefore have
-to manually check for updates on the release page.
+Convert your manga directories into CBZ or EPUB formats with intelligent auto-detection and parallel processing.
 
-![Separator](./assets/palaxy-separator.png)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/github/v/release/LuMiSxh/Palaxy)](https://github.com/LuMiSxh/Palaxy/releases)
 
-# Features
+[Features](#features) • [Installation](#installation) • [Quick Start](#quick-start) • [Development](#development)
 
-## Light and Dark Mode
+</div>
 
-Palaxy comes with a light and dark mode (as well as system default), which you can switch between using the settings
-menu.
+---
+
+## Features
+
+### Intelligent Auto-Detection
+
+![Auto-Detection](./assets/ui-auto-detection.png)
+
+Palaxy automatically analyzes your manga directories and provides smart recommendations:
+
+- **Pattern Recognition**: Detects volume and chapter structure using `VOL-CH/NUM.ext` format (e.g., `001-023/01.png` = Volume 1, Chapter 23, Page 1)
+- **Cover Detection**: Identifies cover pages using grayscale analysis
+- **Format Validation**: Ensures all images are properly formatted
+- **Smart Bundling**: Recommends optimal bundling strategies (by-chapter, by-volume, or all-in-one)
+
+### Multiple Output Formats
+
+**CBZ (Comic Book Archive)**
+
+- Optimized ZIP compression with stored mode for already-compressed images
+- Perfect for comic readers and media servers (Komga, Kavita)
+- Most common use case (90% of conversions)
+
+**EPUB**
+
+- Standards-compliant EPUB 3.0
+- Ideal for e-readers (Kindle, Kobo, etc.)
+- Full metadata support
+
+### Image Encoding Options
+
+**Original** (Recommended)
+
+- No re-encoding, preserves original quality
+- Fastest conversion speed
+- Best when source images are already optimized
+
+**AVIF**
+
+- Modern format with superior compression (up to 4x smaller files)
+- Auto-tuning based on image size and characteristics
+- Grayscale detection for optimal settings
+- Significantly slower processing
+
+**WebP**
+
+- Good compression with reasonable speed
+- Wide compatibility across devices
+- Balanced option for e-readers
+
+### Customization
+
+- **Metadata Editor**: Add title, author, publisher, and description
+- **Output Directory**: Choose where to save converted files
+- **Bundle Strategies**: Flexible grouping options (by-chapter, by-volume, all-in-one)
+- **Volume Boundaries**: Manually adjust auto-detected volumes if needed
+
+### User Interface
+
+**Live Progress Tracking**
+
+![Conversion Progress](./assets/ui-conversion-progress.png)
+
+Real-time conversion monitoring with:
+
+- Large percentage display and animated spinner
+- Visual progress bar
+- Live statistics: Completed, Processing, and Remaining volumes
+- Smooth animations and transitions
+
+**Theme Support**
 
 ![Light and Dark Mode](./assets/ui-theme.png)
 
-## i18n Support
+Choose between light mode, dark mode, or system default with seamless switching.
 
-Palaxy supports multiple languages and is currently available in English and German.
-You can change the language via the ActionHub.
+**Internationalization**
 
-![i18n Support](./assets/ui-i18n.png)
+![Language Support](./assets/ui-i18n.png)
 
-## Customizable Output / Metadata
+Currently available in English and German, with more languages coming soon.
 
-Palaxy allows you to customize the output of your manga. You can choose between different metadata options and
-customize the output directory.
+**Additional Features**
 
-![Customizable Output](./assets/ui-metadata.png)
+- **Wizard-based workflow**: 8-step guided process from import to export
+- **Drag & drop**: Easy file import
+- **Keyboard shortcuts**: Full keyboard navigation support
 
-## Blazingly fast
+---
 
-Palaxy is built with speed in mind.
-It uses [Tauri](https://v2.tauri.app) as backend to leverage the power of Rust and asynchronous programming.
-The frontend is built with [SvelteKit](https://kit.svelte.dev) and [TailwindCSS](https://tailwindcss.com) to provide a
-fast, smooth and responsive user interface that is pleasant to use.
+## Installation
 
-![Blazingly Fast](./assets/ui-fast.png)
+Visit the [releases page](https://github.com/LuMiSxh/Palaxy/releases) and download the latest version for your operating system:
 
-![Separator](./assets/palaxy-separator.png)
+- **Windows**: `Palaxy_x.x.x_x64_en-US.msi` or `Palaxy_x.x.x_x64-setup.exe`
+- **macOS Intel**: `Palaxy_x.x.x_x64.dmg`
+- **macOS Apple Silicon**: `Palaxy_x.x.x_aarch64.dmg`
+- **Linux**: `Palaxy_x.x.x_amd64.AppImage`, `.deb`, or `.rpm`
 
-# Development
+### System Requirements
 
-This project is still in development and is not yet ready for everyday use. If you want to contribute, feel free to
-fork the repository and create a pull request. You can also open an issue if you find a bug or have a feature request.
+- **OS**: Windows 10+, macOS 11+, or modern Linux distribution
+- **RAM**: 512MB minimum, 2GB recommended for large conversions
+- **Disk**: Temporary space equal to largest volume size
+
+**Note**: An automatic updater is planned but not yet available. Check the releases page for updates.
+
+---
+
+## Quick Start
+
+### HakuNeko Workflow
+
+Palaxy is optimized for manga downloaded with HakuNeko:
+
+**Step 1: Download manga using HakuNeko**
+
+Typical directory structure after download:
+
+```
+MangaTitle/
+├── 001-001/
+│   ├── 01.png
+│   ├── 02.png
+│   └── ...
+├── 001-002/
+│   ├── 01.png
+│   └── ...
+├── 002-024/
+│   └── ...
+```
+
+Format: `VOL-CH/NUM.ext` where:
+
+- `001-001` = Volume 1, Chapter 1
+- `002-024` = Volume 2, Chapter 24
+- `01.png` = Page 1
+
+**Step 2: Import into Palaxy**
+
+- Launch Palaxy
+- Drag and drop the manga folder
+- Automatic scanning begins (parallel directory scan, max 64 concurrent)
+
+**Step 3: Review auto-detection**
+
+- Check detected volumes and chapters
+- Adjust volume boundaries if needed
+- Verify suggested bundle strategy
+
+**Step 4: Configure output**
+
+- Choose format: CBZ or EPUB
+- Select encoding: Original, AVIF, or WebP
+- Set output directory
+- Edit metadata (optional)
+
+**Step 5: Convert**
+
+- Start conversion
+- Monitor live progress with detailed statistics
+- Find converted files in output directory
+
+### Common Use Cases
+
+| Scenario          | Format | Encoding      | Notes                                 |
+| ----------------- | ------ | ------------- | ------------------------------------- |
+| Comic reader apps | CBZ    | Original      | Fastest, preserves quality            |
+| Media servers     | CBZ    | Original      | Standard workflow                     |
+| E-readers         | EPUB   | Original/WebP | Best compatibility                    |
+| Archival/Storage  | CBZ    | AVIF          | Smallest file size (up to 4x smaller) |
+
+---
+
+## Development
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) 22+
+- [pnpm](https://pnpm.io/) (required)
+- [Rust](https://www.rust-lang.org/) 1.70+
+- [Tauri Prerequisites](https://v2.tauri.app/start/prerequisites/) for your OS
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/LuMiSxh/Palaxy.git
+cd Palaxy
+
+# Install dependencies
+pnpm install
+
+# Run in development mode
+pnpm run tauri dev
+
+# Build for production
+pnpm run tauri build
+```
+
+### Contributing
+
+Contributions, bug reports, and feature requests are welcome! Feel free to [open an issue](https://github.com/LuMiSxh/Palaxy/issues) or submit a pull request.
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## Acknowledgments
+
+- Built with [Tauri](https://tauri.app)
+- Optimized for the [HakuNeko](https://hakuneko.download/) workflow
+- Inspired by the manga community
+
+---
+
+<div align="center">
+
+**Made with passion by LuMiSxh**
+
+[GitHub](https://github.com/LuMiSxh/Palaxy) • [Issues](https://github.com/LuMiSxh/Palaxy/issues) • [Releases](https://github.com/LuMiSxh/Palaxy/releases)
+
+</div>

@@ -262,7 +262,7 @@
 				{:else}
 					<div class="text-muted flex flex-col items-center gap-2 p-8 text-center">
 						<IconSearch size={32} class="opacity-20" />
-						<p>No commands found</p>
+						<p>{$t`No commands found`}</p>
 					</div>
 				{/if}
 			</ul>

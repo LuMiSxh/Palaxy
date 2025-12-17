@@ -185,7 +185,7 @@
 
 						<div>
 							<div class="text-muted mb-1 text-xs">{$t`Image Format`}</div>
-							<div class="text-sm">{convStateData?.image_format ?? 'None'}</div>
+							<div class="text-sm">{convStateData?.image_format ?? $t`None`}</div>
 						</div>
 
 						<div>

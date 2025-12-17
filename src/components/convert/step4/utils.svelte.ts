@@ -1,5 +1,5 @@
 import type { BundleResponse } from '$types';
-import { addToast } from '$states/toast.svelte';
+import { toast } from 'waku/components';
 import { gt } from 'svelte-i18n-lingui';
 import convState from '$states/converter.svelte';
 
@@ -28,8 +28,8 @@ export function checkChapterLimits(): void {
 		const totalUsed = getTotalChapters();
 
 		if (totalUsed > step4State.result.total_chapters) {
-			addToast(
-				gt({
+			toast({
+				title: gt({
 					message:
 						'The total number of chapters {usedNumber} used exceeds the detected number of chapters {detectedNumber}',
 					values: {
@@ -37,8 +37,8 @@ export function checkChapterLimits(): void {
 						detectedNumber: step4State.result.total_chapters,
 					},
 				}),
-				'warning'
-			);
+				type: 'warning',
+			});
 		}
 	}
 }

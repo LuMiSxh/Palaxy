@@ -17,6 +17,8 @@
 	import { keyboard } from '$lib/keyboard';
 	import { useConversionProgress } from '$lib/useConversionProgress.svelte';
 	import Confetti from '$components/Confetti.svelte';
+	import { stepMachine } from '$states/stepMachine.svelte';
+	import convState from '$states/converter.svelte';
 
 	// Waku Imports
 	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
@@ -52,19 +54,19 @@
 			}
 			keyHint.addKey('enter', $t`Convert another manga`);
 
-			// Focus the button after completion
+			// Focus the action BentoItem after completion
 			await tick();
-			if (completionContainer) {
-				const button = completionContainer.querySelector('button');
-				if (button) {
-					button.focus();
-				}
+			const actionItem = document.querySelector('[data-id="action-bentoitem"]');
+			if (actionItem) {
+				(actionItem as HTMLElement).focus();
 			}
 		}
 	}
 
 	function resetConversion() {
 		conversionProgress.reset();
+		convState.reset();
+		stepMachine.reset();
 		isComplete = false;
 		showConfetti = false;
 	}
@@ -261,7 +263,7 @@
 				{/if}
 
 				<!-- Action Button -->
-				<BentoItem colspan={3} glass>
+				<BentoItem data-id="action-bentoitem" colspan={3} glass tabindex={0}>
 					<Button
 						variant="primary"
 						size="lg"

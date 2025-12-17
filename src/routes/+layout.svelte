@@ -10,7 +10,6 @@
 	import ActionHub from '$components/ActionHub.svelte';
 	import { Badge, Toast } from 'waku/components';
 	import { IconHome, IconSettings, IconTransform, IconCommand } from '@tabler/icons-svelte';
-	import Dialog from '$components/Dialog.svelte';
 	import { keyHint, mountGlobalKeyHintListener } from '$states/keyhint.svelte';
 	import KeyHint from '$components/KeyHint.svelte';
 
@@ -67,6 +66,25 @@
 		} else {
 			appData.set(defaultAppData);
 		}
+
+		// When in prod build (!dev), forbid the use of the context menu and reload shortcuts.
+		if (!dev) {
+			document.addEventListener('contextmenu', (e) => e.preventDefault());
+			document.addEventListener('keydown', (e) => {
+				if (e.ctrlKey && (e.key === 'r' || e.key === 'F5' || e.key === 'p')) {
+					e.preventDefault();
+				}
+			});
+		} else {
+			// In development, handle Ctrl+R to prevent double reloads caused by
+			// a conflict between the browser's default action and Vite's HMR.
+			document.addEventListener('keydown', (e) => {
+				if (e.ctrlKey && e.key === 'r') {
+					e.preventDefault();
+					window.location.reload();
+				}
+			});
+		}
 	}
 
 	// Handle Theme Changes via Waku/Tailwind classes
@@ -84,7 +102,6 @@
 </script>
 
 <Toast />
-<Dialog />
 
 {#if showPalette}
 	<ActionHub {commands} bind:showPalette />

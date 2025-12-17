@@ -23,21 +23,21 @@
 		$appData.autoPop.enabled ? $appData.autoPop.converter.volumeSeparator : ' | '
 	);
 
-	const formatOptions = [
+	let formatOptions = $derived([
 		{ value: 'CBZ', label: 'CBZ' },
 		{ value: 'EPUB', label: 'EPUB' },
-	];
+	]);
 
-	const directionOptions = [
+	let directionOptions = $derived([
 		{ value: 'Left to Right', label: $t`Left to Right` },
 		{ value: 'Right to Left', label: $t`Right to Left` },
-	];
+	]);
 
-	const imageFormatOptions = [
+	let imageFormatOptions = $derived([
 		{ value: 'None', label: $t`Original (No Conversion)` },
 		{ value: 'WebP', label: 'WebP' },
 		{ value: 'AVIF', label: 'AVIF' },
-	];
+	]);
 
 	onMount(() => {
 		return keyHint.register([['tab', $t`Navigate fields`]]);

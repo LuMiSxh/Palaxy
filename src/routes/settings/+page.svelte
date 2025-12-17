@@ -3,9 +3,9 @@
 	import { onMount } from 'svelte';
 	import { appData } from '$stores/appdata';
 	import { Theme, SupportedLanguages, defaultAppData } from '$types/appdata';
-	import { addToast } from '$states/toast.svelte';
+	import { toast } from 'waku/components';
 	import { keyHint } from '$states/keyhint.svelte';
-	import { openDialog } from '$states/dialog.svelte';
+
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { getName, getVersion, getTauriVersion } from '@tauri-apps/api/app';
 	import { platform, arch, version } from '@tauri-apps/plugin-os';
@@ -14,7 +14,7 @@
 
 	// Waku Imports
 	import { VStack, BentoGrid, BentoItem, HStack } from 'waku/layout';
-	import { Toggle, Select, LoadingSpinner, Input } from 'waku/components';
+	import { Toggle, Select, LoadingSpinner, Input, Modal, Button } from 'waku/components';
 	import {
 		IconBrush,
 		IconKeyboard,
@@ -28,6 +28,9 @@
 		IconFolderPlus,
 		IconSeparator,
 	} from '@tabler/icons-svelte';
+
+	// Modal State
+	let showResetModal = $state(false);
 
 	// System Info State
 	let sysInfo = $state({
@@ -71,35 +74,38 @@
 	}
 
 	function handleReset() {
-		openDialog({
-			title: $t`Confirmation`,
-			content: $t`Are you sure you want to reset all settings to their default values?`,
-			onConfirm: () => {
-				appData.set(defaultAppData);
-				addToast($t`Settings reset successfully`, 'success');
-			},
-			onCancel: () => addToast($t`Reset canceled`, 'info'),
-		});
+		showResetModal = true;
 	}
 
-	const themeOptions = [
+	function confirmReset() {
+		appData.set(defaultAppData);
+		toast({ title: $t`Settings reset successfully`, type: 'success' });
+		showResetModal = false;
+	}
+
+	function cancelReset() {
+		toast({ title: $t`Reset canceled`, type: 'info' });
+		showResetModal = false;
+	}
+
+	let themeOptions = $derived([
 		{ value: Theme.System, label: $t`System` },
 		{ value: Theme.Light, label: $t`Light` },
 		{ value: Theme.Dark, label: $t`Dark` },
-	];
-	const langOptions = [
+	]);
+	let langOptions = $derived([
 		{ value: SupportedLanguages.English, label: $t`English` },
 		{ value: SupportedLanguages.German, label: $t`German` },
-	];
-	const formatOptions = [
+	]);
+	let formatOptions = $derived([
 		{ value: 'CBZ', label: 'CBZ' },
 		{ value: 'EPUB', label: 'EPUB' },
-	];
-	const imageOptions = [
+	]);
+	let imageOptions = $derived([
 		{ value: 'None', label: $t`Original (No Conversion)` },
 		{ value: 'WebP', label: 'WebP' },
 		{ value: 'AVIF', label: 'AVIF' },
-	];
+	]);
 </script>
 
 <div class="h-full w-full overflow-y-auto p-3">
@@ -502,3 +508,22 @@
 		</BentoGrid>
 	</VStack>
 </div>
+
+<Modal bind:open={showResetModal} size="sm">
+	<VStack gap="md" class="p-6">
+		<VStack gap="xs">
+			<h2 class="text-lg font-semibold">{$t`Confirmation`}</h2>
+			<p class="text-muted text-sm">
+				{$t`Are you sure you want to reset all settings to their default values?`}
+			</p>
+		</VStack>
+		<HStack gap="sm" justify="end">
+			<Button variant="neutral" style="subtle" onclick={cancelReset}>
+				{$t`Cancel`}
+			</Button>
+			<Button variant="danger" onclick={confirmReset}>
+				{$t`Reset`}
+			</Button>
+		</HStack>
+	</VStack>
+</Modal>

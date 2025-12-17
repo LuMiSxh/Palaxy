@@ -2,7 +2,7 @@
 	import { IconFileZip, IconRefresh, IconSettings } from '@tabler/icons-svelte';
 	import convState from '$states/converter.svelte';
 	import { commands, type BundleFlag } from '$types';
-	import { addToast } from '$states/toast.svelte';
+	import { toast } from 'waku/components';
 	import { t } from 'svelte-i18n-lingui';
 	import { wrapper } from '$lib/utils';
 	import { step4State } from '$components/convert/step4/utils.svelte';
@@ -68,12 +68,12 @@
 			convState.chapterSizes = result.payload.chapter_sizes ?? [];
 
 			if (convState.chapterSizes.length === 0 && convState.bundle !== 'MANUAL') {
-				addToast($t`No volumes detected. Switching to manual bundling.`, 'warning');
+				toast({ title: $t`No volumes detected. Switching to manual bundling.`, type: 'warning' });
 				bundleFlag = 'MANUAL';
 				convState.bundle = 'MANUAL';
 			}
 		} else {
-			addToast($t`Failed to run bundler. Please try again.`, 'error');
+			toast({ title: $t`Failed to run bundler. Please try again.`, type: 'error' });
 		}
 	}
 

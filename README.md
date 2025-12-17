@@ -1,6 +1,6 @@
-![Palaxy](./assets/palaxy-banner.png)
-
 <div align="center">
+
+# Palaxy
 
 **A blazingly fast manga converter for Windows, Linux and MacOS**
 

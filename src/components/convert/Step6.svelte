@@ -1,16 +1,15 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import { IconBook } from '@tabler/icons-svelte';
 	import { t } from 'svelte-i18n-lingui';
 	import { commands } from '$types';
 	import { wrapper } from '$lib/utils';
 	import { keyHint } from '$states/keyhint.svelte';
-	import LoadingSpinner from '$components/LoadingSpinner.svelte';
 	import Chapter from '$components/convert/step5/Chapter.svelte';
 
 	// Waku Imports
 	import { VStack, BentoGrid, BentoItem, HStack } from 'waku/layout';
-	import { Badge } from 'waku/components';
+	import { Badge, LoadingSpinner } from 'waku/components';
 
 	let images: string[][] = $state([]);
 	let selectedImages: (string | null)[][] = $state([]);
@@ -116,19 +115,29 @@
 		setTimeout(() => (isGlobalLoading = false), loadTime);
 	});
 
-	onDestroy(async () => {
-		// Unregister key hint
-		if (unregisterKeyHint) unregisterKeyHint();
+	// Save edited data immediately when selectedImages changes
+	$effect(() => {
+		if (selectedImages.length > 0) {
+			const filteredImages: string[][] = selectedImages.map((row) =>
+				row.filter((image): image is string => image !== null)
+			);
+			wrapper(commands.convStateSet({ EditedData: filteredImages }));
+		}
+	});
 
-		// Filter out null entries and save selected images
-		const filteredImages = selectedImages.map((row) => row.filter((image) => image !== null));
-		await wrapper(commands.convStateSet({ EditedData: filteredImages }));
+	onMount(() => {
+		return () => {
+			// Unregister key hint on cleanup
+			if (unregisterKeyHint) unregisterKeyHint();
+		};
 	});
 </script>
 
 {#if isGlobalLoading}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-		<LoadingSpinner text={$t`Loading Images...`} />
+	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+		<div class="bg-surface-dark/90 rounded-xl p-8 shadow-2xl">
+			<LoadingSpinner text={$t`Loading Images...`} />
+		</div>
 	</div>
 {/if}
 

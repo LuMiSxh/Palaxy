@@ -5,7 +5,7 @@
 	import { t } from 'svelte-i18n-lingui';
 	import { IconFolder, IconFile, IconFolderPlus, IconCheck } from '@tabler/icons-svelte';
 	import { open } from '@tauri-apps/plugin-dialog';
-	import { onDestroy, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import { truncatePath, wrapper } from '$lib/utils';
 	import { keyHint } from '$states/keyhint.svelte';
 	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
@@ -47,18 +47,28 @@
 		convState.target = targetLocation;
 	});
 
-	onDestroy(async () => {
-		// Set Tauri AppState
-		await wrapper(commands.convStateSet({ Name: name ?? '' }));
-		await wrapper(commands.convStateSet({ CreateDirectory: createFolder }));
-		await wrapper(commands.convStateSet({ Target: targetLocation }));
+	// Save state immediately when values change instead of in onDestroy
+	$effect(() => {
+		if (name !== null && name !== undefined) {
+			wrapper(commands.convStateSet({ Name: name ?? '' }));
+		}
+	});
+
+	$effect(() => {
+		wrapper(commands.convStateSet({ CreateDirectory: createFolder }));
+	});
+
+	$effect(() => {
+		if (targetLocation !== null && targetLocation !== undefined) {
+			wrapper(commands.convStateSet({ Target: targetLocation }));
+		}
 	});
 </script>
 
 <div class="h-full w-full p-3">
 	<BentoGrid cols={2} density="comfortable" rows="auto auto">
 		<!-- Project Name -->
-		<BentoItem glass padding="sm">
+		<BentoItem glass>
 			<HStack gap="sm" align="center" class="text-muted mb-3">
 				<IconFile size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Project Name`}</span>
@@ -85,7 +95,6 @@
 		<!-- Create Folder Toggle -->
 		<BentoItem
 			glass
-			padding="sm"
 			onclick={() => (createFolder = !createFolder)}
 			data-keyhint={`enter;${$t`Toggle`}`}
 		>

@@ -148,7 +148,6 @@ stepRegistry.register({
 	icon: IconHandStop,
 	component: Step8,
 
-	hidden: true, // Not shown in step list initially
 	skipInProgress: false,
 
 	canGoBack: () => false, // Can't go back during conversion

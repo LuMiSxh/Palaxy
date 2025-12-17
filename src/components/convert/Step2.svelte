@@ -80,11 +80,7 @@
 		{#if negatives.length > 0 || warnings.length > 0 || positives.length > 0}
 			<BentoGrid cols={3} density="comfortable" rows="auto 1fr auto" class="h-full">
 				<!-- Summary Cards Row -->
-				<BentoItem
-					glass
-					padding="sm"
-					class="relative flex max-h-20 items-center justify-center overflow-hidden"
-				>
+				<BentoItem glass class="relative flex max-h-20 items-center justify-center overflow-hidden">
 					<div class="relative z-10 flex w-full items-center justify-between px-2">
 						<HStack gap="md" align="center">
 							<div
@@ -107,11 +103,7 @@
 					{/if}
 				</BentoItem>
 
-				<BentoItem
-					glass
-					padding="sm"
-					class="relative flex max-h-20 items-center justify-center overflow-hidden"
-				>
+				<BentoItem glass class="relative flex max-h-20 items-center justify-center overflow-hidden">
 					<div class="relative z-10 flex w-full items-center justify-between px-2">
 						<HStack gap="md" align="center">
 							<div
@@ -134,11 +126,7 @@
 					{/if}
 				</BentoItem>
 
-				<BentoItem
-					glass
-					padding="sm"
-					class="relative flex max-h-20 items-center justify-center overflow-hidden"
-				>
+				<BentoItem glass class="relative flex max-h-20 items-center justify-center overflow-hidden">
 					<div class="relative z-10 flex w-full items-center justify-between px-2">
 						<HStack gap="md" align="center">
 							<div

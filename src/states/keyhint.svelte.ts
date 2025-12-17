@@ -124,7 +124,7 @@ function handleFocusIn(event: FocusEvent) {
 	}
 }
 
-function handleFocusOut(event: FocusEvent) {
+function handleFocusOut(_event: FocusEvent) {
 	// Always clean up when an element with data-keyhint loses focus
 	// This ensures hints are removed when navigating between pages/steps
 	if (activeCleanup) {

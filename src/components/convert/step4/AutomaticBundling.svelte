@@ -83,23 +83,12 @@
 			runBundler();
 		}
 	});
-
-	function getChaptersPercentage(): number {
-		const total = step4State.result?.total_chapters ?? 0;
-		if (total === 0) return 0;
-		const used = convState.chapterSizes.reduce((sum, size) => sum + size, 0);
-		return Math.min((used / total) * 100, 100);
-	}
-
-	function getTotalChapters(): number {
-		return convState.chapterSizes.reduce((sum, size) => sum + size, 0);
-	}
 </script>
 
 <div class="h-full w-full p-3">
 	<BentoGrid cols={3} density="comfortable" rows="auto 1fr auto" class="h-full">
 		<!-- Summary Cards Row -->
-		<BentoItem glass padding="sm" class="max-h-24">
+		<BentoItem glass>
 			<HStack gap="md" align="center" justify="between">
 				<HStack gap="md" align="center">
 					<div
@@ -119,7 +108,7 @@
 			</HStack>
 		</BentoItem>
 
-		<BentoItem glass padding="sm" class="max-h-24">
+		<BentoItem glass>
 			<HStack gap="md" align="center" justify="between">
 				<HStack gap="md" align="center">
 					<div
@@ -138,132 +127,90 @@
 			</HStack>
 		</BentoItem>
 
-		<BentoItem glass padding="sm" class="max-h-24">
-			<HStack gap="md" align="center" justify="between">
-				<HStack gap="md" align="center">
-					<div
-						class="bg-accent-500/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-					>
-						<IconSettings size={20} class="text-accent-500" />
-					</div>
-					<VStack gap="none">
-						<span class="text-muted text-xs font-medium tracking-wide uppercase">{$t`Method`}</span>
-						<div class="text-2xl leading-tight font-bold">
-							{bundleFlag === 'IMAGE' ? $t`Image` : $t`Name`}
-						</div>
-					</VStack>
-				</HStack>
-			</HStack>
-		</BentoItem>
-
-		<!-- Main Content Area: Settings -->
-		<BentoItem colspan={2} glass class="flex min-h-0 flex-col">
-			<HStack gap="sm" align="center" class="text-muted mb-3 shrink-0">
+		<!-- Detection Method -->
+		<BentoItem glass>
+			<HStack gap="sm" align="center" class="text-muted mb-3">
 				<IconSettings size={18} />
-				<span class="text-xs font-bold tracking-wider uppercase">{$t`Detection Settings`}</span>
+				<span class="text-xs font-bold tracking-wider uppercase">{$t`Detection Method`}</span>
 			</HStack>
 
-			<div class="custom-scrollbar flex-1 space-y-4 overflow-y-auto rounded px-1 py-1">
-				<!-- Bundle Type Selection -->
-				<div>
-					<label for="bundle-type" class="text-muted mb-2 block text-xs font-medium uppercase">
-						{$t`Bundle Type`}
-					</label>
-					<Select
-						id="bundle-type"
-						options={bundleOptions}
-						bind:value={bundleFlag}
-						style="seamless"
-					/>
-					<p class="text-muted mt-2 text-xs">
-						{#if bundleFlag === 'IMAGE'}
-							{$t`Detect volumes using image analysis`}
-						{:else}
-							{$t`Detect volumes from file/folder names`}
-						{/if}
-					</p>
-
-					{#if bundleFlag === 'IMAGE' && convState.bundleRecommendation === 'MANUAL'}
-						<div class="bg-warning/10 border-warning/30 mt-3 rounded-lg border p-3">
-							<HStack gap="sm" align="start">
-								<div class="text-warning mt-0.5 shrink-0">⚠</div>
-								<VStack gap="xs">
-									<span class="text-sm font-medium">{$t`Image detection unavailable`}</span>
-									<span class="text-muted text-xs">
-										{$t`Source doesn't support image-based detection. Use Manual or Name detection instead.`}
-									</span>
-								</VStack>
-							</HStack>
-						</div>
+			<VStack gap="sm">
+				<Select id="bundle-type" options={bundleOptions} bind:value={bundleFlag} style="seamless" />
+				<p class="text-muted text-xs">
+					{#if bundleFlag === 'IMAGE'}
+						{$t`Detect volumes using image analysis`}
+					{:else}
+						{$t`Detect volumes from file/folder names`}
 					{/if}
-				</div>
+				</p>
 
-				<!-- Image Sensitivity (Only for IMAGE mode) -->
-				{#if bundleFlag === 'IMAGE'}
-					<div>
-						<label for="range" class="text-muted mb-2 block text-xs font-medium uppercase">
-							{$t`Image Sensitivity`}
-						</label>
-						<VStack gap="sm">
-							<HStack justify="between" align="center">
-								<span class="text-sm">{$t`Grayscale Threshold`}</span>
-								<Badge variant="neutral" class="font-mono text-xs">
-									{step4State.sensibility}%
-								</Badge>
-							</HStack>
-							<input
-								id="range"
-								type="range"
-								min="0"
-								max="100"
-								step="5"
-								class="range-accent w-full"
-								bind:value={step4State.sensibility}
-								data-keyhint={`arrowleft,arrowright;${$t`Adjust sensitivity`}`}
-							/>
-							<HStack justify="between" class="text-muted">
-								<span class="text-xs">0%</span>
-								<span class="text-xs">50%</span>
-								<span class="text-xs">100%</span>
-							</HStack>
-							<p class="text-muted text-xs">
-								{$t`Adjust sensitivity for detecting volume boundaries in images`}
-							</p>
-						</VStack>
-					</div>
-				{/if}
-
-				<!-- Chapter Usage Progress -->
-				{#if step4State.result && step4State.result.total_chapters > 0}
-					<div>
-						<span class="text-muted mb-2 block text-xs font-medium uppercase">
-							{$t`Chapter Usage`}
-						</span>
-						<div class="bg-surface-2 rounded-lg p-3">
-							<HStack justify="between" align="center" class="mb-2">
-								<span class="text-sm font-medium">{$t`Progress`}</span>
-								<span class="font-mono text-sm">
-									{getTotalChapters()}/{step4State.result.total_chapters}
+				{#if bundleFlag === 'IMAGE' && convState.bundleRecommendation === 'MANUAL'}
+					<div class="bg-warning/10 border-warning/30 rounded-lg border p-3">
+						<HStack gap="sm" align="start">
+							<div class="text-warning mt-0.5 shrink-0">⚠</div>
+							<VStack gap="xs">
+								<span class="text-sm font-medium">{$t`Image detection unavailable`}</span>
+								<span class="text-muted text-xs">
+									{$t`Source doesn't support image-based detection. Use Manual or Name detection instead.`}
 								</span>
-							</HStack>
-							<div class="bg-surface-0 h-2 w-full overflow-hidden rounded-full">
-								<div
-									class="h-full rounded-full transition-all duration-300"
-									class:bg-success={getTotalChapters() === step4State.result.total_chapters}
-									class:bg-warning={getTotalChapters() < step4State.result.total_chapters}
-									class:bg-danger={getTotalChapters() > step4State.result.total_chapters}
-									style="width: {getChaptersPercentage()}%"
-								></div>
-							</div>
-						</div>
+							</VStack>
+						</HStack>
 					</div>
 				{/if}
-			</div>
+			</VStack>
 		</BentoItem>
 
-		<!-- Side Panel: Volume Visualization -->
+		<!-- Main Content Area -->
+		<BentoItem colspan={2} glass class="flex min-h-0 flex-col">
+			{#if bundleFlag === 'IMAGE'}
+				<HStack gap="sm" align="center" class="text-muted mb-3 shrink-0">
+					<IconSettings size={18} />
+					<span class="text-xs font-bold tracking-wider uppercase">{$t`Image Sensitivity`}</span>
+				</HStack>
+
+				<VStack gap="sm">
+					<HStack justify="between" align="center">
+						<span class="text-sm">{$t`Grayscale Threshold`}</span>
+						<Badge variant="neutral" class="font-mono text-xs">
+							{step4State.sensibility}%
+						</Badge>
+					</HStack>
+					<input
+						id="range"
+						type="range"
+						min="0"
+						max="100"
+						step="5"
+						tabindex={0}
+						class="range-accent w-full"
+						bind:value={step4State.sensibility}
+						data-keyhint={`arrowleft;${$t`Adjust sensitivity`}|arrowright;${$t`Adjust sensitivity`}`}
+					/>
+					<HStack justify="between" class="text-muted">
+						<span class="text-xs">0%</span>
+						<span class="text-xs">50%</span>
+						<span class="text-xs">100%</span>
+					</HStack>
+					<p class="text-muted text-xs">
+						{$t`Adjust sensitivity for detecting volume boundaries in images`}
+					</p>
+				</VStack>
+			{:else}
+				<div class="flex h-full items-center justify-center">
+					<VStack gap="sm" align="center" class="text-center">
+						<IconFileZip size={48} class="text-muted" opacity={0.5} />
+						<p class="text-muted max-w-xs text-sm">
+							{$t`Volumes detected from file and folder names`}
+						</p>
+					</VStack>
+				</div>
+			{/if}
+		</BentoItem>
+
+		<!-- Volume Visualization -->
 		<BentoItem
 			glass
+			rowspan={2}
 			class="flex flex-col"
 			onclick={() => {}}
 			onfocus={() => (volumeVizBentoFocused = true)}
@@ -274,13 +221,7 @@
 		</BentoItem>
 
 		<!-- Rerun Button Section -->
-		<BentoItem
-			colspan={3}
-			glass
-			padding="sm"
-			onclick={runBundler}
-			data-keyhint={`enter;${$t`Rerun`}`}
-		>
+		<BentoItem colspan={2} glass onclick={runBundler} data-keyhint={`enter;${$t`Rerun`}`}>
 			<HStack gap="sm" align="center">
 				<div
 					class="bg-accent-500/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
@@ -322,6 +263,14 @@
 		position: relative;
 	}
 
+	.range-accent:focus {
+		outline: none;
+	}
+
+	.range-accent:focus-visible {
+		outline: none;
+	}
+
 	.range-accent::-webkit-slider-track {
 		-webkit-appearance: none;
 		appearance: none;
@@ -343,6 +292,17 @@
 		transition: var(--transition-fast);
 		border: 3px solid var(--waku-surface-1);
 		box-shadow: var(--shadow-md);
+	}
+
+	.range-accent:focus::-webkit-slider-thumb,
+	.range-accent:focus-visible::-webkit-slider-thumb {
+		transform: scale(1.1);
+		border-width: 2px;
+		box-shadow:
+			var(--shadow-lg),
+			0 0 0 0px var(--waku-surface-1),
+			0 0 0 4px var(--accent-500),
+			0 0 0 6px oklch(from var(--waku-accent) l c h / 0.3);
 	}
 
 	.range-accent::-webkit-slider-thumb:hover {
@@ -377,6 +337,17 @@
 		box-shadow: var(--shadow-md);
 	}
 
+	.range-accent:focus::-moz-range-thumb,
+	.range-accent:focus-visible::-moz-range-thumb {
+		transform: scale(1.1);
+		border-width: 2px;
+		box-shadow:
+			var(--shadow-lg),
+			0 0 0 0px var(--waku-surface-1),
+			0 0 0 4px var(--accent-500),
+			0 0 0 6px oklch(from var(--waku-accent) l c h / 0.3);
+	}
+
 	.range-accent::-moz-range-thumb:hover {
 		transform: scale(1.15);
 		box-shadow:
@@ -387,28 +358,5 @@
 	.range-accent::-moz-range-thumb:active {
 		transform: scale(1.05);
 		box-shadow: var(--shadow-sm);
-	}
-
-	.custom-scrollbar {
-		scrollbar-width: thin;
-		scrollbar-color: var(--waku-surface-2) transparent;
-	}
-
-	.custom-scrollbar::-webkit-scrollbar {
-		width: 8px;
-	}
-
-	.custom-scrollbar::-webkit-scrollbar-track {
-		background: transparent;
-	}
-
-	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background-color: var(--waku-surface-2);
-		border-radius: 4px;
-		transition: background-color 0.2s;
-	}
-
-	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background-color: var(--waku-surface-1);
 	}
 </style>

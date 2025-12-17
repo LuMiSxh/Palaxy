@@ -50,49 +50,51 @@
 </script>
 
 <div class="h-full w-full p-3">
-	<BentoGrid cols={2} density="comfortable" rows="auto 1fr" class="h-full">
-		<!-- Status Summary Card -->
-		{#if convState.source}
-			<BentoItem glass padding="sm" class="max-h-24">
-				<HStack gap="md" align="center" justify="between">
-					<HStack gap="md" align="center">
-						<div
-							class="bg-success/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-						>
-							<IconCheck size={20} class="text-success" />
-						</div>
-						<VStack gap="none">
-							<span class="text-muted text-xs font-medium tracking-wide uppercase"
-								>{$t`Status`}</span
-							>
-							<div class="text-success text-lg leading-tight font-semibold">{$t`Ready`}</div>
-						</VStack>
-					</HStack>
-				</HStack>
-			</BentoItem>
+	<BentoGrid cols={3} density="comfortable" rows="auto 1fr" class="h-full">
+		<!-- Summary Cards Row -->
+		<BentoItem glass>
+			<HStack gap="md" align="center">
+				<div
+					class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full {convState.source
+						? 'bg-success/10'
+						: 'bg-surface-2'}"
+				>
+					<IconCheck size={20} class={convState.source ? 'text-success' : 'text-muted'} />
+				</div>
+				<VStack gap="none">
+					<span class="text-muted text-xs font-medium tracking-wide uppercase">{$t`Status`}</span>
+					<div
+						class="text-2xl leading-tight font-bold {convState.source
+							? 'text-success'
+							: 'text-muted'}"
+					>
+						{convState.source ? $t`Ready` : $t`Waiting`}
+					</div>
+				</VStack>
+			</HStack>
+		</BentoItem>
 
-			<BentoItem glass padding="sm" class="max-h-24">
-				<HStack gap="md" align="center" justify="between">
-					<HStack gap="md" align="center">
-						<div
-							class="bg-accent-500/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-						>
-							<IconFolderOpen size={20} class="text-accent-500" />
-						</div>
-						<VStack gap="none">
-							<span class="text-muted text-xs font-medium tracking-wide uppercase"
-								>{$t`Source`}</span
-							>
-							<div class="text-lg leading-tight font-semibold">{$t`Selected`}</div>
-						</VStack>
-					</HStack>
-				</HStack>
-			</BentoItem>
-		{/if}
+		<BentoItem glass colspan={2}>
+			<HStack gap="md" align="center">
+				<div
+					class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full {convState.source
+						? 'bg-accent-500/10'
+						: 'bg-surface-2'}"
+				>
+					<IconFolderOpen size={20} class={convState.source ? 'text-accent-500' : 'text-muted'} />
+				</div>
+				<VStack gap="none">
+					<span class="text-muted text-xs font-medium tracking-wide uppercase">{$t`Source`}</span>
+					<div class="text-2xl leading-tight font-bold">
+						{convState.source ? $t`Selected` : $t`None`}
+					</div>
+				</VStack>
+			</HStack>
+		</BentoItem>
 
 		<!-- Main Source Selection Card -->
 		<BentoItem
-			colspan={2}
+			colspan={3}
 			glass
 			onclick={select}
 			onkeydown={(e) => {
@@ -102,9 +104,9 @@
 				}
 			}}
 			data-keyhint={`enter;${$t`Select source folder`}`}
-			class={convState.source ? '' : 'row-span-2'}
+			class="flex min-h-0 flex-col"
 		>
-			<HStack gap="sm" align="center" class="text-muted mb-3">
+			<HStack gap="sm" align="center" class="text-muted mb-3 shrink-0">
 				<IconFolder size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Source Folder`}</span>
 				{#if convState.source}
@@ -114,8 +116,8 @@
 				{/if}
 			</HStack>
 
-			<VStack gap="sm" class={convState.source ? '' : 'h-full items-center justify-center'}>
-				{#if convState.source}
+			{#if convState.source}
+				<VStack gap="sm">
 					<div
 						class="bg-surface-2 hover:bg-surface-1 group w-full cursor-pointer rounded-lg p-3 transition-colors"
 					>
@@ -136,24 +138,26 @@
 					<p class="text-muted text-xs">
 						{$t`Click to change the source folder or press Next to analyze`}
 					</p>
-				{:else}
-					<VStack gap="lg" align="center" class="max-w-md text-center">
-						<div class="bg-accent-500/10 flex h-16 w-16 items-center justify-center rounded-full">
-							<IconFolder size={32} class="text-accent-500" />
+				</VStack>
+			{:else}
+				<div class="flex h-full items-center justify-center p-8">
+					<VStack gap="md" align="center" class="max-w-md text-center">
+						<div class="bg-surface-2 flex h-16 w-16 items-center justify-center rounded-full">
+							<IconFolder size={32} class="text-muted" />
 						</div>
-						<VStack gap="sm" align="center">
-							<h3 class="text-xl font-semibold">{$t`Select Source Folder`}</h3>
+						<VStack gap="xs" align="center">
+							<h3 class="text-lg font-semibold">{$t`No Source Selected`}</h3>
 							<p class="text-muted text-sm">
-								{$t`Choose the directory containing your manga images to begin`}
+								{$t`Choose the directory containing your manga images to begin the conversion process`}
 							</p>
 						</VStack>
-						<div class="text-muted flex items-center gap-2 text-sm">
-							<Badge variant="primary">⏎ {$t`Enter`}</Badge>
+						<div class="text-muted flex items-center gap-2 text-xs">
+							<Badge variant="primary" class="text-xs">⏎ {$t`Enter`}</Badge>
 							<span>{$t`or click to browse`}</span>
 						</div>
 					</VStack>
-				{/if}
-			</VStack>
+				</div>
+			{/if}
 		</BentoItem>
 	</BentoGrid>
 </div>

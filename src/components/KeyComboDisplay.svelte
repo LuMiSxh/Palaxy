@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { type } from '@tauri-apps/plugin-os';
 	import type { KeyCombination } from '$types/keys';
+	import { onMount } from 'svelte';
 
 	let { keyCombination }: { keyCombination: KeyCombination } = $props();
 
-	const osName = type();
+	let osName = $state('windows');
+
+	onMount(() => (osName = type()));
 
 	const keySymbols: Record<string, Record<string, string>> = {
 		macos: {

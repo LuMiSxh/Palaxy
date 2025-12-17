@@ -5,8 +5,8 @@
   "windows": ["*"],
   "permissions": [
     "dialog:allow-open",
-    "dialog:deny-ask",
-    "dialog:deny-confirm",
-    "dialog:deny-save"
+    "dialog:allow-save",
+    "dialog:allow-ask",
+    "dialog:allow-message"
   ]
 }

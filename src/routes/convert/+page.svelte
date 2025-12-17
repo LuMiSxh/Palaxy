@@ -5,7 +5,7 @@
 	import '$lib/steps/definitions';
 	import { VStack, HStack } from 'waku/layout';
 	import { Button, Badge } from 'waku/components';
-	import { keyHint } from '$states/keyhint.svelte';
+	import { keyHint, clearActiveKeyHint } from '$states/keyhint.svelte';
 	import { keyboard } from '$lib/keyboard';
 	import { t } from 'svelte-i18n-lingui';
 	import { appData } from '$stores/appdata';
@@ -58,8 +58,11 @@
 		};
 	});
 
-	// Update key hints based on current state
+	// Update key hints based on current state and clear old hints when step changes
 	$effect(() => {
+		// Clear any active keyhints from previous step's focused elements
+		clearActiveKeyHint();
+
 		const hints: [KeyCombination, string][] = [['tab', $t`Navigate fields`]];
 
 		if (canGoBack) {
@@ -101,7 +104,7 @@
 </script>
 
 <div class="h-full w-full overflow-y-auto p-3 md:p-6">
-	<VStack gap="md" class="mx-auto h-full">
+	<VStack gap="sm" class="mx-auto h-full">
 		<!-- Header -->
 		<div class="flex items-center justify-between gap-4">
 			<HStack gap="sm" align="center">

@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { appData } from '$stores/appdata';
-	import convState from '$states/converter.svelte';
 	import { commands, type Direction, type FileFormat, type ImageOutputFormat } from '$types';
 	import { t } from 'svelte-i18n-lingui';
-	import { onDestroy, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import { wrapper } from '$lib/utils';
 	import { keyHint } from '$states/keyhint.svelte';
 	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
@@ -44,20 +43,40 @@
 		return keyHint.register([['tab', $t`Navigate fields`]]);
 	});
 
-	onDestroy(async () => {
-		// Set Tauri AppState
-		await wrapper(commands.convStateSet({ Direction: readingDirection }));
-		await wrapper(commands.convStateSet({ Format: fileFormat }));
-		await wrapper(commands.convStateSet({ ImageFormat: imageFormat }));
-		await wrapper(commands.convStateSet({ HideSingleVolumeNumber: hideSingleVolumeNumber }));
-		await wrapper(commands.convStateSet({ VolumeSeparator: volumeSeparator }));
+	// Save state immediately when values change instead of in onDestroy
+	$effect(() => {
+		if (fileFormat) {
+			wrapper(commands.convStateSet({ Format: fileFormat }));
+		}
+	});
+
+	$effect(() => {
+		if (readingDirection) {
+			wrapper(commands.convStateSet({ Direction: readingDirection }));
+		}
+	});
+
+	$effect(() => {
+		if (imageFormat) {
+			wrapper(commands.convStateSet({ ImageFormat: imageFormat }));
+		}
+	});
+
+	$effect(() => {
+		wrapper(commands.convStateSet({ HideSingleVolumeNumber: hideSingleVolumeNumber }));
+	});
+
+	$effect(() => {
+		if (volumeSeparator !== undefined) {
+			wrapper(commands.convStateSet({ VolumeSeparator: volumeSeparator }));
+		}
 	});
 </script>
 
 <div class="h-full w-full p-3">
-	<BentoGrid cols={2} density="comfortable" rows="auto auto auto 1fr" class="h-full">
+	<BentoGrid cols={2} density="comfortable" rows="auto auto auto 1.5fr" class="h-full">
 		<!-- File Format -->
-		<BentoItem glass padding="sm">
+		<BentoItem glass>
 			<HStack gap="sm" align="center" class="text-muted mb-3">
 				<IconFileText size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`File Format`}</span>
@@ -76,7 +95,7 @@
 		</BentoItem>
 
 		<!-- Reading Direction -->
-		<BentoItem glass padding="sm">
+		<BentoItem glass>
 			<HStack gap="sm" align="center" class="text-muted mb-3">
 				<IconDirection size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Reading Direction`}</span>
@@ -104,7 +123,7 @@
 		</BentoItem>
 
 		<!-- Image Format -->
-		<BentoItem glass padding="sm">
+		<BentoItem glass>
 			<HStack gap="sm" align="center" class="text-muted mb-3">
 				<IconPhoto size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Image Format`}</span>
@@ -130,11 +149,7 @@
 		</BentoItem>
 
 		<!-- Hide Single Volume Number Toggle -->
-		<BentoItem
-			glass
-			padding="sm"
-			onclick={() => (hideSingleVolumeNumber = !hideSingleVolumeNumber)}
-		>
+		<BentoItem glass onclick={() => (hideSingleVolumeNumber = !hideSingleVolumeNumber)}>
 			<HStack gap="sm" align="center" class="text-muted mb-3">
 				<IconFileText size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Volume Numbering`}</span>
@@ -162,7 +177,7 @@
 		</BentoItem>
 
 		<!-- Volume Separator -->
-		<BentoItem colspan={2} glass padding="sm">
+		<BentoItem colspan={2} glass>
 			<HStack gap="sm" align="center" class="text-muted mb-3">
 				<IconSeparator size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Volume Separator`}</span>

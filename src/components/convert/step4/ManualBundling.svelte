@@ -18,12 +18,14 @@
 	import { onMount, tick } from 'svelte';
 	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
 	import { Badge, Button, Input } from 'waku/components';
+	import { keyboard } from '$lib/keyboard';
 
 	let volVisSelectedIdx = $state(-1);
 	let newVolumeChapters: string | undefined = $state(undefined);
 	let volumeListContainer: HTMLDivElement | null = $state(null);
 	let editingInput: HTMLInputElement | null = $state(null);
 	let isEditing = $state(false);
+	let volumeMgmtBentoFocused = $state(false);
 
 	function addVolume() {
 		const chapters = Number(newVolumeChapters);
@@ -45,8 +47,8 @@
 		}
 	}
 
-	function handleVolumeListKeyDown(event: KeyboardEvent) {
-		if (!convState.chapterSizes.length) return;
+	function handleBentoKeyDown(event: KeyboardEvent) {
+		if (!convState.chapterSizes.length || !volumeMgmtBentoFocused) return;
 
 		if (!isEditing) {
 			if (event.key === 'ArrowUp') {
@@ -58,8 +60,10 @@
 				volVisSelectedIdx = Math.min(convState.chapterSizes.length - 1, volVisSelectedIdx + 1);
 				scrollToSelectedVolume();
 			} else if (event.key === 'Delete' && volVisSelectedIdx >= 0) {
+				event.preventDefault();
 				deleteSelectedVolume();
 			} else if (/^\d$/.test(event.key) && volVisSelectedIdx >= 0) {
+				event.preventDefault();
 				startEditing(event.key);
 			}
 		}
@@ -85,7 +89,6 @@
 	function finishEditing() {
 		isEditing = false;
 		checkChapterLimits();
-		volumeListContainer?.focus();
 	}
 
 	function deleteSelectedVolume() {
@@ -115,25 +118,24 @@
 		}
 	}
 
-	function preventFocusOnClick(event: MouseEvent) {
-		event.preventDefault();
-	}
-
 	onMount(() => {
 		if (convState.chapterSizes.length > 0 && volVisSelectedIdx < 0) {
 			volVisSelectedIdx = 0;
 		}
 
-		setTimeout(() => {
-			volumeListContainer?.focus();
-		}, 100);
+		const cleanup = keyboard.smartRegister([
+			['arrowup', handleBentoKeyDown],
+			['arrowdown', handleBentoKeyDown],
+		]);
+
+		return cleanup;
 	});
 </script>
 
 <div class="h-full w-full p-3">
 	<BentoGrid cols={3} density="comfortable" rows="auto 1fr auto" class="h-full">
 		<!-- Summary Cards Row -->
-		<BentoItem glass padding="sm" class="max-h-24">
+		<BentoItem glass>
 			<HStack gap="md" align="center" justify="between">
 				<HStack gap="md" align="center">
 					<div
@@ -153,7 +155,7 @@
 			</HStack>
 		</BentoItem>
 
-		<BentoItem glass padding="sm" class="max-h-24">
+		<BentoItem glass>
 			<HStack gap="md" align="center" justify="between">
 				<HStack gap="md" align="center">
 					{@const isEqual = getTotalChapters() === (step4State.result?.total_chapters ?? 0)}
@@ -186,7 +188,7 @@
 			</HStack>
 		</BentoItem>
 
-		<BentoItem glass padding="sm" class="max-h-24">
+		<BentoItem glass>
 			<HStack gap="md" align="center" justify="between">
 				<HStack gap="md" align="center">
 					<div
@@ -206,21 +208,23 @@
 		</BentoItem>
 
 		<!-- Main Content Area -->
-		<BentoItem colspan={2} glass class="flex min-h-0 flex-col">
+		<BentoItem
+			colspan={2}
+			glass
+			class="flex min-h-0 flex-col"
+			onclick={() => {}}
+			onfocus={() => (volumeMgmtBentoFocused = true)}
+			onblur={() => (volumeMgmtBentoFocused = false)}
+			onkeydown={handleBentoKeyDown}
+			data-keyhint={`arrowup;${$t`Navigate volumes`}|arrowdown;${$t`Navigate volumes`}|delete;${$t`Delete volume`}`}
+		>
 			<HStack gap="sm" align="center" class="text-muted mb-3 shrink-0">
 				<IconFileZip size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Volume Management`}</span>
 				<Badge variant="primary" class="ml-auto">{convState.chapterSizes.length}</Badge>
 			</HStack>
 
-			<div
-				class="custom-scrollbar mb-3 flex-1 overflow-y-auto rounded px-1 py-1"
-				tabindex="-1"
-				role="tablist"
-				bind:this={volumeListContainer}
-				onkeydown={handleVolumeListKeyDown}
-				onmousedown={preventFocusOnClick}
-			>
+			<div class="custom-scrollbar flex-1 overflow-y-auto p-2" bind:this={volumeListContainer}>
 				{#if convState.chapterSizes.length > 0}
 					<VStack gap="sm">
 						{#each convState.chapterSizes as chapters, i}
@@ -232,12 +236,12 @@
 								class:ring-2={volVisSelectedIdx === i}
 								class:ring-accent-500={volVisSelectedIdx === i}
 								class:bg-surface-1={volVisSelectedIdx === i}
+								type="button"
+								tabindex="-1"
 								onclick={(evt) => {
 									evt.preventDefault();
 									volVisSelectedIdx = i;
 								}}
-								tabindex="-1"
-								type="button"
 							>
 								<HStack gap="sm" align="center">
 									<div
@@ -274,7 +278,7 @@
 												type="number"
 												min="1"
 												max="999"
-												class="bg-surface-0 border-accent-500 h-9 w-16 rounded border text-center focus:outline-none"
+												class="bg-surface-0 border-accent-500 focus:ring-accent-500 h-9 w-16 rounded-lg border text-center focus:ring-2 focus:outline-none"
 												bind:value={convState.chapterSizes[i]}
 												onblur={finishEditing}
 												onkeydown={(e) => {
@@ -286,7 +290,7 @@
 											/>
 										{:else}
 											<button
-												class="bg-surface-0 hover:bg-accent-500/10 hover:border-accent-500 flex h-9 w-16 items-center justify-center rounded border border-transparent text-center font-medium transition-colors"
+												class="bg-surface-0 hover:bg-accent-500/10 hover:border-accent-500 focus:border-accent-500 focus:ring-accent-500 flex h-9 w-16 items-center justify-center rounded-lg border border-transparent text-center font-medium transition-colors focus:ring-2"
 												onclick={(e) => {
 													e.stopPropagation();
 													volVisSelectedIdx = i;
@@ -299,7 +303,7 @@
 										{/if}
 
 										<button
-											class="hover:bg-danger/10 border-danger/20 text-danger hover:border-danger flex h-9 w-9 items-center justify-center rounded border transition-colors"
+											class="hover:bg-danger/10 border-danger/20 text-danger hover:border-danger focus:border-danger focus:ring-danger flex h-9 w-9 items-center justify-center rounded-lg border transition-colors focus:ring-2"
 											onclick={(e) => {
 												e.stopPropagation();
 												volVisSelectedIdx = i;
@@ -329,126 +333,133 @@
 					</div>
 				{/if}
 			</div>
+
+			{#if convState.chapterSizes.length > 0}
+				<p class="text-muted mt-2 shrink-0 text-xs">
+					{$t`Focus this panel and use arrow keys to navigate, press a number to edit chapters, or Delete to remove a volume`}
+				</p>
+			{/if}
 		</BentoItem>
 
-		<!-- Side Panel: Chapter Distribution -->
-		<BentoItem glass class="flex flex-col" onclick={() => {}}>
+		<!-- Side Panel: Chapter Distribution (2 rows tall) -->
+		<BentoItem glass rowspan={2} class="flex flex-col" onclick={() => {}}>
 			<HStack gap="sm" align="center" class="text-muted mb-3 shrink-0">
 				<IconChartBar size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Distribution`}</span>
 			</HStack>
 
-			{#if step4State.result && step4State.result.total_chapters > 0}
-				{@const chapterToVolumeMap = (() => {
-					const map = new Array(step4State.result.total_chapters).fill(-1);
-					let chapterCount = 0;
-					for (let v = 0; v < convState.chapterSizes.length; v++) {
-						for (let c = 0; c < convState.chapterSizes[v]; c++) {
-							if (chapterCount < map.length) {
-								map[chapterCount] = v;
-								chapterCount++;
+			<div class="custom-scrollbar flex-1 overflow-y-auto">
+				{#if step4State.result && step4State.result.total_chapters > 0}
+					{@const chapterToVolumeMap = (() => {
+						const map = new Array(step4State.result.total_chapters).fill(-1);
+						let chapterCount = 0;
+						for (let v = 0; v < convState.chapterSizes.length; v++) {
+							for (let c = 0; c < convState.chapterSizes[v]; c++) {
+								if (chapterCount < map.length) {
+									map[chapterCount] = v;
+									chapterCount++;
+								}
 							}
 						}
-					}
-					return map;
-				})()}
+						return map;
+					})()}
 
-				<VStack gap="md" class="flex-1">
-					<!-- Progress Bar -->
-					<div>
-						<HStack justify="between" align="center" class="mb-2">
-							<span class="text-sm font-medium">{$t`Usage`}</span>
-							<span class="font-mono text-sm">
-								{getTotalChapters()}/{step4State.result.total_chapters}
-							</span>
-						</HStack>
-						<div class="bg-surface-0 h-2 w-full overflow-hidden rounded-full">
-							<div
-								class="h-full rounded-full transition-all duration-300"
-								class:bg-success={getTotalChapters() === step4State.result.total_chapters}
-								class:bg-warning={getTotalChapters() < step4State.result.total_chapters}
-								class:bg-danger={getTotalChapters() > step4State.result.total_chapters}
-								style="width: {getChaptersPercentage()}%"
-							></div>
-						</div>
-					</div>
-
-					<!-- Visual Distribution -->
-					<div>
-						<span class="text-muted mb-2 block text-xs">{$t`Chapter Map`}</span>
-						<div class="flex flex-wrap gap-1">
-							{#each Array(step4State.result.total_chapters) as _, i}
-								{@const volumeIndex = chapterToVolumeMap[i]}
-								{@const isUsed = volumeIndex !== -1}
-								{@const isExceeded =
-									getTotalChapters() > step4State.result.total_chapters &&
-									i >= step4State.result.total_chapters}
-
+					<VStack gap="md">
+						<!-- Progress Bar -->
+						<div>
+							<HStack justify="between" align="center" class="mb-2">
+								<span class="text-sm font-medium">{$t`Usage`}</span>
+								<span class="font-mono text-sm">
+									{getTotalChapters()}/{step4State.result.total_chapters}
+								</span>
+							</HStack>
+							<div class="bg-surface-0 h-2 w-full overflow-hidden rounded-full">
 								<div
-									class="h-3 w-3 cursor-help rounded-sm transition-colors duration-200"
-									class:bg-accent-500={isUsed && !isExceeded && volumeIndex % 2 === 0}
-									class:bg-accent-400={isUsed && !isExceeded && volumeIndex % 2 === 1}
-									class:bg-danger={isExceeded}
-									class:bg-surface-1={!isUsed}
-									title={$t({ message: 'Chapter {chap}', values: { chap: i + 1 } }) +
-										(isUsed
-											? ' - ' + $t({ message: 'Volume {vol}', values: { vol: volumeIndex + 1 } })
-											: '')}
+									class="h-full rounded-full transition-all duration-300"
+									class:bg-success={getTotalChapters() === step4State.result.total_chapters}
+									class:bg-warning={getTotalChapters() < step4State.result.total_chapters}
+									class:bg-danger={getTotalChapters() > step4State.result.total_chapters}
+									style="width: {getChaptersPercentage()}%"
 								></div>
-							{/each}
+							</div>
 						</div>
+
+						<!-- Visual Distribution -->
+						<div>
+							<span class="text-muted mb-2 block text-xs">{$t`Chapter Map`}</span>
+							<div class="flex flex-wrap gap-1">
+								{#each Array(step4State.result.total_chapters) as _, i}
+									{@const volumeIndex = chapterToVolumeMap[i]}
+									{@const isUsed = volumeIndex !== -1}
+									{@const isExceeded =
+										getTotalChapters() > step4State.result.total_chapters &&
+										i >= step4State.result.total_chapters}
+
+									<div
+										class="h-3 w-3 cursor-help rounded-sm transition-colors duration-200"
+										class:bg-accent-500={isUsed && !isExceeded && volumeIndex % 2 === 0}
+										class:bg-accent-400={isUsed && !isExceeded && volumeIndex % 2 === 1}
+										class:bg-danger={isExceeded}
+										class:bg-surface-1={!isUsed}
+										title={$t({ message: 'Chapter {chap}', values: { chap: i + 1 } }) +
+											(isUsed
+												? ' - ' + $t({ message: 'Volume {vol}', values: { vol: volumeIndex + 1 } })
+												: '')}
+									></div>
+								{/each}
+							</div>
+						</div>
+					</VStack>
+				{:else}
+					<div class="flex flex-1 items-center justify-center">
+						<p class="text-muted text-center text-sm">{$t`No chapter data available`}</p>
 					</div>
-				</VStack>
-			{:else}
-				<div class="flex flex-1 items-center justify-center">
-					<p class="text-muted text-center text-sm">{$t`No chapter data available`}</p>
-				</div>
-			{/if}
+				{/if}
+			</div>
 		</BentoItem>
 
 		<!-- Add Volume Section -->
-		<BentoItem
-			colspan={3}
-			glass
-			padding="sm"
-			onclick={addVolume}
-			data-keyhint={`enter;${$t`Add Volume`}`}
-			disabled={!newVolumeChapters ||
-				Number(newVolumeChapters) <= 0 ||
-				isNaN(Number(newVolumeChapters))}
-		>
-			<HStack gap="sm" align="center">
-				<div
-					class="bg-accent-500/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-				>
-					<IconPlus size={20} class="text-accent-500" />
-				</div>
-				<VStack gap="xs" class="flex-1">
-					<span class="text-xs font-bold tracking-wider uppercase">{$t`Add New Volume`}</span>
-					<HStack gap="sm">
-						<Input
-							id="new-volume"
-							type="number"
-							style="seamless"
-							placeholder={$t`Number of chapters` || ''}
-							bind:value={newVolumeChapters}
-							onkeydown={(e) => {
-								if (e.key === ' ') {
-									e.stopPropagation();
-								}
-								handleKeyDown(e);
-							}}
-							class="flex-1"
-						/>
-						<Button variant="primary" onclick={addVolume} style="seamless">
-							<HStack gap="sm" align="center">
-								<IconPlus size={18} />
-								<span>{$t`Add`}</span>
-							</HStack>
-						</Button>
-					</HStack>
-				</VStack>
+		<BentoItem colspan={2} glass>
+			<HStack gap="sm" align="center" class="text-muted mb-3">
+				<IconPlus size={18} />
+				<span class="text-xs font-bold tracking-wider uppercase">{$t`Add New Volume`}</span>
 			</HStack>
+
+			<VStack gap="sm">
+				<HStack gap="sm">
+					<Input
+						id="new-volume"
+						type="number"
+						style="seamless"
+						placeholder={$t`Number of chapters` || ''}
+						bind:value={newVolumeChapters}
+						onkeydown={(e) => {
+							if (e.key === ' ') {
+								e.stopPropagation();
+							}
+							handleKeyDown(e);
+						}}
+						class="flex-1"
+					/>
+					<Button
+						variant="primary"
+						onclick={addVolume}
+						disabled={!newVolumeChapters ||
+							Number(newVolumeChapters) <= 0 ||
+							isNaN(Number(newVolumeChapters))}
+						style="seamless"
+						data-keyhint={`enter;${$t`Add Volume`}`}
+					>
+						<HStack gap="sm" align="center">
+							<IconPlus size={18} />
+							<span>{$t`Add`}</span>
+						</HStack>
+					</Button>
+				</HStack>
+				<p class="text-muted text-xs">
+					{$t`Enter the number of chapters for the new volume and click Add`}
+				</p>
+			</VStack>
 		</BentoItem>
 	</BentoGrid>
 </div>

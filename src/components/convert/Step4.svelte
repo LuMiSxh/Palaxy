@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import { keyHint } from '$states/keyhint.svelte';
 	import { t } from 'svelte-i18n-lingui';
 	import { wrapper } from '$lib/utils';
@@ -29,12 +29,23 @@
 		}
 	});
 
-	onDestroy(async () => {
-		if (unregisterKeyHint) unregisterKeyHint();
+	// Save state immediately when values change instead of in onDestroy
+	$effect(() => {
+		if (convState.bundle) {
+			wrapper(commands.convStateSet({ BundleFlag: convState.bundle as BundleFlag }));
+		}
+	});
 
-		// Save chapter sizes and bundle type
-		await wrapper(commands.convStateSet({ BundleFlag: convState.bundle as BundleFlag }));
-		await wrapper(commands.convStateSet({ VolumeSizes: convState.chapterSizes }));
+	$effect(() => {
+		if (convState.chapterSizes.length > 0) {
+			wrapper(commands.convStateSet({ VolumeSizes: convState.chapterSizes }));
+		}
+	});
+
+	onMount(() => {
+		return () => {
+			if (unregisterKeyHint) unregisterKeyHint();
+		};
 	});
 </script>
 

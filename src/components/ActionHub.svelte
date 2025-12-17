@@ -226,7 +226,7 @@
 							aria-selected={i === selectedIndex}
 							class="group flex w-full items-center justify-between rounded-lg px-3 py-3 text-left transition-all duration-150
                                     {i === selectedIndex
-								? 'bg-accent-500 text-white shadow-md'
+								? 'bg-accent-500 text-auto-contrast shadow-md'
 								: 'hover:bg-surface-2 text-base'}"
 							onclick={(e) => {
 								e.stopPropagation();
@@ -239,16 +239,14 @@
 								{#if item.icon}
 									<item.icon
 										size={20}
-										class={i === selectedIndex ? 'text-white' : 'text-muted group-hover:text-base'}
+										class={i === selectedIndex ? '' : 'text-muted group-hover:text-base'}
 									/>
 								{/if}
 								<div class="flex flex-col truncate">
 									<span class="truncate font-medium">{item.name}</span>
 									{#if item.description}
 										<span
-											class="truncate text-xs {i === selectedIndex
-												? 'text-white/80'
-												: 'text-muted'}"
+											class="truncate text-xs {i === selectedIndex ? 'opacity-80' : 'text-muted'}"
 										>
 											{item.description}
 										</span>
@@ -257,10 +255,7 @@
 							</div>
 
 							{#if item.subcommands}
-								<IconChevronRight
-									size={16}
-									class={i === selectedIndex ? 'text-white' : 'text-muted'}
-								/>
+								<IconChevronRight size={16} class={i === selectedIndex ? '' : 'text-muted'} />
 							{/if}
 						</button>
 					{/each}

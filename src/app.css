@@ -6,7 +6,7 @@
 
 :root {
 	/* Palaxy Blue (~#61afef) converted to OKLCH for Waku */
-	--waku-accent: oklch(0.86 0.22 106);
+	--waku-accent: oklch(0.91 0.22 106);
 	/* Alternative color (Arknights Endfield) Hex: #F8F546  -> OKLCH: oklch(0.91 0.22 106) */
 }
 

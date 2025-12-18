@@ -70,10 +70,7 @@
 
 {#if isLoading}
 	<div class="flex h-full w-full items-center justify-center p-3">
-		<VStack gap="sm" align="center">
-			<LoadingSpinner size="lg" />
-			<span class="text-muted text-sm">{$t`Analyzing source material...`}</span>
-		</VStack>
+		<LoadingSpinner size="lg" text={$t`Analyzing source material...`} />
 	</div>
 {:else}
 	<div class="h-full w-full p-3">

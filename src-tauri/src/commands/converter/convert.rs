@@ -1,16 +1,10 @@
-//! Conversion module with parallel volume processing
-//!
-//! This module handles the main conversion process, converting bundled volumes
-//! into CBZ or EPUB format with parallel processing and progress events.
+//! Conversion module with parallel volume processing.
 
 use super::events::*;
-use super::image::process_images_to_memory;
-use crate::generator::Generator;
-use crate::generator::cbz::Cbz;
-use crate::generator::epub::EPub;
 use crate::prelude::*;
 use log::{debug, error, info, trace, warn};
-use std::path::{Path, PathBuf};
+use packager::{process_images_to_memory, Cbz, EPub, Generator};
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex as StdMutex};
 use tauri::{AppHandle, State};
@@ -52,16 +46,6 @@ pub async fn conv_convert(
         volume_separator,
     ) = {
         let state = state.lock().await;
-        debug!(
-            "Converting {} volumes to {:?} format",
-            state.volume_sizes.len(),
-            state.format
-        );
-        trace!(
-            "Conversion parameters: target={:?}, create_directory={:?}, direction={:?}, image_format={:?}",
-            state.target, state.create_directory, state.direction, state.image_format
-        );
-
         (
             state.name.clone(),
             state.target.clone(),
@@ -75,460 +59,295 @@ pub async fn conv_convert(
             state.hide_single_volume_number,
             state.volume_separator.clone(),
         )
-    }; // Lock is released here
-
-    debug!("Using target directory: {:?}", target);
-
-    let target_directory_path = match create_directory {
-        true => {
-            let path = Path::new(&target).join(&name);
-            debug!("Creating target directory: {:?}", path);
-            if !path.exists() {
-                trace!("Directory doesn't exist, creating it now");
-                create_dir(&path).await.map_err(|e| {
-                    error!("Failed to create directory {:?}: {}", path, e);
-                    e
-                })?;
-            }
-            Ok(path)
-        }
-        false => {
-            let path = Path::new(&target);
-            debug!("Using existing directory: {:?}", path);
-            if !path.exists() {
-                error!("Target directory does not exist: {:?}", path);
-                Err(Error::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "Target directory does not exist",
-                )))
-            } else {
-                Ok(PathBuf::from(path))
-            }
-        }
-    }?
-    .to_str()
-    .unwrap()
-    .to_string();
-    debug!("Target directory path: {}", target_directory_path);
-
-    // Check if we have edited data, otherwise use normal data
-    let pages = match edited_data {
-        Some(e_data) => {
-            if e_data.is_empty() {
-                debug!("Using original data (edited data is empty)");
-                data
-            } else {
-                debug!("Using edited data with {} chapter sets", e_data.len());
-                e_data
-            }
-        }
-        None => {
-            debug!(
-                "No edited data available, using original data with {} chapter sets",
-                data.len()
-            );
-            data
-        }
     };
 
-    // Create a temporary directory for image conversions if needed
-    let temp_dir = if image_format != ImageOutputFormat::None {
-        let temp_path = Path::new(&target_directory_path).join(".palaxy_temp");
-        debug!(
-            "Creating temp directory for image conversions: {:?}",
-            temp_path
-        );
-        if !temp_path.exists() {
-            create_dir(&temp_path).await.map_err(|e| {
-                error!("Failed to create temp directory {:?}: {}", temp_path, e);
-                e
-            })?;
+    // Use edited data if available, otherwise use original data
+    let data = edited_data.unwrap_or(data);
+
+    debug!(
+        "Conversion settings: format={:?}, direction={:?}, image_format={:?}",
+        format, direction, image_format
+    );
+    debug!("Volume sizes: {:?}", volume_sizes);
+
+    // Determine output path
+    let output_path = if create_directory {
+        let new_dir = target.join(&name);
+        debug!("Creating new directory: {:?}", new_dir);
+        if let Err(e) = create_dir(&new_dir).await {
+            warn!("Failed to create directory {:?}: {}", new_dir, e);
         }
-        Some(temp_path)
+        new_dir
     } else {
-        None
+        debug!("Using existing target directory: {:?}", target);
+        target
     };
+
+    let output_path_str = output_path
+        .to_str()
+        .ok_or_else(|| Error::InvalidPath(output_path.clone(), "Invalid UTF-8 path".into()))?;
+
+    debug!("Output path: {}", output_path_str);
+
+    // Calculate resource budget
+    let budget = common::ResourceBudget::calculate();
+    info!(
+        "Using resource budget: {} concurrent volumes, {} chunk size",
+        budget.max_concurrent_volumes, budget.chunk_size
+    );
 
     // Emit conversion start event
-    let total_volumes = volume_sizes.len();
-    if let Err(e) = emit_conversion_start(&app, total_volumes) {
+    trace!("Emitting conversion start event");
+    if let Err(e) = emit_conversion_start(&app, volume_sizes.len()) {
         warn!("Failed to emit conversion start event: {}", e);
     }
 
-    // Track results for final event
-    let successful = Arc::new(StdMutex::new(0usize));
-    let failed = Arc::new(StdMutex::new(0usize));
+    // Prepare volumes (chunks of chapters)
+    let mut volumes = Vec::new();
+    let mut chapter_index = 0;
 
-    // Clone temp_dir for cleanup later
-    let temp_dir_cleanup = temp_dir.clone();
-
-    info!(
-        "Processing {} volumes in parallel using thread pool",
-        total_volumes
-    );
-
-    // Pre-calculate cumulative chapter indices to avoid repeated summing
-    let mut cumulative_indices = Vec::with_capacity(volume_sizes.len());
-    let mut sum = 0;
-    for &chapters in &volume_sizes {
-        cumulative_indices.push(sum);
-        sum += chapters;
+    for (vol_idx, &chapter_count) in volume_sizes.iter().enumerate() {
+        let mut volume_data = Vec::new();
+        for _ in 0..chapter_count {
+            if chapter_index < data.len() {
+                volume_data.push(data[chapter_index].clone());
+                chapter_index += 1;
+            }
+        }
+        volumes.push((vol_idx + 1, volume_data));
+        trace!(
+            "Prepared volume {} with {} chapters",
+            vol_idx + 1,
+            chapter_count
+        );
     }
 
-    // Use for_each instead of map/collect to emit events in real-time
-    volume_sizes
-        .iter() // <- NOTE: iter(), not par_iter()
-        .enumerate()
-        .for_each(|(i, &chapters)| {
-            let j = cumulative_indices[i];
-            // Format volume name based on settings
-            let volume_name = if hide_single_volume_number && total_volumes == 1 {
-                // Hide volume number when there's only one volume
-                name.trim().to_string()
-            } else {
-                // Use custom separator between name and volume number
-                // Trim only the name to avoid double spacing, keep separator as-is
-                format!("{}{}{}", name.trim(), volume_separator, i + 1)
-            };
+    info!("Processing {} volumes", volumes.len());
 
-            debug!(
-                "Volume {} ({}) will include {} chapters",
-                i + 1,
-                volume_name,
-                chapters
-            );
+    // Shared counters for progress tracking
+    let completed_volumes = Arc::new(AtomicUsize::new(0));
+    let failed_volumes = Arc::new(StdMutex::new(Vec::new()));
 
-            // Clone the necessary data for this volume
-            let volume_pages = pages[j..(j + chapters)].to_vec();
+    // Process volumes in parallel with controlled concurrency
+    let semaphore = Arc::new(tokio::sync::Semaphore::new(budget.max_concurrent_volumes));
+
+    let mut tasks = Vec::new();
+
+    for (vol_idx, (volume_number, volume_chapters)) in volumes.into_iter().enumerate() {
+        let sem = Arc::clone(&semaphore);
+        let app_handle = app.clone();
+        let name_clone = name.clone();
+        let output_path_clone = output_path_str.to_string();
+        let completed = Arc::clone(&completed_volumes);
+        let failed = Arc::clone(&failed_volumes);
+        let total_volumes = volume_sizes.len();
+        let volume_name = if total_volumes == 1 && hide_single_volume_number {
+            name_clone.clone()
+        } else {
+            format!("{}{}{}", name_clone, volume_separator, volume_number)
+        };
+
+        let task = tokio::spawn(async move {
+            let _permit = sem.acquire().await.ok()?;
+
+            debug!("Starting processing for volume {}", volume_number);
 
             // Emit volume start event
-            if let Err(e) = emit_volume_start(&app, i, total_volumes, volume_name.clone()) {
+            if let Err(e) =
+                emit_volume_start(&app_handle, vol_idx, total_volumes, volume_name.clone())
+            {
                 warn!("Failed to emit volume start event: {}", e);
             }
 
-            // Emit status message for volume start
-            if let Err(e) = emit_status_message(
-                &app,
-                StatusMessageType::VolumeStarted {
-                    volume_index: i,
-                    volume_name: volume_name.clone(),
-                },
-            ) {
-                warn!("Failed to emit status message: {}", e);
-            }
+            // Flatten chapter images into a single list
+            let all_images: Vec<PathBuf> = volume_chapters.into_iter().flatten().collect();
+            let total_images = all_images.len();
 
-            debug!("Volume {}: starting conversion to {:?}", i + 1, format);
+            debug!("Volume {} has {} total images", volume_number, total_images);
 
-            // PERFORM CONVERSION
+            // Progress tracking
+            let processed_images = Arc::new(AtomicUsize::new(0));
+            let processed_clone = Arc::clone(&processed_images);
+            let app_clone = app_handle.clone();
+            let vol_name_clone = volume_name.clone();
+
+            // Process images with progress callback
+            let pages = process_images_to_memory(
+                &all_images,
+                image_format,
+                Some(&|| {
+                    let current = processed_clone.fetch_add(1, Ordering::SeqCst) + 1;
+                    if let Err(e) = emit_image_progress(
+                        &app_clone,
+                        vol_idx,
+                        vol_name_clone.clone(),
+                        current,
+                        total_images,
+                    ) {
+                        trace!("Failed to emit image progress: {}", e);
+                    }
+                }),
+            )
+            .ok()?;
+
+            debug!(
+                "Processed {} images for volume {}",
+                pages.len(),
+                volume_number
+            );
+
+            debug!("Generating {:?} file: {}", format, volume_name);
+
+            // Convert based on format
             let result = match format {
                 FileFormat::Cbz => convert_cbz_volume(
-                    i,
+                    &output_path_clone,
                     &volume_name,
-                    &target_directory_path,
-                    &volume_pages,
-                    image_format,
-                    &app,
-                    total_volumes,
+                    &name_clone,
+                    volume_number,
+                    pages,
                 ),
                 FileFormat::Epub => convert_epub_volume(
-                    i,
+                    &output_path_clone,
                     &volume_name,
-                    &target_directory_path,
-                    &volume_pages,
+                    &name_clone,
+                    volume_number,
                     direction,
-                    image_format,
-                    &app,
-                    total_volumes,
+                    pages,
                 ),
             };
 
-            // Emit volume complete event
-            match &result {
+            match result {
                 Ok(_) => {
-                    if let Ok(mut s) = successful.lock() {
-                        *s += 1;
-                    }
+                    completed.fetch_add(1, Ordering::SeqCst);
+                    info!("Successfully converted volume {}", volume_number);
+
+                    // Emit volume complete event
                     if let Err(e) = emit_volume_complete(
-                        &app,
-                        i,
+                        &app_handle,
+                        vol_idx,
                         total_volumes,
-                        volume_name.clone(),
+                        volume_name,
                         true,
                         None,
                     ) {
                         warn!("Failed to emit volume complete event: {}", e);
                     }
 
-                    // Emit status message for successful volume completion
-                    if let Err(e) = emit_status_message(
-                        &app,
-                        StatusMessageType::VolumeFinished {
-                            volume_index: i,
-                            volume_name: volume_name.clone(),
-                            success: true,
-                        },
-                    ) {
-                        warn!("Failed to emit status message: {}", e);
-                    }
+                    Some(())
                 }
-                Err(err) => {
-                    if let Ok(mut f) = failed.lock() {
-                        *f += 1;
+                Err(e) => {
+                    error!("Failed to convert volume {}: {}", volume_number, e);
+                    if let Ok(mut fails) = failed.lock() {
+                        fails.push((volume_number, e.to_string()));
                     }
-                    if let Err(e) = emit_volume_complete(
-                        &app,
-                        i,
+
+                    if let Err(err) = emit_volume_complete(
+                        &app_handle,
+                        vol_idx,
                         total_volumes,
-                        volume_name.clone(),
+                        volume_name,
                         false,
-                        Some(err.to_string()),
+                        Some(e.to_string()),
                     ) {
-                        warn!("Failed to emit volume complete event: {}", e);
+                        warn!("Failed to emit volume complete event: {}", err);
                     }
 
-                    // Emit status message for failed volume completion
-                    if let Err(e) = emit_status_message(
-                        &app,
-                        StatusMessageType::VolumeFinished {
-                            volume_index: i,
-                            volume_name: volume_name.clone(),
-                            success: false,
-                        },
-                    ) {
-                        warn!("Failed to emit status message: {}", e);
-                    }
+                    None
                 }
-            }
-
-            // Log individual volume result but don't stop processing
-            if let Err(e) = &result {
-                error!("Volume {} failed: {}", i + 1, e);
             }
         });
 
-    // Conversion is complete - all volumes processed in parallel
-    let conversion_result = Ok(());
+        tasks.push(task);
+    }
 
-    // Clean up temporary directory if it was created
-    if let Some(temp_dir) = temp_dir_cleanup {
-        debug!("Cleaning up temporary directory: {:?}", temp_dir);
-        if let Err(e) = tokio::fs::remove_dir_all(&temp_dir).await {
-            warn!("Failed to remove temporary directory {:?}: {}", temp_dir, e);
-        } else {
-            trace!("Temporary directory removed successfully");
+    // Wait for all tasks to complete
+    debug!("Waiting for all volume conversion tasks to complete");
+    for task in tasks {
+        if let Err(e) = task.await {
+            error!("Task join error: {}", e);
         }
     }
 
+    let completed_count = completed_volumes.load(Ordering::SeqCst);
+    let failed_count = failed_volumes.lock().unwrap().len();
+
     let duration = start.elapsed().as_secs_f64();
 
+    info!(
+        "Conversion complete: {} successful, {} failed in {:.2}s",
+        completed_count, failed_count, duration
+    );
+
     // Emit conversion complete event
-    let successful_count = *successful.lock().unwrap();
-    let failed_count = *failed.lock().unwrap();
     if let Err(e) = emit_conversion_complete(
         &app,
-        total_volumes,
-        successful_count,
+        volume_sizes.len(),
+        completed_count,
         failed_count,
         duration,
     ) {
         warn!("Failed to emit conversion complete event: {}", e);
     }
-
-    // Check if conversion had errors
-    if let Err(e) = conversion_result {
-        error!("Conversion process encountered errors: {}", e);
-        return Err(e);
-    }
-
-    if failed_count > 0 {
-        warn!(
-            "Conversion completed with {} failures out of {} volumes",
-            failed_count, total_volumes
-        );
-    }
-
-    info!(
-        "Conversion completed: {} successful, {} failed in {}s",
-        successful_count, failed_count, duration
-    );
     Ok(BaseResponse::default_duration(duration))
 }
 
-/// Convert a single volume to CBZ format
 fn convert_cbz_volume(
-    volume_index: usize,
-    volume_name: &str,
-    target_dir: &str,
-    volume_pages: &[Vec<PathBuf>],
-    image_format: ImageOutputFormat,
-    app: &AppHandle,
-    _total_volumes: usize,
+    output_path: &str,
+    filename: &str,
+    title: &str,
+    volume_number: usize,
+    pages: Vec<packager::ProcessedPage>,
 ) -> EResult<()> {
-    let total_images: usize = volume_pages.iter().map(|c| c.len()).sum();
-
-    // Use an Atomic counter for thread-safe progress tracking across the volume
-    let current_image_atomic = Arc::new(AtomicUsize::new(0));
-    let volume_name_arc = Arc::new(volume_name.to_string());
-    let app_arc = Arc::new(app.clone());
-
-    // Initialize Generator
-    let mut generator = Cbz::new(target_dir, volume_name)?;
-
-    // Define the progress callback
-    let progress_callback = {
-        let current_image = current_image_atomic.clone();
-        let v_name = volume_name_arc.clone();
-        let app_ref = app_arc.clone();
-
-        move || {
-            let curr = current_image.fetch_add(1, Ordering::Relaxed) + 1;
-
-            // Emit progress frequently (every image or every 5th depending on preference)
-            // Since AVIF is slow, emitting every image makes it feel responsive
-            if let Err(e) = emit_status_message(
-                &app_ref,
-                StatusMessageType::PageAdded {
-                    volume_index,
-                    volume_name: v_name.to_string(),
-                    page_number: curr,
-                    total_pages: total_images,
-                },
-            ) {
-                // Don't panic on event error, just log
-                trace!("Failed to emit status: {}", e);
-            }
-
-            if curr % 5 == 0 || curr == total_images {
-                let _ = emit_image_progress(
-                    &app_ref,
-                    volume_index,
-                    v_name.to_string(),
-                    curr,
-                    total_images,
-                );
-            }
-        }
-    };
-
-    trace!(
-        "Volume {}: processing {} chapter sets",
-        volume_index + 1,
-        volume_pages.len()
+    debug!(
+        "Creating CBZ: path={}, filename={}, volume={}",
+        output_path, filename, volume_number
     );
 
-    for (chapter_idx, chapter_pages) in volume_pages.iter().enumerate() {
-        let processed_pages =
-            match process_images_to_memory(chapter_pages, image_format, Some(&progress_callback)) {
-                Ok(pages) => pages,
-                Err(e) => {
-                    error!("Chapter {} failed: {}, trying passthrough", chapter_idx, e);
-                    process_images_to_memory::<fn()>(
-                        chapter_pages,
-                        ImageOutputFormat::None, // Force original
-                        None,                    // Don't double count progress
-                    )?
-                }
-            };
+    let mut cbz = Cbz::new(output_path, filename)?;
 
-        for page in processed_pages {
-            generator.add_page_from_memory(&page.data, &page.extension)?;
-        }
+    debug!("Adding {} pages to CBZ", pages.len());
+    for page in pages {
+        cbz.add_page_from_memory(&page.data, &page.extension)?;
     }
 
-    debug!(
-        "Volume {}: setting metadata and saving CBZ",
-        volume_index + 1
-    );
-    generator.set_metadata(volume_name, volume_index + 1)?;
-    generator.save()?;
+    cbz.set_metadata(title, volume_number)?;
 
-    info!("Volume {}: CBZ file saved successfully", volume_index + 1);
+    debug!("Saving CBZ file");
+    cbz.save()?;
+
+    info!("CBZ volume {} created successfully", volume_number);
     Ok(())
 }
 
-/// Convert a single volume to EPUB format
 fn convert_epub_volume(
-    volume_index: usize,
-    volume_name: &str,
-    target_dir: &str,
-    volume_pages: &[Vec<PathBuf>],
+    output_path: &str,
+    filename: &str,
+    title: &str,
+    volume_number: usize,
     direction: Direction,
-    image_format: ImageOutputFormat,
-    app: &AppHandle,
-    _total_volumes: usize,
+    pages: Vec<packager::ProcessedPage>,
 ) -> EResult<()> {
     debug!(
-        "Volume {}: creating EPUB file: {}",
-        volume_index + 1,
-        volume_name
+        "Creating EPUB: path={}, filename={}, volume={}, direction={:?}",
+        output_path, filename, volume_number, direction
     );
 
-    if volume_pages.is_empty() || volume_pages[0].is_empty() {
-        return Err(Error::Unsupported(
-            "Cannot create EPUB without cover image".to_string(),
-        ));
+    let mut epub = EPub::new(output_path, filename)?;
+
+    epub.set_reading_direction(direction);
+    epub.set_lang("en")?;
+
+    debug!("Adding {} pages to EPUB", pages.len());
+    for page in pages {
+        epub.add_page_from_memory(&page.data, &page.extension)?;
     }
 
-    let total_images: usize = volume_pages.iter().map(|c| c.len()).sum();
-    let current_image_atomic = Arc::new(AtomicUsize::new(0));
-    let volume_name_arc = Arc::new(volume_name.to_string());
-    let app_arc = Arc::new(app.clone());
+    epub.set_metadata(title, volume_number)?;
 
-    let mut generator = EPub::new(target_dir, volume_name)?;
+    debug!("Saving EPUB file");
+    epub.save()?;
 
-    generator.set_cover(&volume_pages[0][0])?;
-
-    generator.set_lang("en")?;
-    generator.set_reading_direction(direction);
-    generator.set_custom_metadata("title", volume_name)?;
-    generator.set_custom_metadata("author", "Manga Bundler")?;
-
-    // Progress callback (Same as CBZ)
-    let progress_callback = {
-        let current_image = current_image_atomic.clone();
-        let v_name = volume_name_arc.clone();
-        let app_ref = app_arc.clone();
-        move || {
-            let curr = current_image.fetch_add(1, Ordering::Relaxed) + 1;
-
-            let _ = emit_status_message(
-                &app_ref,
-                StatusMessageType::PageAdded {
-                    volume_index,
-                    volume_name: v_name.to_string(),
-                    page_number: curr,
-                    total_pages: total_images,
-                },
-            );
-
-            if curr % 5 == 0 || curr == total_images {
-                let _ = emit_image_progress(
-                    &app_ref,
-                    volume_index,
-                    v_name.to_string(),
-                    curr,
-                    total_images,
-                );
-            }
-        }
-    };
-
-    for (chapter_idx, chapter_pages) in volume_pages.iter().enumerate() {
-        // 1. PROCESS TO MEMORY (Parallel)
-        let processed_pages =
-            match process_images_to_memory(chapter_pages, image_format, Some(&progress_callback)) {
-                Ok(pages) => pages,
-                Err(e) => {
-                    error!("Chapter {} failed: {}, trying passthrough", chapter_idx, e);
-                    process_images_to_memory::<fn()>(chapter_pages, ImageOutputFormat::None, None)?
-                }
-            };
-
-        for page in processed_pages {
-            generator.add_page_from_memory(&page.data, &page.extension)?;
-        }
-    }
-
-    generator.save()?;
+    info!("EPUB volume {} created successfully", volume_number);
     Ok(())
 }

@@ -25,7 +25,7 @@ msgstr "+{more} more chapters"
 msgid "Action Hub"
 msgstr "Action Hub"
 
-#: src/components/convert/Step2.svelte:256
+#: src/components/convert/Step2.svelte:253
 msgid "Action Required"
 msgstr "Action Required"
 
@@ -79,11 +79,11 @@ msgstr "Always show number"
 msgid "An error occurred"
 msgstr "An error occurred"
 
-#: src/components/convert/Step2.svelte:164
+#: src/components/convert/Step2.svelte:161
 msgid "Analysis Details"
 msgstr "Analysis Details"
 
-#: src/components/convert/Step2.svelte:75
+#: src/components/convert/Step2.svelte:73
 msgid "Analyzing source material..."
 msgstr "Analyzing source material..."
 
@@ -266,7 +266,7 @@ msgstr "Create project folder"
 msgid "Create Project Folder"
 msgstr "Create Project Folder"
 
-#: src/components/convert/Step2.svelte:179
+#: src/components/convert/Step2.svelte:176
 msgid "Critical Issues"
 msgstr "Critical Issues"
 
@@ -407,7 +407,7 @@ msgstr "German"
 msgid "Go to the home page"
 msgstr "Go to the home page"
 
-#: src/components/convert/Step2.svelte:139
+#: src/components/convert/Step2.svelte:136
 msgid "Good"
 msgstr "Good"
 
@@ -479,7 +479,7 @@ msgstr "Images will keep their original format (fastest, larger file size)"
 #~ msgid "Invoke"
 #~ msgstr "Invoke"
 
-#: src/components/convert/Step2.svelte:93
+#: src/components/convert/Step2.svelte:90
 msgid "Issues"
 msgstr "Issues"
 
@@ -591,11 +591,11 @@ msgstr "Next"
 msgid "No"
 msgstr "No"
 
-#: src/components/convert/Step2.svelte:275
+#: src/components/convert/Step2.svelte:272
 msgid "No Analysis Results"
 msgstr "No Analysis Results"
 
-#: src/components/convert/Step2.svelte:277
+#: src/components/convert/Step2.svelte:274
 msgid "No analysis results found. There might be an issue with the source material or the analysis process."
 msgstr "No analysis results found. There might be an issue with the source material or the analysis process."
 
@@ -676,7 +676,7 @@ msgstr "Output Structure"
 msgid "Platform"
 msgstr "Platform"
 
-#: src/components/convert/Step2.svelte:258
+#: src/components/convert/Step2.svelte:255
 msgid "Please resolve the critical issues above before continuing with the conversion process."
 msgstr "Please resolve the critical issues above before continuing with the conversion process."
 
@@ -701,7 +701,7 @@ msgstr "Project"
 msgid "Project Name"
 msgstr "Project Name"
 
-#: src/components/convert/Step2.svelte:227
+#: src/components/convert/Step2.svelte:224
 msgid "Quality Indicators"
 msgstr "Quality Indicators"
 
@@ -763,12 +763,12 @@ msgstr "Restore all settings to their default values"
 msgid "Right to Left"
 msgstr "Right to Left"
 
-#: src/components/convert/Step4.svelte:56
+#: src/components/convert/Step4.svelte:54
 msgid "Running Bundler..."
 msgstr "Running Bundler..."
 
-#: src/components/convert/Step2.svelte:160
-#: src/components/convert/Step2.svelte:160
+#: src/components/convert/Step2.svelte:157
+#: src/components/convert/Step2.svelte:157
 msgid "Scroll details"
 msgstr "Scroll details"
 
@@ -998,8 +998,8 @@ msgstr "Volumes detected from file and folder names"
 msgid "Waiting"
 msgstr "Waiting"
 
-#: src/components/convert/Step2.svelte:116
-#: src/components/convert/Step2.svelte:203
+#: src/components/convert/Step2.svelte:113
+#: src/components/convert/Step2.svelte:200
 msgid "Warnings"
 msgstr "Warnings"
 

@@ -159,15 +159,3 @@ pub fn emit_conversion_complete(
     .emit(app)
     .map_err(|e| Error::AsyncTaskError(format!("Failed to emit conversion complete event: {}", e)))
 }
-
-/// Emits a status message event
-pub fn emit_status_message(app: &AppHandle, message: StatusMessageType) -> EResult<()> {
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() as u64;
-
-    StatusMessageEvent { message, timestamp }
-        .emit(app)
-        .map_err(|e| Error::AsyncTaskError(format!("Failed to emit status message event: {}", e)))
-}

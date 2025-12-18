@@ -5,46 +5,37 @@
 //! and application state initialization.
 
 use crate::commands::converter::{
+    conv_analyze, conv_bundle, conv_convert, conv_state_get, conv_state_reset, conv_state_set,
     ConversionCompleteEvent, ConversionStartEvent, ImageProgressEvent, StatusMessageEvent,
-    VolumeCompleteEvent, VolumeStartEvent, conv_analyze, conv_bundle, conv_convert, conv_state_get,
-    conv_state_reset, conv_state_set,
+    VolumeCompleteEvent, VolumeStartEvent,
 };
 use crate::commands::management::mgmt_get_logs_path;
 #[cfg(debug_assertions)]
 use specta_typescript::Typescript;
 use tauri::{Builder, Manager};
-use tauri_specta::{Builder as SpectaBuilder, collect_commands, collect_events};
+use tauri_specta::{collect_commands, collect_events, Builder as SpectaBuilder};
 use tokio::sync::Mutex;
 
-mod collector;
 mod commands;
-mod generator;
 mod prelude;
-mod types;
-#[macro_use]
-mod macros;
 
-// Use mimalloc as the global allocator for better multi-threaded performance
+// Use mimalloc as the global allocator for better multi-threaded performance -> Leads to speedups but larger binary size
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-/// Initialize the rayon global thread pool with optimized settings
+/// Initialize the rayon global thread pool using ResourceBudget settings
 ///
-/// This configures rayon for optimal performance on the current hardware:
-/// - Uses all available CPU cores
-/// - Sets appropriate stack size for image processing
-/// - Enables work stealing for better load balancing
+/// This configures rayon for optimal performance based on system resources
 fn init_rayon_thread_pool() {
-    let num_cpus = num_cpus::get();
+    use common::ResourceBudget;
 
-    // Use all available cores, but cap at 16 to avoid diminishing returns
-    let num_threads = num_cpus.min(16);
+    let budget = ResourceBudget::calculate();
 
     // Set stack size to 4MB per thread (image processing can be stack-heavy)
     let stack_size = 4 * 1024 * 1024;
 
     match rayon::ThreadPoolBuilder::new()
-        .num_threads(num_threads)
+        .num_threads(budget.thread_pool_size)
         .stack_size(stack_size)
         .thread_name(|idx| format!("rayon-worker-{}", idx))
         .build_global()
@@ -52,7 +43,7 @@ fn init_rayon_thread_pool() {
         Ok(_) => {
             log::info!(
                 "Initialized rayon thread pool with {} threads (stack size: {}MB)",
-                num_threads,
+                budget.thread_pool_size,
                 stack_size / (1024 * 1024)
             );
         }
@@ -119,6 +110,12 @@ pub fn run() {
         // Configure application logging with different levels for debug/release
         .plugin(
             tauri_plugin_log::Builder::new()
+                .targets([
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir {
+                        file_name: None,
+                    }),
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
+                ])
                 .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
                 .level(if cfg!(debug_assertions) {
                     log::LevelFilter::Debug

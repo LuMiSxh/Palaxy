@@ -5,14 +5,12 @@
 //! - `analyze`: Source directory analysis
 //! - `bundle`: Chapter bundling logic
 //! - `convert`: Main conversion orchestration with parallel processing
-//! - `image`: Image format conversion with optimized encoders
 //! - `events`: Progress event definitions and emission helpers
 
 pub mod analyze;
 pub mod bundle;
 pub mod convert;
 pub mod events;
-pub mod image;
 pub mod state;
 
 // Re-export public command functions

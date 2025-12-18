@@ -1,13 +1,10 @@
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::path::PathBuf;
+
 // --- Enums ---
 
-/// Represents the method used for bundling files
-///
-/// * `Name` - Bundle by name
-/// * `Image` - Bundle by image
-/// * `Manual` - Manual bundling (default)
+/// File bundling method.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Default, Type)]
 pub enum BundleFlag {
     #[serde(rename = "NAME")]
@@ -19,10 +16,7 @@ pub enum BundleFlag {
     Manual,
 }
 
-/// Supported file formats for conversion
-///
-/// * `Epub` - Electronic Publication format
-/// * `Cbz` - Comic Book ZIP format (default)
+/// Output file format.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Default, Type)]
 pub enum FileFormat {
     #[serde(rename = "EPUB")]
@@ -32,10 +26,7 @@ pub enum FileFormat {
     Cbz,
 }
 
-/// Reading direction for content in an ePub file
-///
-/// * `Ltr` - Left to Right (default)
-/// * `Rtl` - Right to Left
+/// Reading direction for ePub content.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Default, Type)]
 pub enum Direction {
     #[default]
@@ -45,11 +36,7 @@ pub enum Direction {
     Rtl,
 }
 
-/// Image output format for conversion
-///
-/// * `None` - Keep original image format (default)
-/// * `WebP` - Convert images to WebP format
-/// * `Avif` - Convert images to AVIF format
+/// Image output format for conversion.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Default, Type)]
 pub enum ImageOutputFormat {
     #[default]
@@ -61,9 +48,7 @@ pub enum ImageOutputFormat {
     Avif,
 }
 
-/// Keys for the conversion state data
-///
-/// Represents various properties that can be set during the conversion process
+/// Conversion state property keys.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Type)]
 pub enum ConvStateKey {
     Name(String),
@@ -84,11 +69,7 @@ pub enum ConvStateKey {
 
 // --- Responses ---
 
-/// Base response structure that can contain optional payload data
-///
-/// * `duration` - Operation execution time in seconds
-/// * `comment` - Optional comment or message related to the operation
-/// * `payload` - Optional data payload of generic type T
+/// Base response structure with optional payload.
 #[derive(Serialize, Deserialize, Default, Type)]
 pub struct BaseResponse<T = ()> {
     pub duration: f64,
@@ -97,15 +78,7 @@ pub struct BaseResponse<T = ()> {
 }
 
 impl BaseResponse<()> {
-    /// Creates a new BaseResponse with only duration set
-    ///
-    /// # Arguments
-    ///
-    /// * `duration` - The operation execution time in seconds
-    ///
-    /// # Returns
-    ///
-    /// A new BaseResponse with duration set and other fields defaulted
+    /// Creates a response with only duration set.
     pub fn default_duration(duration: f64) -> Self {
         Self {
             duration,
@@ -115,11 +88,7 @@ impl BaseResponse<()> {
     }
 }
 
-/// Response structure containing bundling operation results
-///
-/// * `total_chapters` - Total number of chapters processed
-/// * `total_volumes` - Optional total number of volumes created
-/// * `chapter_sizes` - Optional list of chapter sizes in bytes
+/// Bundling operation results.
 #[derive(Serialize, Deserialize, Default, Type)]
 pub struct BundleResponse {
     pub total_chapters: usize,
@@ -127,15 +96,10 @@ pub struct BundleResponse {
     pub chapter_sizes: Option<Vec<usize>>,
 }
 
-/// Type alias for a BaseResponse containing BundleResponse data
+/// Bundle operation response type.
 pub type CommBundle = BaseResponse<BundleResponse>;
 
-/// Response structure containing analysis results
-///
-/// * `negative` - List of negative findings
-/// * `positive` - List of positive findings
-/// * `warning` - List of warnings
-/// * `flag` - Recommended bundle flag based on analysis
+/// Analysis operation results.
 #[derive(Serialize, Deserialize, Default, Type)]
 pub struct AnalyzeResponse {
     pub negative: Vec<String>,
@@ -144,5 +108,5 @@ pub struct AnalyzeResponse {
     pub flag: BundleFlag,
 }
 
-/// Type alias for a BaseResponse containing AnalyzeResponse data
+/// Analysis operation response type.
 pub type CommAnalyzeMeta = BaseResponse<AnalyzeResponse>;

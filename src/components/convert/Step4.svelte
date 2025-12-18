@@ -51,10 +51,7 @@
 
 {#if step4State.loading}
 	<div class="flex h-full w-full items-center justify-center p-3">
-		<VStack gap="sm" align="center">
-			<LoadingSpinner size="lg" />
-			<span class="text-muted text-sm">{$t`Running Bundler...`}</span>
-		</VStack>
+		<LoadingSpinner size="lg" text={$t`Running Bundler...`} />
 	</div>
 {:else if convState.bundle === 'MANUAL'}
 	<ManualBundling />

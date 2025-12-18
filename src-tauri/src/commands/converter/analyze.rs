@@ -3,12 +3,12 @@
 //! This module handles the analysis of source directories to validate structure,
 //! naming conventions, file formats, and provide recommendations for bundling.
 
-use crate::collector::Collector;
 use crate::prelude::*;
 use lazy_static::lazy_static;
 use log::{debug, error, info, trace, warn};
 use rayon::prelude::*;
 use regex::Regex;
+use scanner::Collector;
 use std::path::PathBuf;
 use tauri::State;
 use tokio::sync::Mutex;

@@ -1,0 +1,15 @@
+[package]
+name = "scanner"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+common.workspace = true
+image.workspace = true
+rayon.workspace = true
+tokio.workspace = true
+log.workspace = true
+tauri.workspace = true
+regex.workspace = true
+lazy_static.workspace = true
+num_cpus.workspace = true

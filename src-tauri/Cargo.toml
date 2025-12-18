@@ -17,14 +17,14 @@ name = "palaxy_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2", features = [] }
+tauri-build = { version = "2.5", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["protocol-asset"] }
-tauri-build = { version = "2", features = [] }
-tauri-plugin-dialog = "2.4"
-tauri-plugin-os = "2"
-tauri-plugin-log = "2"
+tauri = { version = "2.9", features = ["protocol-asset"] }
+tauri-build = { version = "2.5", features = [] }
+tauri-plugin-dialog = "2.4.2"
+tauri-plugin-os = "2.3.2"
+tauri-plugin-log = "2.7.1"
 tauri-specta = { version = "=2.0.0-rc.21", features = ["derive", "typescript"] }
 specta = "=2.0.0-rc.22"
 specta-typescript = "0.0.9"
@@ -51,7 +51,7 @@ mimalloc = "0.1"
 
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-single-instance = "2"
+tauri-plugin-single-instance = "2.3"
 
 [profile.release]
 # Enable Link Time Optimization for better cross-crate inlining and dead code elimination

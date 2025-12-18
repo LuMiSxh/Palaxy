@@ -6,7 +6,6 @@
 	import { step4State } from '$components/convert/step4/utils.svelte';
 	import ManualBundling from '$components/convert/step4/ManualBundling.svelte';
 	import AutomaticBundling from '$components/convert/step4/AutomaticBundling.svelte';
-	import { VStack } from 'waku/layout';
 	import { LoadingSpinner } from 'waku/components';
 	import convState from '$states/converter.svelte';
 	import { commands, type BundleFlag } from '$types';

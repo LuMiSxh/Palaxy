@@ -119,7 +119,7 @@
 	$effect(() => {
 		if (selectedImages.length > 0) {
 			const filteredImages: string[][] = selectedImages.map((row) =>
-				row.filter((image): image is string => image !== null)
+				row.filter((image): image is string => image !== null),
 			);
 			wrapper(commands.convStateSet({ EditedData: filteredImages }));
 		}
@@ -146,7 +146,7 @@
 		<VStack gap="md" class="mx-auto max-w-6xl pb-4">
 			<BentoGrid cols={1} density="compact">
 				{#if volumeChapters.length > 0}
-					{#each volumeChapters as chapters, volumeIndex}
+					{#each volumeChapters as chapters, volumeIndex (volumeIndex)}
 						<BentoItem glass>
 							<HStack align="center" gap="sm" class="text-muted mb-4">
 								<IconBook size={18} />
@@ -161,7 +161,7 @@
 							</HStack>
 
 							<VStack gap="md">
-								{#each chapters as chapterIndex}
+								{#each chapters as chapterIndex (chapterIndex)}
 									<Chapter
 										{chapterIndex}
 										bind:images

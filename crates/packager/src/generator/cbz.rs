@@ -1,35 +1,25 @@
 use crate::generator::Generator;
-use crate::prelude::*;
+use common::prelude::*;
 use log::{debug, error, info, trace};
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use zip::write::SimpleFileOptions;
 use zip::{CompressionMethod, ZipWriter};
 
-/// A generator for creating CBZ (Comic Book ZIP) files.
-///
-/// This struct implements the `Generator` trait to package images into
-/// a properly formatted CBZ archive with optional metadata.
+/// CBZ (Comic Book ZIP) generator.
 pub struct Cbz {
-    /// The ZIP writer for archive creation
+    /// ZIP writer for archive creation.
     zip: Option<ZipWriter<BufWriter<File>>>,
-    /// Options for image files (no compression - images are already compressed)
+    /// Options for image files (no compression).
     image_options: SimpleFileOptions,
-    /// Options for metadata files (high compression for text)
+    /// Options for metadata files (high compression).
     metadata_options: SimpleFileOptions,
-    /// Current page index for sequential numbering
+    /// Current page index for sequential numbering.
     page_index: usize,
 }
 
 impl Generator for Cbz {
-    /// Creates a new CBZ generator with the specified output path and filename.
-    ///
-    /// # Parameters
-    /// * `output_path` - The directory where the CBZ file will be created
-    /// * `filename` - The name of the CBZ file (without extension)
-    ///
-    /// # Returns
-    /// A Result containing a new Cbz instance or an Error if creation fails.
+    /// Creates a new CBZ generator.
     fn new(output_path: &str, filename: &str) -> Result<Self, Error> {
         info!(
             "Creating new CBZ generator: output_path={}, filename={}",
@@ -52,7 +42,12 @@ impl Generator for Cbz {
         debug!("CBZ image options: compression=Stored (no recompression), permissions=0o755");
         debug!("CBZ metadata options: compression=Deflated level 9, permissions=0o755");
 
-        let output_file = format!("{}/{}.cbz", output_path, filename);
+        // Pre-allocate output filename to avoid allocations
+        let mut output_file = String::with_capacity(output_path.len() + filename.len() + 6);
+        use std::fmt::Write;
+        write!(&mut output_file, "{}/{}.cbz", output_path, filename)
+            .expect("String write cannot fail");
+
         debug!("Creating CBZ file at: {}", output_file);
 
         let file = match File::create(&output_file) {
@@ -63,7 +58,8 @@ impl Generator for Cbz {
             }
         };
 
-        let buf_writer = BufWriter::with_capacity(64 * 1024, file);
+        // Use larger buffer for better I/O performance
+        let buf_writer = BufWriter::with_capacity(128 * 1024, file);
         let zip = ZipWriter::new(buf_writer);
         debug!("ZipWriter initialized successfully");
 
@@ -75,18 +71,10 @@ impl Generator for Cbz {
         })
     }
 
-    /// Adds an image to the CBZ file from in-memory data.
-    ///
-    /// Images are added with filenames like "page_001.ext", "page_002.ext", etc.
-    ///
-    /// # Parameters
-    /// * `data` - Byte slice containing the image data
-    /// * `extension` - File extension indicating the image format (e.g., "jpg", "png")
-    /// # Returns
-    /// A Result containing a reference to self for method chaining or an Error.
+    /// Adds a page from in-memory image data.
     fn add_page_from_memory(&mut self, data: &[u8], extension: &str) -> Result<&mut Self, Error> {
         // Pre-allocate to avoid allocation on every page
-        let mut file_name = String::with_capacity(16);
+        let mut file_name = String::with_capacity(16 + extension.len());
         use std::fmt::Write;
         write!(
             &mut file_name,
@@ -108,7 +96,7 @@ impl Generator for Cbz {
             return Err(Error::from(e));
         }
 
-        // 3. Write Data
+        // Write data in one go
         if let Err(e) = zip.write_all(data) {
             error!("Failed to write file data: {}", e);
             return Err(Error::from(e));
@@ -118,33 +106,17 @@ impl Generator for Cbz {
         Ok(self)
     }
 
-    /// Sets metadata for the CBZ file by adding a ComicInfo.xml file.
-    ///
-    /// Uses a template XML file to create standardized comic metadata.
-    ///
-    /// # Parameters
-    /// * `title` - The title of the comic
-    /// * `volume` - The volume number
-    ///
-    /// # Returns
-    /// A Result containing a reference to self for method chaining or an Error.
+    /// Sets document metadata by adding ComicInfo.xml.
     fn set_metadata(&mut self, title: &str, volume: usize) -> Result<&mut Self, Error> {
         info!("Setting CBZ metadata: title='{}', volume={}", title, volume);
         const TEMPLATE: &str = include_str!("../../templates/template.xml");
 
         debug!("Preparing ComicInfo.xml with {} pages", self.page_index);
 
-        // Pre-allocate buffer for XML (~500 chars typical)
-        let mut volume_str = String::with_capacity(8);
-        let mut page_count_str = String::with_capacity(8);
-        use std::fmt::Write;
-        write!(&mut volume_str, "{}", volume).expect("String write cannot fail");
-        write!(&mut page_count_str, "{}", self.page_index).expect("String write cannot fail");
-
         let xml = TEMPLATE
             .replace("%title%", title)
-            .replace("%volume%", &volume_str)
-            .replace("%pagecount%", &page_count_str);
+            .replace("%volume%", &volume.to_string())
+            .replace("%pagecount%", &self.page_index.to_string());
 
         // Get the zip writer
         let zip = match self.zip.as_mut() {
@@ -172,12 +144,6 @@ impl Generator for Cbz {
     }
 
     /// Finalizes and saves the CBZ file.
-    ///
-    /// This method consumes the Cbz instance and completes the ZIP archive
-    /// in a separate blocking task to avoid blocking the async runtime.
-    ///
-    /// # Returns
-    /// A Result indicating success or an Error if saving fails.
     fn save(mut self) -> Result<(), Error> {
         info!("Finalizing and saving CBZ file");
 

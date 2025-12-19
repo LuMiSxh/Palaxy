@@ -12,6 +12,7 @@
 	import { IconHome, IconSettings, IconTransform, IconCommand } from '@tabler/icons-svelte';
 	import { keyHint, mountGlobalKeyHintListener } from '$states/keyhint.svelte';
 	import KeyHint from '$components/KeyHint.svelte';
+	import { resolve } from '$app/paths';
 
 	let { children } = $props();
 	let showPalette = $state(false);
@@ -39,19 +40,19 @@
 			name: $t`Home`,
 			description: $t`Go to the home page`,
 			icon: IconHome,
-			action: () => goto('/'),
+			action: () => goto(resolve('/')),
 		},
 		{
 			name: $t`Convert`,
 			description: $t`Convert your manga images into a digital format that can be read on your favorite devices`,
 			icon: IconTransform,
-			action: () => goto('/convert'),
+			action: () => goto(resolve('/convert')),
 		},
 		{
 			name: $t`Settings`,
 			description: $t`Manage application preferences`,
 			icon: IconSettings,
-			action: () => goto('/settings'),
+			action: () => goto(resolve('/settings')),
 		},
 	]);
 

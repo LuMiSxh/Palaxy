@@ -227,7 +227,7 @@
 			<div class="custom-scrollbar flex-1 overflow-y-auto p-2" bind:this={volumeListContainer}>
 				{#if convState.chapterSizes.length > 0}
 					<VStack gap="sm">
-						{#each convState.chapterSizes as chapters, i}
+						{#each convState.chapterSizes as chapters, i (i)}
 							{@const totalChapters = step4State.result?.total_chapters || 1}
 							{@const currentPercentage = (chapters / totalChapters) * 100}
 
@@ -388,7 +388,7 @@
 						<div>
 							<span class="text-muted mb-2 block text-xs">{$t`Chapter Map`}</span>
 							<div class="flex flex-wrap gap-1">
-								{#each Array(step4State.result.total_chapters) as _, i}
+								{#each Array(step4State.result.total_chapters) as _, i (i)}
 									{@const volumeIndex = chapterToVolumeMap[i]}
 									{@const isUsed = volumeIndex !== -1}
 									{@const isExceeded =

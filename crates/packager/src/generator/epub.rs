@@ -3,19 +3,12 @@ use std::io::{BufWriter, Cursor};
 use std::path::{Path, PathBuf};
 
 use crate::generator::Generator;
-use crate::prelude::*;
+use common::prelude::*;
 use epub_builder::{EpubBuilder, EpubContent, EpubVersion, ZipLibrary};
 use log::{debug, error, info, trace};
 
-/// Generates XHTML content for an image to be included in the EPUB.
-///
-/// # Arguments
-///
-/// * `image_source` - Path to the image file relative to the EPUB root
-///
-/// # Returns
-///
-/// * `EResult<String>` - The generated XHTML content or an error
+/// Generates XHTML content for an image page.
+#[inline]
 fn generate_xhtml(image_source: &str) -> EResult<String> {
     trace!("Generating XHTML content for image: {}", image_source);
     const TEMPLATE: &str = include_str!("../../templates/template.xhtml");
@@ -27,49 +20,30 @@ fn generate_xhtml(image_source: &str) -> EResult<String> {
     Ok(xhtml)
 }
 
-/// A generator for creating EPUB files with images.
-///
-/// This struct wraps the `EpubBuilder` functionality and implements the `Generator` trait
-/// to provide a standardized interface for creating EPUB documents with images.
+/// EPUB generator for comic/manga files.
 pub struct EPub {
-    /// The underlying EPUB builder
+    /// EPUB builder instance.
     epub: EpubBuilder<ZipLibrary>,
-    /// Directory where the EPUB file will be saved
+    /// Output directory path.
     output_path: String,
-    /// Name of the output file (without extension)
+    /// Output filename (without extension).
     filename: String,
-    /// Reading direction for the EPUB content
+    /// Reading direction for content.
     reading_direction: Option<Direction>,
-    /// Count of pages added to the EPUB
+    /// Page count.
     page_count: usize,
 }
 
 impl EPub {
-    /// Sets custom metadata in the EPUB file.
-    ///
-    /// # Arguments
-    ///
-    /// * `key` - Metadata key
-    /// * `value` - Metadata value
-    ///
-    /// # Returns
-    ///
-    /// * `EResult<&mut Self>` - Self reference for method chaining or an error
+    /// Sets custom metadata.
+    #[inline]
     pub fn set_custom_metadata(&mut self, key: &str, value: &str) -> EResult<&mut Self> {
         debug!("Setting EPUB metadata: {}={}", key, value);
         self.epub.metadata(key, value)?;
         Ok(self)
     }
 
-    /// Sets the cover image for the EPUB file.
-    ///
-    /// # Arguments
-    ///
-    /// * `cover_image_path` - Path to the cover image file
-    ///
-    /// # Returns
-    ///
-    /// * `EResult<&mut Self>` - Self reference for method chaining or an error
+    /// Sets the cover image.
     pub fn set_cover(&mut self, cover_image_path: &PathBuf) -> EResult<&mut Self> {
         info!("Setting EPUB cover image: {:?}", cover_image_path);
         let (cover_extension, cover_mime) = get_file_info(cover_image_path)?;
@@ -110,30 +84,16 @@ impl EPub {
         }
     }
 
-    /// Sets the language for the EPUB file.
-    ///
-    /// # Arguments
-    ///
-    /// * `lang` - Language code (e.g., "en", "ja")
-    ///
-    /// # Returns
-    ///
-    /// * `EResult<&mut Self>` - Self reference for method chaining or an error
+    /// Sets the language.
+    #[inline]
     pub fn set_lang(&mut self, lang: &str) -> EResult<&mut Self> {
         info!("Setting EPUB language to: {}", lang);
         self.epub.set_lang(lang);
         Ok(self)
     }
 
-    /// Sets the reading direction for the EPUB content.
-    ///
-    /// # Arguments
-    ///
-    /// * `direction` - Reading direction (LTR or RTL)
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - Self reference for method chaining
+    /// Sets the reading direction.
+    #[inline]
     pub fn set_reading_direction(&mut self, direction: Direction) -> &mut Self {
         info!("Setting EPUB reading direction to: {:?}", direction);
         self.reading_direction = Some(direction);
@@ -143,15 +103,6 @@ impl EPub {
 
 impl Generator for EPub {
     /// Creates a new EPUB generator.
-    ///
-    /// # Arguments
-    ///
-    /// * `output_path` - Directory where the EPUB file will be saved
-    /// * `filename` - Name of the output file (without extension)
-    ///
-    /// # Returns
-    ///
-    /// * `EResult<Self>` - A new EPub instance or an error
     fn new(output_path: &str, filename: &str) -> EResult<Self> {
         info!(
             "Creating new EPUB generator: output_path={}, filename={}",
@@ -187,6 +138,7 @@ impl Generator for EPub {
     fn add_page_from_memory(&mut self, data: &[u8], extension: &str) -> EResult<&mut Self> {
         self.page_count += 1;
 
+        // Use static strings where possible to avoid allocations
         let mime = match extension.to_lowercase().as_str() {
             "jpg" | "jpeg" => "image/jpeg",
             "png" => "image/png",
@@ -195,13 +147,23 @@ impl Generator for EPub {
             _ => "application/octet-stream",
         };
 
-        let name_stem = format!("page_{:03}", self.page_count);
-        let image_filename = format!("images/{}.{}", name_stem, extension);
-        let content_filename = format!("{}.xhtml", name_stem);
+        // Pre-allocate strings with exact capacity
+        let mut image_filename = String::with_capacity(20 + extension.len());
+        let mut content_filename = String::with_capacity(16);
+
+        use std::fmt::Write;
+        write!(
+            &mut image_filename,
+            "images/page_{:03}.{}",
+            self.page_count, extension
+        )
+        .expect("String write cannot fail");
+        write!(&mut content_filename, "page_{:03}.xhtml", self.page_count)
+            .expect("String write cannot fail");
 
         trace!("Adding EPUB page {}: {}", self.page_count, image_filename);
 
-        // Cursor<Vec<u8>> implements Read, which epub-builder accepts
+        // Cursor<&[u8]> is more efficient than Cursor<Vec<u8>>
         if let Err(e) = self
             .epub
             .add_resource(&image_filename, Cursor::new(data), mime)
@@ -223,25 +185,18 @@ impl Generator for EPub {
         Ok(self)
     }
 
-    /// Sets metadata for the EPUB file, including title and volume number.
-    ///
-    /// # Arguments
-    ///
-    /// * `title` - Title of the EPUB
-    /// * `volume` - Volume number
-    ///
-    /// # Returns
-    ///
-    /// * `EResult<&mut Self>` - Self reference for method chaining or an error
+    /// Sets document metadata.
     fn set_metadata(&mut self, title: &str, volume: usize) -> EResult<&mut Self> {
         info!(
             "Setting EPUB metadata: title='{}', volume={}",
             title, volume
         );
 
+        // Pre-allocate with exact capacity
         let mut full_title = String::with_capacity(title.len() + 12);
         use std::fmt::Write;
         write!(&mut full_title, "{} | {}", title, volume).expect("String write cannot fail");
+
         if let Err(e) = self.epub.metadata("title", &full_title) {
             error!("Failed to set title metadata: {}", e);
             return Err(Error::from(e));
@@ -266,16 +221,15 @@ impl Generator for EPub {
         Ok(self)
     }
 
-    /// Finalizes and saves the EPUB file to the specified output path.
-    ///
-    /// # Returns
-    ///
-    /// * `EResult<()>` - Success or an error
+    /// Finalizes and saves the EPUB file.
     fn save(self) -> EResult<()> {
         let output_path = Path::new(&self.output_path);
+
+        // Pre-allocate filename string
         let mut epub_filename = String::with_capacity(self.filename.len() + 5);
         use std::fmt::Write;
         write!(&mut epub_filename, "{}.epub", self.filename).expect("String write cannot fail");
+
         let output_file_path = output_path.join(epub_filename);
         info!("Saving EPUB to: {:?}", output_file_path);
 
@@ -287,7 +241,8 @@ impl Generator for EPub {
             }
         };
 
-        let buf_writer = BufWriter::with_capacity(64 * 1024, file);
+        // Use larger buffer for better I/O performance
+        let buf_writer = BufWriter::with_capacity(128 * 1024, file);
 
         match self.epub.generate(buf_writer) {
             Ok(_) => {

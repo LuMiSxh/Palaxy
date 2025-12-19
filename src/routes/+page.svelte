@@ -13,6 +13,7 @@
 	} from '@tabler/icons-svelte';
 	import { keyHint } from '$states/keyhint.svelte';
 	import { getVersion, getTauriVersion } from '@tauri-apps/api/app';
+	import { resolve } from '$app/paths';
 
 	let versions = $state({ app: '', tauri: '', loading: true });
 
@@ -60,7 +61,7 @@
 				rowspan={2}
 				glass
 				class="group relative min-h-0 overflow-hidden outline-none"
-				onclick={() => goto('/convert')}
+				onclick={() => goto(resolve('/convert'))}
 				data-keyhint={`enter;${$t`Start conversion`}`}
 			>
 				<div
@@ -94,7 +95,7 @@
 						variant="primary"
 						onclick={(e: MouseEvent) => {
 							e.stopPropagation();
-							goto('/convert');
+							goto(resolve('/convert'));
 						}}
 						style="seamless"
 						class="self-start"
@@ -151,7 +152,7 @@
 
 				<BentoItem
 					glass
-					onclick={() => goto('/settings')}
+					onclick={() => goto(resolve('/settings'))}
 					data-keyhint={`enter;${$t`Open settings`}`}
 					class="group hover:border-accent-500/50 focus:border-accent-500/50 flex-1 cursor-pointer transition-all outline-none"
 				>

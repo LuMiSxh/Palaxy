@@ -1,0 +1,60 @@
+[workspace]
+members = [
+    "src-tauri",
+    "crates/*",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.4.0"
+authors = ["LuMiSxh"]
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+thiserror = "2.0"
+tokio = { version = "1.43", features = ["full"] }
+log = "0.4"
+specta = "=2.0.0-rc.22"
+tauri-specta = { version = "=2.0.0-rc.21", features = ["derive", "typescript"] }
+tauri = { version = "2.9", features = ["protocol-asset"] }
+# ---
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "avif"] }
+rayon = "1.10"
+sysinfo = "0.37"
+num_cpus = "1.16"
+regex = "1.11"
+lazy_static = "1.5"
+zip = "6.0"
+epub-builder = "0.8"
+# ---
+common = { path = "crates/common" }
+scanner = { path = "crates/scanner" }
+packager = { path = "crates/packager" }
+
+[profile.release]
+# Enable Link Time Optimization for better cross-crate inlining and dead code elimination
+# "fat" LTO provides maximum optimization across all crates
+lto = "fat"
+
+# Use a single codegen unit for maximum optimization potential
+# This allows LLVM to optimize across the entire crate at once
+codegen-units = 1
+
+# Enable all optimizations
+opt-level = 3
+
+# Strip symbols and debug info from the binary to reduce size
+strip = true
+
+# Abort on panic instead of unwinding (slightly smaller and faster)
+panic = "abort"
+
+# Enable overflow checks even in release (safety without much cost)
+overflow-checks = true
+
+[profile.release.build-override]
+# Use faster optimization for build scripts (they don't need to be as optimized)
+opt-level = 3
+codegen-units = 16

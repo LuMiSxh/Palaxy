@@ -79,6 +79,7 @@ class KeyHintState {
 		// Check if ANY active scope is exclusive
 		const hasExclusive = allScopes.some((s) => s.exclusive);
 
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const merged = new Map<string, string>();
 
 		allScopes.forEach((scope) => {
@@ -166,7 +167,7 @@ export function mountGlobalKeyHintListener() {
  */
 export function handleKeyHint(
 	node: HTMLElement,
-	data: { keys: [KeyCombination, string][]; reset?: boolean }
+	data: { keys: [KeyCombination, string][]; reset?: boolean },
 ) {
 	let unregister: (() => void) | null = null;
 

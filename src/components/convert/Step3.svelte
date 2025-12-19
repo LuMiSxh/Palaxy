@@ -16,15 +16,15 @@
 			? convState.source
 				? (convState.source.split('/').pop() ?? '')
 				: ''
-			: (convState.name ?? '')
+			: (convState.name ?? ''),
 	);
 	let targetLocation = $state(
 		$appData.autoPop.enabled
 			? ($appData.autoPop.converter.targetLocation ?? convState.target ?? '')
-			: (convState.target ?? '')
+			: (convState.target ?? ''),
 	);
 	let createFolder = $state(
-		$appData.autoPop.enabled ? ($appData.autoPop.converter.createNewFolder ?? true) : true
+		$appData.autoPop.enabled ? ($appData.autoPop.converter.createNewFolder ?? true) : true,
 	);
 
 	let projectNamePlaceholder = $derived(($t`Enter project name` || '') as string);

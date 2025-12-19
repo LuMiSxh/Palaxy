@@ -22,7 +22,7 @@ export default ts.config(
 		},
 	},
 	{
-		files: ['**/*.svelte'],
+		files: ['**/*.svelte', '**/*.svelte.ts'],
 		languageOptions: {
 			parserOptions: {
 				parser: ts.parser,
@@ -54,5 +54,5 @@ export default ts.config(
 		},
 	},
 	...svelte.configs['flat/prettier'],
-	prettier
+	prettier,
 );

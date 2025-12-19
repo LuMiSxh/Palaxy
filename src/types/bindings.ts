@@ -170,105 +170,83 @@ volumeStartEvent: "volume-start-event"
 /** user-defined types **/
 
 /**
- * Response structure containing analysis results
- * 
- * * `negative` - List of negative findings
- * * `positive` - List of positive findings
- * * `warning` - List of warnings
- * * `flag` - Recommended bundle flag based on analysis
+ * Analysis operation results.
  */
 export type AnalyzeResponse = { negative: string[]; positive: string[]; warning: string[]; flag: BundleFlag }
 /**
- * Base response structure that can contain optional payload data
- * 
- * * `duration` - Operation execution time in seconds
- * * `comment` - Optional comment or message related to the operation
- * * `payload` - Optional data payload of generic type T
+ * Base response structure with optional payload.
  */
 export type BaseResponse<T> = { duration: number; comment: string | null; payload: T | null }
 /**
- * Represents the method used for bundling files
- * 
- * * `Name` - Bundle by name
- * * `Image` - Bundle by image
- * * `Manual` - Manual bundling (default)
+ * File bundling method.
  */
 export type BundleFlag = "NAME" | "IMAGE" | "MANUAL"
 /**
- * Response structure containing bundling operation results
- * 
- * * `total_chapters` - Total number of chapters processed
- * * `total_volumes` - Optional total number of volumes created
- * * `chapter_sizes` - Optional list of chapter sizes in bytes
+ * Bundling operation results.
  */
 export type BundleResponse = { total_chapters: number; total_volumes: number | null; chapter_sizes: number[] | null }
 /**
- * Represents the state of a file conversion operation
- * 
- * Contains all necessary information about a conversion task including
- * source and destination paths, format settings, and file organization.
+ * Conversion state for the application.
  */
 export type ConvState = { 
 /**
- * Name of the conversion task
+ * Name of the conversion task.
  */
 name: string; 
 /**
- * Source directory or file path
+ * Source directory or file path.
  */
 source: string; 
 /**
- * Target directory for output files
+ * Target directory for output files.
  */
 target: string; 
 /**
- * Method used for bundling files
+ * Method used for bundling files.
  */
 bundle_flag: BundleFlag; 
 /**
- * Reading direction (LTR or RTL)
+ * Reading direction (LTR or RTL).
  */
 direction: Direction; 
 /**
- * Output file format (EPUB or CBZ)
+ * Output file format (EPUB or CBZ).
  */
 format: FileFormat; 
 /**
- * Whether to create a new directory for output
+ * Whether to create a new directory for output.
  */
 create_directory: boolean; 
 /**
- * Whether to convert images to WebP format (deprecated, use image_format instead)
+ * Whether to convert images to WebP format (deprecated, use image_format instead).
  */
 convert_to_webp: boolean; 
 /**
- * Image output format for conversion
+ * Image output format for conversion.
  */
 image_format: ImageOutputFormat; 
 /**
- * Sizes for volume splitting
+ * Sizes for volume splitting.
  */
 volume_sizes: number[]; 
 /**
- * Collection of file paths organized for processing
+ * Collection of file paths organized for processing.
  */
 data: string[][]; 
 /**
- * Optional edited version of the data collection
+ * Optional edited version of the data collection.
  */
 edited_data: string[][] | null; 
 /**
- * Whether to hide the volume number when there's only one volume
+ * Whether to hide the volume number when there's only one volume.
  */
 hide_single_volume_number: boolean; 
 /**
- * Custom separator string between project name and volume number
+ * Custom separator string between project name and volume number.
  */
 volume_separator?: string }
 /**
- * Keys for the conversion state data
- * 
- * Represents various properties that can be set during the conversion process
+ * Conversion state property keys.
  */
 export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { ConvertToWebp: boolean } | { ImageFormat: ImageOutputFormat } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null } | { HideSingleVolumeNumber: boolean } | { VolumeSeparator: string }
 /**
@@ -280,72 +258,55 @@ export type ConversionCompleteEvent = { total_volumes: number; successful: numbe
  */
 export type ConversionStartEvent = { total_volumes: number }
 /**
- * Reading direction for content in an ePub file
- * 
- * * `Ltr` - Left to Right (default)
- * * `Rtl` - Right to Left
+ * Reading direction for ePub content.
  */
 export type Direction = "Left to Right" | "Right to Left"
 /**
- * Error types that can occur during application execution
- * 
- * Provides a unified error handling system that wraps both standard library
- * and third-party errors, as well as application-specific errors.
+ * Application error types.
  */
 export type Error = 
 /**
- * I/O errors from the standard library
+ * I/O error.
  */
 { type: "Io" } | 
 /**
- * Regular expression parsing errors
+ * Regular expression error.
  */
 { type: "Regex" } | 
 /**
- * Errors from the Tauri framework
+ * Tauri framework error.
  */
 { type: "Tauri" } | 
 /**
- * Image processing errors
+ * Image processing error.
  */
 { type: "Image" } | 
 /**
- * EPUB generation errors
+ * EPUB generation error.
  */
 { type: "Epub" } | 
 /**
- * ZIP file operation errors
+ * ZIP operation error.
  */
 { type: "Zip" } | 
 /**
- * HTTP request errors
- */
-{ type: "Reqwest" } | 
-/**
- * Error for invalid file or directory paths
+ * Invalid file or directory path.
  */
 { type: "InvalidPath"; data: [string, string] } | 
 /**
- * Error for failed asynchronous tasks
+ * Asynchronous task failure.
  */
 { type: "AsyncTaskError"; data: string } | 
 /**
- * Error for unsupported operations or formats
+ * Unsupported operation or format.
  */
 { type: "Unsupported"; data: string }
 /**
- * Supported file formats for conversion
- * 
- * * `Epub` - Electronic Publication format
- * * `Cbz` - Comic Book ZIP format (default)
+ * Output file format.
  */
 export type FileFormat = "EPUB" | "CBZ"
 /**
- * Image output format for conversion
- * 
- * * `None` - Keep original image format (default)
- * * `WebP` - Convert images to WebP format
- * * `Avif` - Convert images to AVIF format
+ * Image output format for conversion.
  */
 export type ImageOutputFormat = "None" | "WebP" | "AVIF"
 /**
@@ -353,15 +314,15 @@ export type ImageOutputFormat = "None" | "WebP" | "AVIF"
  */
 export type ImageProgressEvent = { volume_index: number; volume_name: string; current_image: number; total_images: number }
 /**
- * Path information for application log files
+ * Path information for application log files.
  */
 export type LogPath = { 
 /**
- * Directory where log files are stored
+ * Directory where log files are stored.
  */
 directory: string; 
 /**
- * Full path to the main log file
+ * Full path to the main log file.
  */
 file: string }
 /**

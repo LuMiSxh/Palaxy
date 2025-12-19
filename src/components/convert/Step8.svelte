@@ -252,10 +252,10 @@
 						</HStack>
 
 						<VStack gap="sm">
-							{#each conversionProgress.errors as error}
+							{#each conversionProgress.errors as err (err)}
 								<div class="bg-error/5 border-error/20 rounded-lg border p-3">
-									<div class="mb-1 font-medium">{error.volumeName}</div>
-									<div class="text-muted text-sm">{error.error}</div>
+									<div class="mb-1 font-medium">{err.volumeName}</div>
+									<div class="text-muted text-sm">{err.error}</div>
 								</div>
 							{/each}
 						</VStack>

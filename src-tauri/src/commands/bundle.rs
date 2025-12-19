@@ -3,9 +3,12 @@
 //! This module handles the bundling of chapters into volumes based on
 //! different strategies: manual, name-based, or image analysis.
 
-use crate::collector::Collector;
 use crate::prelude::*;
 use log::{debug, info, trace, warn};
+use scanner::{
+    calculate_volume_sizes, determine_volume_start_chapters, sort_by_name_volume_chapter,
+    sort_by_stem_number, sort_name_by_number, Collector,
+};
 use std::path::PathBuf;
 use tauri::State;
 use tokio::sync::Mutex;
@@ -48,15 +51,15 @@ pub async fn conv_bundle(
         .collect_chapters(match state.bundle_flag {
             BundleFlag::Manual => {
                 trace!("Using manual sorting strategy");
-                Some(&Collector::sort_by_stem_number)
+                Some(&sort_by_stem_number)
             }
             BundleFlag::Name => {
                 trace!("Using name-based volume-chapter sorting strategy");
-                Some(&Collector::sort_by_name_volume_chapter)
+                Some(&sort_by_name_volume_chapter)
             }
             BundleFlag::Image => {
                 trace!("Using numeric sorting strategy");
-                Some(&Collector::sort_name_by_number)
+                Some(&sort_name_by_number)
             }
         })
         .await?;
@@ -66,7 +69,7 @@ pub async fn conv_bundle(
     // Collect all pages from the chapters
     debug!("Collecting pages from chapters");
     let pages: Vec<Vec<PathBuf>> = collector
-        .collect_pages(chapters.clone(), Some(&Collector::sort_by_stem_number))
+        .collect_pages(chapters.clone(), Some(&sort_by_stem_number))
         .await?;
 
     let page_count: usize = pages.iter().map(|p| p.len()).sum();
@@ -144,9 +147,8 @@ pub async fn conv_bundle(
             let sensitivity = sensibility.map_or(0.75, |s| s as f64 / 100.0);
             debug!("Using grayscale sensitivity: {}", sensitivity);
 
-            let volume_start_chapters = collector
-                .determine_volume_start_chapters(pages.clone(), sensitivity)
-                .await?;
+            let volume_start_chapters =
+                determine_volume_start_chapters(pages.clone(), sensitivity).await?;
 
             debug!("Detected {} volume boundaries", volume_start_chapters.len());
             for (i, &idx) in volume_start_chapters.iter().enumerate() {
@@ -154,8 +156,7 @@ pub async fn conv_bundle(
             }
 
             total_volumes = volume_start_chapters.len();
-            chapter_sizes =
-                collector.calculate_volume_sizes(volume_start_chapters, total_chapters)?;
+            chapter_sizes = calculate_volume_sizes(volume_start_chapters, total_chapters)?;
 
             debug!("Volume sizes: {:?}", chapter_sizes);
             info!("Image-based bundling resulted in {} volumes", total_volumes);

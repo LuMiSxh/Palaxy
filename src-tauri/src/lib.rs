@@ -1,105 +1,45 @@
 //! Main application initialization module.
-//!
-//! This module is responsible for setting up and running the Tauri application.
-//! It handles command registration, TypeScript bindings export, plugin setup,
-//! and application state initialization.
 
-use crate::commands::converter::{
-    ConversionCompleteEvent, ConversionStartEvent, ImageProgressEvent, StatusMessageEvent,
-    VolumeCompleteEvent, VolumeStartEvent, conv_analyze, conv_bundle, conv_convert, conv_state_get,
-    conv_state_reset, conv_state_set,
-};
-use crate::commands::management::mgmt_get_logs_path;
+mod commands;
+mod events;
+mod prelude;
+mod setup;
+mod state;
+
 #[cfg(debug_assertions)]
 use specta_typescript::Typescript;
 use tauri::{Builder, Manager};
-use tauri_specta::{Builder as SpectaBuilder, collect_commands, collect_events};
+use tauri_specta::{collect_commands, collect_events, Builder as SpectaBuilder};
 use tokio::sync::Mutex;
-
-mod collector;
-mod commands;
-mod generator;
-mod prelude;
-mod types;
-#[macro_use]
-mod macros;
 
 // Use mimalloc as the global allocator for better multi-threaded performance
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-/// Initialize the rayon global thread pool with optimized settings
-///
-/// This configures rayon for optimal performance on the current hardware:
-/// - Uses all available CPU cores
-/// - Sets appropriate stack size for image processing
-/// - Enables work stealing for better load balancing
-fn init_rayon_thread_pool() {
-    let num_cpus = num_cpus::get();
-
-    // Use all available cores, but cap at 16 to avoid diminishing returns
-    let num_threads = num_cpus.min(16);
-
-    // Set stack size to 4MB per thread (image processing can be stack-heavy)
-    let stack_size = 4 * 1024 * 1024;
-
-    match rayon::ThreadPoolBuilder::new()
-        .num_threads(num_threads)
-        .stack_size(stack_size)
-        .thread_name(|idx| format!("rayon-worker-{}", idx))
-        .build_global()
-    {
-        Ok(_) => {
-            log::info!(
-                "Initialized rayon thread pool with {} threads (stack size: {}MB)",
-                num_threads,
-                stack_size / (1024 * 1024)
-            );
-        }
-        Err(_) => {
-            // Thread pool already initialized, which is fine
-            log::info!("Rayon thread pool already initialized, using default configuration");
-        }
-    }
-}
-
-/// Initializes and runs the Tauri application.
-///
-/// This function performs the following tasks:
-/// 1. Initialize optimized rayon thread pool
-/// 2. Register commands for frontend-backend communication
-/// 3. Export TypeScript bindings for development build
-/// 4. Configure the application with necessary plugins
-/// 5. Set up application state, including database initialization
-/// 6. Start the Tauri application with the configured settings
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Initialize rayon thread pool early for optimal performance
-    init_rayon_thread_pool();
-
-    // Register commands for the frontend to call
+    // Register commands and events
     let spectra_builder = SpectaBuilder::<tauri::Wry>::new()
         .commands(collect_commands![
-            conv_state_set,
-            conv_state_get,
-            conv_state_reset,
-            conv_analyze,
-            conv_bundle,
-            conv_convert,
-            mgmt_get_logs_path
+            commands::state::conv_state_set,
+            commands::state::conv_state_get,
+            commands::state::conv_state_reset,
+            // ---
+            commands::analyze::conv_analyze,
+            commands::bundle::conv_bundle,
+            commands::convert::conv_convert,
         ])
         .events(collect_events![
-            VolumeStartEvent,
-            VolumeCompleteEvent,
-            ImageProgressEvent,
-            ConversionStartEvent,
-            ConversionCompleteEvent,
-            StatusMessageEvent,
+            events::VolumeStartEvent,
+            events::VolumeCompleteEvent,
+            events::ImageProgressEvent,
+            events::ConversionStartEvent,
+            events::ConversionCompleteEvent,
+            events::StatusMessageEvent,
         ]);
 
-    #[cfg(debug_assertions)] // <- Only export on non-release builds
+    #[cfg(debug_assertions)]
     {
-        // Configure TypeScript bindings export for development
         let mut ts = Typescript::default();
         ts = ts.bigint(specta_typescript::BigIntExportBehavior::Number);
 
@@ -109,44 +49,26 @@ pub fn run() {
     }
 
     Builder::default()
-        // Ensure only one instance of the app runs at a time
+        // Single Instance
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             let _ = app
                 .get_webview_window("main")
                 .expect("no main window")
                 .set_focus();
         }))
-        // Configure application logging with different levels for debug/release
-        .plugin(
-            tauri_plugin_log::Builder::new()
-                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
-                .level(if cfg!(debug_assertions) {
-                    log::LevelFilter::Debug
-                } else {
-                    // Warn
-                    log::LevelFilter::Debug
-                })
-                .filter(|metadata| metadata.target().starts_with(env!("CARGO_PKG_NAME")))
-                .format(|out, message, record| {
-                    let time = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
-                    out.finish(format_args!(
-                        "[{} {} {}] [{}:{}] {}",
-                        time,
-                        record.level(),
-                        record.target(),
-                        record.file().unwrap_or("unknown"),
-                        record.line().unwrap_or(0),
-                        message
-                    ))
-                })
-                .build(),
-        )
-        // Add OS and dialog functionality plugins
+        // Logging (from setup module)
+        .plugin(setup::logging::init().build())
+        // Plugins
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_dialog::init())
-        .manage(Mutex::new(prelude::ConvState::default()))
+        // State (from state module)
+        .manage(Mutex::new(state::ConvState::default()))
+        // Invoke Handler
         .invoke_handler(spectra_builder.invoke_handler())
         .setup(move |app| {
+            // Initialize performance (from setup module)
+            setup::concurrency::init();
+
             spectra_builder.mount_events(app);
             Ok(())
         })

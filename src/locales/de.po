@@ -558,7 +558,7 @@ msgid "Navigate down"
 msgstr "Nach unten navigieren"
 
 #: src/components/convert/Step3.svelte:41
-#: src/components/convert/Step4.svelte:17
+#: src/components/convert/Step4.svelte:16
 #: src/components/convert/Step5.svelte:43
 #: src/routes/convert/+page.svelte:66
 #: src/routes/settings/+page.svelte:47
@@ -763,7 +763,7 @@ msgstr "Alle Einstellungen auf ihre Standardwerte zurücksetzen"
 msgid "Right to Left"
 msgstr "Rechts nach Links"
 
-#: src/components/convert/Step4.svelte:54
+#: src/components/convert/Step4.svelte:53
 msgid "Running Bundler..."
 msgstr "Bundler läuft..."
 

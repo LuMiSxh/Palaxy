@@ -101,7 +101,7 @@
 				['escape', $t`Close`],
 				['space', $t`Close`],
 			],
-			true
+			true,
 		);
 
 		// Focus the input
@@ -152,7 +152,7 @@
 						return true;
 					},
 				],
-			]
+			],
 		);
 
 		return () => {
@@ -208,7 +208,7 @@
 						<IconCommand size={14} />
 					</button>
 					<span class="text-muted">/</span>
-					{#each commandStack as cmd, i}
+					{#each commandStack as cmd, i (cmd)}
 						<span class="text-accent-500 font-medium">{cmd.name}</span>
 						{#if i < commandStack.length - 1}
 							<span class="text-muted">/</span>

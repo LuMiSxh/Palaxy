@@ -30,7 +30,7 @@ class KeyboardManager {
 	register(
 		keyCombo: KeyCombination,
 		callback: (event: KeyboardEvent) => void,
-		id: string | undefined = undefined
+		id: string | undefined = undefined,
 	): string {
 		// Normalize the key combo string
 		keyCombo = normalizeKeyCombo(keyCombo);
@@ -63,7 +63,7 @@ class KeyboardManager {
 	registerExcept(
 		excludedKeys: SingleKey[],
 		callback: (event: KeyboardEvent) => void,
-		id: string | undefined = undefined
+		id: string | undefined = undefined,
 	): string {
 		id = this.generateIdIfNotProvided(id);
 
@@ -132,7 +132,7 @@ class KeyboardManager {
 	 */
 	smartRegister = (
 		handlers: Parameters<typeof this.register>[],
-		exceptHandlers: Parameters<typeof this.registerExcept>[] = []
+		exceptHandlers: Parameters<typeof this.registerExcept>[] = [],
 	): (() => void) => {
 		const ids: string[] = [];
 
@@ -207,7 +207,7 @@ class KeyboardManager {
 		].filter(Boolean);
 
 		const keyCombo = normalizeKeyCombo(
-			modifiers.length > 0 ? `${modifiers.join('+')}+${event.code}` : event.code
+			modifiers.length > 0 ? `${modifiers.join('+')}+${event.code}` : event.code,
 		);
 
 		// Check if we have handlers for this combination

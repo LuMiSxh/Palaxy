@@ -79,7 +79,7 @@
 	{#each groupedHints as group (group.description)}
 		<li class="mr-4 flex items-center gap-2" transition:glassKeyTransition={{ duration: 300 }}>
 			<div class="flex items-center gap-1">
-				{#each group.keys as key, k}
+				{#each group.keys as key, k (k)}
 					<KeyComboDisplay keyCombination={key} />
 					{#if k < group.keys.length - 1}
 						<span class="text-muted text-xs font-bold opacity-50">/</span>

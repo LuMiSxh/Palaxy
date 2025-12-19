@@ -1,6 +1,6 @@
 //! Conversion module with parallel volume processing.
 
-use super::events::*;
+use crate::events::*;
 use crate::prelude::*;
 use log::{debug, error, info, trace, warn};
 use packager::{process_images_to_memory, Cbz, EPub, Generator};
@@ -92,8 +92,8 @@ pub async fn conv_convert(
     // Calculate resource budget
     let budget = common::ResourceBudget::calculate();
     info!(
-        "Using resource budget: {} concurrent volumes, {} chunk size",
-        budget.max_concurrent_volumes, budget.chunk_size
+        "Using resource budget: {} concurrent volumes, rayon_chunk={}, memory_batch={}",
+        budget.max_concurrent_volumes, budget.rayon_chunk_size, budget.memory_batch_size
     );
 
     // Emit conversion start event
@@ -146,6 +146,7 @@ pub async fn conv_convert(
         } else {
             format!("{}{}{}", name_clone, volume_separator, volume_number)
         };
+        let rayon_chunk_size = budget.rayon_chunk_size;
 
         let task = tokio::spawn(async move {
             let _permit = sem.acquire().await.ok()?;
@@ -187,6 +188,7 @@ pub async fn conv_convert(
                         trace!("Failed to emit image progress: {}", e);
                     }
                 }),
+                Some(rayon_chunk_size),
             )
             .ok()?;
 
@@ -258,14 +260,48 @@ pub async fn conv_convert(
             }
         });
 
-        tasks.push(task);
+        tasks.push((vol_idx, volume_number, task));
     }
 
-    // Wait for all tasks to complete
     debug!("Waiting for all volume conversion tasks to complete");
-    for task in tasks {
-        if let Err(e) = task.await {
-            error!("Task join error: {}", e);
+    for (vol_idx, volume_number, task) in tasks {
+        match task.await {
+            Ok(_) => {
+                // Task finished normally (success or handled error inside)
+            }
+            Err(e) => {
+                // Task panicked!
+                let err_msg = if e.is_panic() {
+                    "Worker thread crashed (Panic)".to_string()
+                } else {
+                    format!("Task failed: {}", e)
+                };
+
+                error!("Volume {} failed critically: {}", volume_number, err_msg);
+
+                // Update failed count manually since the thread died
+                if let Ok(mut fails) = failed_volumes.lock() {
+                    fails.push((volume_number, err_msg.clone()));
+                }
+
+                // Construct volume name again for the event
+                let total_volumes = volume_sizes.len();
+                let vol_name = if total_volumes == 1 && hide_single_volume_number {
+                    name.clone()
+                } else {
+                    format!("{}{}{}", name, volume_separator, volume_number)
+                };
+
+                // Notify frontend
+                let _ = emit_volume_complete(
+                    &app,
+                    vol_idx,
+                    total_volumes,
+                    vol_name,
+                    false,
+                    Some(err_msg),
+                );
+            }
         }
     }
 

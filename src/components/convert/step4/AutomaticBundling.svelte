@@ -41,7 +41,7 @@
 	});
 
 	let bundleFlag: BundleFlag = $state(
-		convState.bundle ? convState.bundle : convState.bundleRecommendation
+		convState.bundle ? convState.bundle : convState.bundleRecommendation,
 	);
 
 	const bundleOptions = $derived([

@@ -20,7 +20,7 @@
 
 {#if convState.chapterSizes.length > 0}
 	<div bind:this={scrollContainer} class="custom-scrollbar flex-1 space-y-3 overflow-y-auto pr-2">
-		{#each convState.chapterSizes as chapters, i}
+		{#each convState.chapterSizes as chapters, i (i)}
 			{@const totalChapters = step4State.result?.total_chapters || 1}
 			{@const previousChapters = convState.chapterSizes.slice(0, i).reduce((sum, c) => sum + c, 0)}
 			{@const currentPercentage = (chapters / totalChapters) * 100}
@@ -54,7 +54,7 @@
 
 				<!-- Chapter Blocks -->
 				<div class="mb-3 flex flex-wrap gap-1">
-					{#each Array(Math.min(chapters, 50)) as _, j}
+					{#each Array(Math.min(chapters, 50)) as _, j (j)}
 						<div
 							class="bg-accent-500 h-4 w-4 rounded-sm transition-all hover:scale-110"
 							style="opacity: {0.6 + (j / chapters) * 0.4}"

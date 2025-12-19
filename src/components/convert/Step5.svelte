@@ -10,17 +10,17 @@
 	import { IconFileText, IconPhoto, IconSeparator, IconDirection } from '@tabler/icons-svelte';
 
 	let fileFormat: FileFormat = $state(
-		$appData.autoPop.enabled ? ($appData.autoPop.converter.conversionType ?? 'CBZ') : 'CBZ'
+		$appData.autoPop.enabled ? ($appData.autoPop.converter.conversionType ?? 'CBZ') : 'CBZ',
 	);
 	let readingDirection: Direction = $state('Left to Right');
 	let imageFormat: ImageOutputFormat = $state(
-		$appData.autoPop.enabled ? ($appData.autoPop.converter.imageFormat ?? 'WebP') : 'WebP'
+		$appData.autoPop.enabled ? ($appData.autoPop.converter.imageFormat ?? 'WebP') : 'WebP',
 	);
 	let hideSingleVolumeNumber = $state(
-		$appData.autoPop.enabled ? $appData.autoPop.converter.hideSingleVolumeNumber : false
+		$appData.autoPop.enabled ? $appData.autoPop.converter.hideSingleVolumeNumber : false,
 	);
 	let volumeSeparator = $state(
-		$appData.autoPop.enabled ? $appData.autoPop.converter.volumeSeparator : ' | '
+		$appData.autoPop.enabled ? $appData.autoPop.converter.volumeSeparator : ' | ',
 	);
 
 	let formatOptions = $derived([

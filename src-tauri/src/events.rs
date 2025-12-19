@@ -1,8 +1,3 @@
-//! Event system for conversion progress tracking
-//!
-//! This module defines Tauri events that are emitted during the conversion process
-//! to provide real-time progress feedback to the frontend.
-
 use crate::prelude::*;
 use serde::{Deserialize, Serialize};
 use specta::Type;
@@ -79,9 +74,8 @@ pub struct StatusMessageEvent {
     pub timestamp: u64,
 }
 
-// Event emission helper functions
+// --- Helper Functions ---
 
-/// Emits a volume start event
 pub fn emit_volume_start(
     app: &AppHandle,
     volume_index: usize,
@@ -97,7 +91,6 @@ pub fn emit_volume_start(
     .map_err(|e| Error::AsyncTaskError(format!("Failed to emit volume start event: {}", e)))
 }
 
-/// Emits a volume complete event
 pub fn emit_volume_complete(
     app: &AppHandle,
     volume_index: usize,
@@ -117,7 +110,6 @@ pub fn emit_volume_complete(
     .map_err(|e| Error::AsyncTaskError(format!("Failed to emit volume complete event: {}", e)))
 }
 
-/// Emits an image progress event
 pub fn emit_image_progress(
     app: &AppHandle,
     volume_index: usize,
@@ -135,14 +127,12 @@ pub fn emit_image_progress(
     .map_err(|e| Error::AsyncTaskError(format!("Failed to emit image progress event: {}", e)))
 }
 
-/// Emits a conversion start event
 pub fn emit_conversion_start(app: &AppHandle, total_volumes: usize) -> EResult<()> {
     ConversionStartEvent { total_volumes }
         .emit(app)
         .map_err(|e| Error::AsyncTaskError(format!("Failed to emit conversion start event: {}", e)))
 }
 
-/// Emits a conversion complete event
 pub fn emit_conversion_complete(
     app: &AppHandle,
     total_volumes: usize,

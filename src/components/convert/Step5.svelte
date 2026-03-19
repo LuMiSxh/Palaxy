@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { appData } from '$stores/appdata';
+	import convState from '$states/converter.svelte';
 	import { commands, type Direction, type FileFormat, type ImageOutputFormat } from '$types';
 	import { t } from 'svelte-i18n-lingui';
 	import { onMount } from 'svelte';
@@ -7,7 +8,13 @@
 	import { keyHint } from '$states/keyhint.svelte';
 	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
 	import { Input, Select, Toggle, Badge } from 'waku/components';
-	import { IconFileText, IconPhoto, IconSeparator, IconDirection } from '@tabler/icons-svelte';
+	import {
+		IconFileText,
+		IconPhoto,
+		IconSeparator,
+		IconDirection,
+		IconLayersSubtract,
+	} from '@tabler/icons-svelte';
 
 	let fileFormat: FileFormat = $state(
 		$appData.autoPop.enabled ? ($appData.autoPop.converter.conversionType ?? 'CBZ') : 'CBZ',
@@ -22,6 +29,7 @@
 	let volumeSeparator = $state(
 		$appData.autoPop.enabled ? $appData.autoPop.converter.volumeSeparator : ' | ',
 	);
+	let flatten = $state(convState.flatten);
 
 	let formatOptions = $derived([
 		{ value: 'CBZ', label: 'CBZ' },
@@ -71,10 +79,15 @@
 			wrapper(commands.convStateSet({ VolumeSeparator: volumeSeparator }));
 		}
 	});
+
+	$effect(() => {
+		convState.flatten = flatten;
+		wrapper(commands.convStateSet({ Flatten: flatten }));
+	});
 </script>
 
 <div class="h-full w-full p-3">
-	<BentoGrid cols={2} density="comfortable" rows="auto auto auto 1.5fr" class="h-full">
+	<BentoGrid cols={2} density="comfortable" rows="auto auto auto auto 1.5fr" class="h-full">
 		<!-- File Format -->
 		<BentoItem glass>
 			<HStack gap="sm" align="center" class="text-muted mb-3">
@@ -176,8 +189,36 @@
 			</div>
 		</BentoItem>
 
+		<!-- Flatten Volumes -->
+		<BentoItem glass onclick={() => (flatten = !flatten)}>
+			<HStack gap="sm" align="center" class="text-muted mb-3">
+				<IconLayersSubtract size={18} />
+				<span class="text-xs font-bold tracking-wider uppercase">{$t`Flatten Volumes`}</span>
+			</HStack>
+
+			<div
+				class="hover:bg-surface-2 group flex w-full cursor-pointer items-center justify-between rounded-lg p-3 text-left transition-colors"
+			>
+				<VStack gap="xs" class="flex-1">
+					<span class="text-sm font-medium">
+						{flatten ? $t`Merge into single volume` : $t`Keep separate volumes`}
+					</span>
+					<span class="text-muted text-xs">
+						{#if flatten}
+							{$t`All chapters will be combined into one output file`}
+						{:else}
+							{$t`Chapters will be organized into separate volumes as detected`}
+						{/if}
+					</span>
+				</VStack>
+				<div class="pointer-events-none ml-4">
+					<Toggle bind:checked={flatten} tabindex={-1} style="seamless" />
+				</div>
+			</div>
+		</BentoItem>
+
 		<!-- Volume Separator -->
-		<BentoItem colspan={2} glass>
+		<BentoItem glass>
 			<HStack gap="sm" align="center" class="text-muted mb-3">
 				<IconSeparator size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Volume Separator`}</span>

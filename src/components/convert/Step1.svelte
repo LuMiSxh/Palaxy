@@ -6,13 +6,19 @@
 	import converter from '$states/converter.svelte';
 	import convState from '$states/converter.svelte';
 	import { truncatePath, wrapper } from '$lib/utils';
-	import { IconFolder, IconFolderOpen, IconCheck } from '@tabler/icons-svelte';
+	import {
+		IconFolder,
+		IconFolderOpen,
+		IconCheck,
+		IconFileZip,
+	} from '@tabler/icons-svelte';
 
 	import { keyboard } from '$lib/keyboard';
 	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
 	import { Badge } from 'waku/components';
 
 	let unregisterKeyboard: () => void;
+	let isZipSource = $state(false);
 
 	onMount(async () => {
 		// Reset
@@ -20,7 +26,10 @@
 		converter.reset();
 
 		// Set Keyboard
-		unregisterKeyboard = keyboard.smartRegister([['enter', select]]);
+		unregisterKeyboard = keyboard.smartRegister([
+			['enter', selectFolder],
+			['shift+enter', selectZip],
+		]);
 
 		// Auto-focus the BentoItem for keyboard-first navigation
 		setTimeout(() => {
@@ -33,7 +42,7 @@
 		if (unregisterKeyboard) unregisterKeyboard();
 	});
 
-	async function select(evt: KeyboardEvent | MouseEvent | undefined = undefined) {
+	async function selectFolder(evt: KeyboardEvent | MouseEvent | undefined = undefined) {
 		evt?.stopPropagation();
 		evt?.preventDefault();
 
@@ -44,6 +53,24 @@
 			})) ?? '';
 
 		if (converter.source !== null) {
+			isZipSource = false;
+			await wrapper(commands.convStateSet({ Source: convState.source ?? '' }));
+		}
+	}
+
+	async function selectZip(evt: KeyboardEvent | MouseEvent | undefined = undefined) {
+		evt?.stopPropagation();
+		evt?.preventDefault();
+
+		convState.source =
+			(await open({
+				directory: false,
+				multiple: false,
+				filters: [{ name: 'ZIP Archive', extensions: ['zip'] }],
+			})) ?? '';
+
+		if (converter.source !== null) {
+			isZipSource = true;
 			await wrapper(commands.convStateSet({ Source: convState.source ?? '' }));
 		}
 	}
@@ -81,12 +108,20 @@
 						? 'bg-accent-500/10'
 						: 'bg-surface-2'}"
 				>
-					<IconFolderOpen size={20} class={convState.source ? 'text-accent-500' : 'text-muted'} />
+					{#if isZipSource}
+						<IconFileZip size={20} class={convState.source ? 'text-accent-500' : 'text-muted'} />
+					{:else}
+						<IconFolderOpen size={20} class={convState.source ? 'text-accent-500' : 'text-muted'} />
+					{/if}
 				</div>
 				<VStack gap="none">
 					<span class="text-muted text-xs font-medium tracking-wide uppercase">{$t`Source`}</span>
 					<div class="text-2xl leading-tight font-bold">
-						{convState.source ? $t`Selected` : $t`None`}
+						{#if convState.source}
+							{isZipSource ? $t`ZIP` : $t`Folder`}
+						{:else}
+							{$t`None`}
+						{/if}
 					</div>
 				</VStack>
 			</HStack>
@@ -94,9 +129,9 @@
 
 		<!-- Main Source Selection Card -->
 		<BentoItem
-			colspan={3}
+			colspan={2}
 			glass
-			onclick={select}
+			onclick={selectFolder}
 			onkeydown={(e) => {
 				if (e.key === ' ') {
 					e.preventDefault();
@@ -109,14 +144,14 @@
 			<HStack gap="sm" align="center" class="text-muted mb-3 shrink-0">
 				<IconFolder size={18} />
 				<span class="text-xs font-bold tracking-wider uppercase">{$t`Source Folder`}</span>
-				{#if convState.source}
+				{#if convState.source && !isZipSource}
 					<div class="bg-success/20 ml-auto flex h-6 w-6 items-center justify-center rounded-full">
 						<IconCheck size={14} class="text-success" />
 					</div>
 				{/if}
 			</HStack>
 
-			{#if convState.source}
+			{#if convState.source && !isZipSource}
 				<VStack gap="sm">
 					<div
 						class="bg-surface-2 hover:bg-surface-1 group w-full cursor-pointer rounded-lg p-3 transition-colors"
@@ -128,7 +163,7 @@
 								<IconFolderOpen size={20} class="text-accent-500" />
 							</div>
 							<VStack gap="xs" class="flex-1 overflow-hidden">
-								<span class="text-sm font-medium">{$t`Source selected`}</span>
+								<span class="text-sm font-medium">{$t`Folder selected`}</span>
 								<span class="text-muted truncate font-mono text-xs" title={convState.source}>
 									{truncatePath(convState.source, 80)}
 								</span>
@@ -139,20 +174,81 @@
 						{$t`Click to change the source folder or press Next to analyze`}
 					</p>
 				</VStack>
-			{:else}
+			{:else if !convState.source}
 				<div class="flex h-full items-center justify-center p-8">
 					<VStack gap="md" align="center" class="max-w-md text-center">
 						<div class="bg-surface-2 flex h-16 w-16 items-center justify-center rounded-full">
 							<IconFolder size={32} class="text-muted" />
 						</div>
 						<VStack gap="xs" align="center">
-							<h3 class="text-lg font-semibold">{$t`No Source Selected`}</h3>
+							<h3 class="text-lg font-semibold">{$t`Select Folder`}</h3>
 							<p class="text-muted text-sm">
-								{$t`Choose the directory containing your manga images to begin the conversion process`}
+								{$t`Choose a directory containing your manga images`}
 							</p>
 						</VStack>
 						<div class="text-muted flex items-center gap-2 text-xs">
 							<Badge variant="primary" class="text-xs">⏎ {$t`Enter`}</Badge>
+							<span>{$t`or click to browse`}</span>
+						</div>
+					</VStack>
+				</div>
+			{/if}
+		</BentoItem>
+
+		<!-- ZIP Source Selection Card -->
+		<BentoItem
+			glass
+			onclick={selectZip}
+			data-keyhint={`shift+enter;${$t`Select ZIP file`}`}
+			class="flex min-h-0 flex-col"
+		>
+			<HStack gap="sm" align="center" class="text-muted mb-3 shrink-0">
+				<IconFileZip size={18} />
+				<span class="text-xs font-bold tracking-wider uppercase">{$t`ZIP Archive`}</span>
+				{#if convState.source && isZipSource}
+					<div class="bg-success/20 ml-auto flex h-6 w-6 items-center justify-center rounded-full">
+						<IconCheck size={14} class="text-success" />
+					</div>
+				{/if}
+			</HStack>
+
+			{#if convState.source && isZipSource}
+				<VStack gap="sm">
+					<div
+						class="bg-surface-2 hover:bg-surface-1 group w-full cursor-pointer rounded-lg p-3 transition-colors"
+					>
+						<HStack gap="sm" align="center">
+							<div
+								class="bg-accent-500/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+							>
+								<IconFileZip size={20} class="text-accent-500" />
+							</div>
+							<VStack gap="xs" class="flex-1 overflow-hidden">
+								<span class="text-sm font-medium">{$t`ZIP selected`}</span>
+								<span class="text-muted truncate font-mono text-xs" title={convState.source}>
+									{truncatePath(convState.source, 80)}
+								</span>
+							</VStack>
+						</HStack>
+					</div>
+					<p class="text-muted text-xs">
+						{$t`Click to change the ZIP file or press Next to analyze`}
+					</p>
+				</VStack>
+			{:else if !convState.source}
+				<div class="flex h-full items-center justify-center p-8">
+					<VStack gap="md" align="center" class="max-w-md text-center">
+						<div class="bg-surface-2 flex h-16 w-16 items-center justify-center rounded-full">
+							<IconFileZip size={32} class="text-muted" />
+						</div>
+						<VStack gap="xs" align="center">
+							<h3 class="text-lg font-semibold">{$t`Select ZIP`}</h3>
+							<p class="text-muted text-sm">
+								{$t`Choose a ZIP archive containing your manga images`}
+							</p>
+						</VStack>
+						<div class="text-muted flex items-center gap-2 text-xs">
+							<Badge variant="primary" class="text-xs">⇧⏎ {$t`Shift+Enter`}</Badge>
 							<span>{$t`or click to browse`}</span>
 						</div>
 					</VStack>

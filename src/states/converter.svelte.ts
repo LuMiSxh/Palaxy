@@ -78,6 +78,12 @@ class ConverterState {
 	analysisPositives: string[] = $state([]);
 
 	/**
+	 * Whether to flatten all chapters into a single volume.
+	 * @type {boolean}
+	 */
+	flatten: boolean = $state(false);
+
+	/**
 	 * Resets the converter state to default values.
 	 * @returns {void}
 	 */
@@ -89,6 +95,7 @@ class ConverterState {
 		this.bundleRecommendation = 'MANUAL';
 		this.chapterSizes = [];
 		this.excludedImages = 0;
+		this.flatten = false;
 		this.analysisNegatives = [];
 		this.analysisWarnings = [];
 		this.analysisPositives = [];

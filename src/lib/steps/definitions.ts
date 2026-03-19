@@ -20,7 +20,7 @@ import { commands } from '$types';
 stepRegistry.register({
 	id: 'select-source',
 	title: 'Choose Source Material',
-	description: 'Select the directory containing your manga images.',
+	description: 'Select a directory or ZIP archive containing your manga images.',
 	icon: IconFolder,
 	component: Step1,
 
@@ -43,7 +43,7 @@ stepRegistry.register({
 stepRegistry.register({
 	id: 'analysis',
 	title: 'Analysis',
-	description: 'Analyze the source material for potential issues and improvements.',
+	description: 'Analyze the source material for structure, issues, and improvements.',
 	icon: IconLineScan,
 	component: Step2,
 
@@ -85,6 +85,8 @@ stepRegistry.register({
 	component: Step4,
 
 	canProceed: () => {
+		// Flatten mode always allows proceeding
+		if (convState.flatten) return true;
 		// Require at least one volume to be defined
 		return convState.chapterSizes.length > 0;
 	},

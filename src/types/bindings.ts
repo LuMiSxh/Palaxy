@@ -244,11 +244,15 @@ hide_single_volume_number: boolean;
 /**
  * Custom separator string between project name and volume number.
  */
-volume_separator?: string }
+volume_separator?: string;
+/**
+ * Whether to flatten all chapters into a single volume.
+ */
+flatten: boolean }
 /**
  * Conversion state property keys.
  */
-export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { ConvertToWebp: boolean } | { ImageFormat: ImageOutputFormat } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null } | { HideSingleVolumeNumber: boolean } | { VolumeSeparator: string }
+export type ConvStateKey = { Name: string } | { Source: string } | { Target: string } | { BundleFlag: BundleFlag } | { Direction: Direction } | { Format: FileFormat } | { CreateDirectory: boolean } | { ConvertToWebp: boolean } | { ImageFormat: ImageOutputFormat } | { VolumeSizes: number[] } | { Data: string[][] } | { EditedData: string[][] | null } | { HideSingleVolumeNumber: boolean } | { VolumeSeparator: string } | { Flatten: boolean }
 /**
  * Emitted when all conversions complete
  */

@@ -28,6 +28,7 @@ regex = "1.11"
 lazy_static = "1.5"
 zip = "6.0"
 epub-builder = "0.8"
+tempfile = "3"
 # ---
 common = { path = "crates/common" }
 scanner = { path = "crates/scanner" }

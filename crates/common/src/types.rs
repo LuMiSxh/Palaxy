@@ -65,6 +65,7 @@ pub enum ConvStateKey {
     EditedData(Option<Vec<Vec<PathBuf>>>),
     HideSingleVolumeNumber(bool),
     VolumeSeparator(String),
+    Flatten(bool),
 }
 
 // --- Responses ---

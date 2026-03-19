@@ -30,7 +30,7 @@ pub use types::{
     AnalyzeResponse, BaseResponse, BundleFlag, BundleResponse, CommAnalyzeMeta, CommBundle,
     ConvStateKey, Direction, FileFormat, ImageOutputFormat,
 };
-pub use utils::get_file_info;
+pub use utils::{get_file_info, is_image_file, SUPPORTED_IMAGE_EXTENSIONS};
 
 /// Prelude module for convenient imports.
 pub mod prelude {
@@ -50,7 +50,7 @@ pub mod prelude {
     };
 
     // Utilities
-    pub use crate::utils::get_file_info;
+    pub use crate::utils::{get_file_info, is_image_file, SUPPORTED_IMAGE_EXTENSIONS};
 
     // Re-export commonly used external types
     pub use serde::{Deserialize, Serialize};

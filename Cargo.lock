@@ -3198,6 +3198,7 @@ dependencies = [
  "tauri-plugin-os",
  "tauri-plugin-single-instance",
  "tauri-specta",
+ "tempfile",
  "thiserror 2.0.17",
  "tokio",
  "zip",
@@ -4124,13 +4125,13 @@ version = "0.4.0"
 dependencies = [
  "common",
  "image",
- "lazy_static",
  "log",
  "num_cpus",
  "rayon",
- "regex",
  "tauri",
+ "tempfile",
  "tokio",
+ "zip",
 ]
 
 [[package]]

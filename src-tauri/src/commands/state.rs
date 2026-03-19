@@ -38,6 +38,7 @@ pub async fn conv_state_set(
             ConvStateKey::EditedData(_) => "EditedData",
             ConvStateKey::HideSingleVolumeNumber(_) => "HideSingleVolumeNumber",
             ConvStateKey::VolumeSeparator(_) => "VolumeSeparator",
+            ConvStateKey::Flatten(_) => "Flatten",
         }
     );
     let start = std::time::Instant::now();
@@ -112,6 +113,10 @@ pub async fn conv_state_set(
         ConvStateKey::VolumeSeparator(value) => {
             debug!("Setting volume separator to: {}", value);
             state.volume_separator = value;
+        }
+        ConvStateKey::Flatten(value) => {
+            debug!("Setting flatten to: {}", value);
+            state.flatten = value;
         }
     }
 

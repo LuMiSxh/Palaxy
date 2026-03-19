@@ -1,207 +1,252 @@
-//! Directory and file collection functionality.
+//! Directory and file collection with support for ZIP input, flat structures,
+//! and arbitrary nesting depth.
 
-use std::cmp::Ordering;
-use std::path::PathBuf;
-use std::sync::Arc;
+use std::path::{Path, PathBuf};
 
-use log::{debug, error, info, trace, warn};
+use log::{debug, info, trace, warn};
 use rayon::prelude::*;
-use tauri::async_runtime::{spawn, JoinHandle};
-use tokio::fs::{read_dir, DirEntry};
-use tokio::sync::Semaphore;
+use tempfile::TempDir;
 
 use common::prelude::*;
+use common::utils::is_image_file;
 
-use crate::constants::MAX_CONCURRENT_DIRS;
+use crate::sorting::natural_sort;
 
-/// Manages collection and organization of image files in a directory structure.
-#[derive(Debug, Clone)]
+/// Result of discovering the chapter/page structure of an input source.
+#[derive(Debug)]
+pub struct DiscoverResult {
+    /// Each inner Vec is one "chapter" — a leaf directory's sorted image paths.
+    /// For flat input, there is exactly one inner Vec.
+    pub chapters: Vec<Vec<PathBuf>>,
+    /// Non-image files encountered during scanning (for warning at analysis time).
+    pub skipped_files: Vec<PathBuf>,
+    /// Whether the input was a flat structure (images directly at root, no subdirs with images).
+    pub is_flat: bool,
+}
+
+/// Manages collection of image files from various input sources.
+///
+/// Supports directories and ZIP files. For ZIP files, extracts to a temporary
+/// directory that is kept alive as long as the Collector exists.
 pub struct Collector {
-    /// Root directory containing chapters or volumes.
+    /// Root directory to scan (either the original directory or extracted temp dir).
     base_directory: PathBuf,
+    /// Temporary directory handle for ZIP extraction. Dropped when Collector is dropped.
+    temp_dir: Option<TempDir>,
 }
 
 impl Collector {
-    /// Creates a new collector instance for the specified directory.
-    #[inline]
-    pub fn new(base_directory: &PathBuf) -> Self {
-        info!("Creating new Collector for directory: {:?}", base_directory);
-        Self {
-            base_directory: base_directory.clone(),
+    /// Creates a collector from a path, which may be a directory or ZIP file.
+    ///
+    /// If the path points to a `.zip` file, it will be extracted to a temporary
+    /// directory. The temp directory is kept alive for the lifetime of this Collector.
+    pub fn from_path(path: &Path) -> EResult<Self> {
+        if path.is_file() && Self::is_zip_file(path) {
+            info!("Source is a ZIP file, extracting: {:?}", path);
+            let (extracted_path, temp_dir) = Self::extract_zip(path)?;
+            info!("Extracted ZIP to: {:?}", extracted_path);
+            Ok(Self {
+                base_directory: extracted_path,
+                temp_dir: Some(temp_dir),
+            })
+        } else if path.is_dir() {
+            info!("Source is a directory: {:?}", path);
+            Ok(Self {
+                base_directory: path.to_path_buf(),
+                temp_dir: None,
+            })
+        } else {
+            Err(Error::InvalidPath(
+                path.to_path_buf(),
+                "Path is neither a directory nor a ZIP file".into(),
+            ))
         }
     }
 
-    /// Collects chapter directories from the base directory.
-    pub async fn collect_chapters(
-        &mut self,
-        comparator: Option<&'static (dyn Fn(&PathBuf, &PathBuf) -> Ordering + Sync)>,
-    ) -> EResult<Vec<PathBuf>> {
-        info!("Collecting chapters from {:?}", self.base_directory);
-        let mut chapters = Self::collect_parallel(&self.base_directory, true).await?;
-        debug!("Found {} potential chapter directories", chapters.len());
-
-        if let Some(comparator) = comparator {
-            debug!("Sorting chapters using custom comparator");
-            chapters.par_sort_unstable_by(comparator);
-        }
-
-        info!("Collected {} chapters", chapters.len());
-        Ok(chapters)
+    /// Takes ownership of the temp directory handle.
+    ///
+    /// After calling this, the Collector no longer owns the temp dir.
+    /// The caller is responsible for keeping the TempDir alive as needed.
+    pub fn take_temp_dir(&mut self) -> Option<TempDir> {
+        self.temp_dir.take()
     }
 
-    /// Collects page images from each chapter directory.
-    pub async fn collect_pages(
-        &self,
-        chapters: Vec<PathBuf>,
-        comparator: Option<&'static (dyn Fn(&PathBuf, &PathBuf) -> Ordering + Sync)>,
-    ) -> EResult<Vec<Vec<PathBuf>>> {
-        info!("Collecting pages from {} chapters", chapters.len());
-        let semaphore = Arc::new(Semaphore::new(MAX_CONCURRENT_DIRS));
-        debug!(
-            "Using semaphore with {} permits for concurrent operations",
-            MAX_CONCURRENT_DIRS
-        );
+    /// Returns true if this collector was created from a ZIP file.
+    pub fn is_zip_source(&self) -> bool {
+        self.temp_dir.is_some()
+    }
 
-        // Pre-allocate result vector with exact capacity
-        let chapter_count = chapters.len();
-        let pages = Arc::new(tokio::sync::Mutex::new(vec![Vec::new(); chapter_count]));
+    /// Returns the base directory being scanned.
+    pub fn base_directory(&self) -> &Path {
+        &self.base_directory
+    }
 
-        let handles: Vec<JoinHandle<EResult<()>>> = chapters
-            .into_par_iter()
-            .enumerate()
-            .map(|(index, chapter_dir)| {
-                let semaphore = Arc::clone(&semaphore);
-                let pages = Arc::clone(&pages);
-                trace!("Spawning task for chapter directory: {:?}", chapter_dir);
+    /// Discovers the complete chapter/page structure by recursively scanning
+    /// the base directory.
+    ///
+    /// The algorithm:
+    /// 1. Recursively finds all "leaf image directories" — directories that contain
+    ///    image files.
+    /// 2. If a directory has both images and subdirectories containing images,
+    ///    the loose images are treated as their own chapter.
+    /// 3. If the root contains only images (no subdirs with images), the result
+    ///    is a single chapter with `is_flat = true`.
+    /// 4. Non-image files are collected into `skipped_files` for warning reporting.
+    pub fn discover(&self) -> EResult<DiscoverResult> {
+        info!("Discovering structure in: {:?}", self.base_directory);
 
-                spawn(async move {
-                    let _permit = semaphore.acquire().await.map_err(|e| {
-                        error!("Failed to acquire semaphore: {}", e);
-                        Error::AsyncTaskError(format!("Failed to acquire semaphore: {}", e))
-                    })?;
+        let mut skipped_files = Vec::new();
+        let mut leaf_dirs = Self::find_leaf_image_dirs(&self.base_directory, &mut skipped_files)?;
 
-                    debug!("Processing chapter directory {}: {:?}", index, chapter_dir);
-                    let mut chapter_images = Self::collect_parallel(&chapter_dir, false).await?;
-                    trace!("Found {} images in chapter {}", chapter_images.len(), index);
+        if leaf_dirs.is_empty() {
+            warn!("No image files found in source");
+            return Ok(DiscoverResult {
+                chapters: Vec::new(),
+                skipped_files,
+                is_flat: false,
+            });
+        }
 
-                    if let Some(comparator) = comparator {
-                        trace!("Sorting images in chapter {}", index);
-                        chapter_images.par_sort_unstable_by(comparator);
-                    }
+        // Determine if this is a flat structure:
+        // flat = only one leaf dir and it IS the base directory
+        let is_flat = leaf_dirs.len() == 1 && leaf_dirs[0].0 == self.base_directory;
 
-                    // Update the pages vector directly
-                    pages.lock().await[index] = chapter_images;
+        // Sort chapters by directory path using natural sort
+        leaf_dirs.par_sort_unstable_by(|a, b| natural_sort_by_dir_path(&a.0, &b.0));
 
-                    Ok(())
-                })
+        // Sort images within each chapter
+        let chapters: Vec<Vec<PathBuf>> = leaf_dirs
+            .into_iter()
+            .map(|(dir_path, mut images)| {
+                debug!(
+                    "Chapter {:?}: {} images",
+                    dir_path.file_name().unwrap_or_default(),
+                    images.len()
+                );
+                images.par_sort_unstable_by(natural_sort);
+                images
             })
             .collect();
 
-        // Wait for all tasks to complete
-        for handle in handles {
-            handle
-                .await
-                .map_err(|e| Error::AsyncTaskError(e.to_string()))??;
-        }
-
-        // Extract final result
-        let result = Arc::try_unwrap(pages)
-            .map(|mutex| mutex.into_inner())
-            .unwrap_or_else(|arc| (*arc.blocking_lock()).clone());
-
-        info!("Collected pages for {} chapters", result.len());
-        Ok(result)
-    }
-
-    /// Collects directory contents in parallel with filtering options.
-    pub async fn collect_parallel(directory: &PathBuf, only_dirs: bool) -> EResult<Vec<PathBuf>> {
-        debug!(
-            "Collecting {} from directory: {:?}",
-            if only_dirs { "directories" } else { "files" },
-            directory
+        info!(
+            "Discovered {} chapters, {} skipped files, flat={}",
+            chapters.len(),
+            skipped_files.len(),
+            is_flat
         );
 
-        let mut dir_reader = match read_dir(directory).await {
-            Ok(reader) => reader,
+        Ok(DiscoverResult {
+            chapters,
+            skipped_files,
+            is_flat,
+        })
+    }
+
+    /// Recursively finds leaf directories that contain image files.
+    fn find_leaf_image_dirs(
+        dir: &Path,
+        skipped_files: &mut Vec<PathBuf>,
+    ) -> EResult<Vec<(PathBuf, Vec<PathBuf>)>> {
+        let entries: Vec<_> = match std::fs::read_dir(dir) {
+            Ok(reader) => reader
+                .filter_map(|entry| entry.ok())
+                .filter(|entry| {
+                    // Skip hidden files/directories
+                    entry
+                        .file_name()
+                        .to_str()
+                        .map(|name| !name.starts_with('.'))
+                        .unwrap_or(false)
+                })
+                .collect(),
             Err(e) => {
-                error!("Failed to read directory {:?}: {}", directory, e);
+                warn!("Failed to read directory {:?}: {}", dir, e);
                 return Err(Error::Io(e));
             }
         };
 
-        // Collect entries into a buffer to reduce async overhead
-        let mut entries = Vec::with_capacity(64); // Reasonable default capacity
+        let mut sub_dirs = Vec::new();
+        let mut image_files = Vec::new();
 
-        loop {
-            match dir_reader.next_entry().await {
-                Ok(Some(entry)) => {
-                    if let Some(path) = Self::process_entry(entry, only_dirs).await? {
-                        entries.push(path);
-                    }
-                }
-                Ok(None) => break,
-                Err(e) => {
-                    error!("Error reading entry in {:?}: {}", directory, e);
-                    return Err(Error::Io(e));
+        for entry in entries {
+            let path = entry.path();
+            let file_type = entry.file_type().map_err(Error::Io)?;
+
+            if file_type.is_dir() {
+                sub_dirs.push(path);
+            } else if file_type.is_file() {
+                if is_image_file(&path) {
+                    image_files.push(path);
+                } else {
+                    trace!("Skipping non-image file: {:?}", path);
+                    skipped_files.push(path);
                 }
             }
         }
 
-        info!("Collected {} entries from {:?}", entries.len(), directory);
-        Ok(entries)
-    }
-
-    /// Processes a single directory entry and validates it.
-    #[inline]
-    async fn process_entry(entry: DirEntry, only_dirs: bool) -> EResult<Option<PathBuf>> {
-        let path = entry.path();
-
-        // Skip hidden files (early return for better performance)
-        if let Some(file_name) = path.file_name() {
-            let name = file_name.to_string_lossy();
-            if name.starts_with('.') {
-                trace!("Skipping hidden file: {:?}", path);
-                return Ok(None);
+        // If no subdirectories, this is a leaf directory
+        if sub_dirs.is_empty() {
+            if image_files.is_empty() {
+                return Ok(Vec::new());
             }
+            return Ok(vec![(dir.to_path_buf(), image_files)]);
         }
 
-        // Apply directory/file filter
-        let metadata = entry.metadata().await.map_err(Error::Io)?;
-        let is_dir = metadata.is_dir();
+        // Recurse into subdirectories
+        let mut results = Vec::new();
+        for sub_dir in sub_dirs {
+            let sub_results = Self::find_leaf_image_dirs(&sub_dir, skipped_files)?;
+            results.extend(sub_results);
+        }
 
-        if (only_dirs && !is_dir) || (!only_dirs && is_dir) {
-            warn!(
-                "Expected {}, got {}: {:?}",
-                if only_dirs { "directory" } else { "file" },
-                if is_dir { "directory" } else { "file" },
-                path
+        // If this directory also has loose images alongside subdirs,
+        // treat those images as their own chapter
+        if !image_files.is_empty() {
+            debug!(
+                "Directory {:?} has {} loose images alongside subdirectories",
+                dir,
+                image_files.len()
             );
-            return Err(Error::InvalidPath(
-                path.clone(),
-                format!(
-                    "{} expected, got {}",
-                    if only_dirs { "Directory" } else { "File" },
-                    if is_dir { "directory" } else { "file" }
-                ),
-            ));
+            results.push((dir.to_path_buf(), image_files));
         }
 
-        trace!("Adding path: {:?}", path);
-        Ok(Some(path))
+        Ok(results)
     }
 
-    /// Filters paths based on a test condition.
-    #[inline]
-    pub fn check_path<F>(paths: &Vec<PathBuf>, test_case: F) -> EResult<Vec<PathBuf>>
-    where
-        F: Fn(&PathBuf) -> bool + Sync + Send,
-    {
-        let invalid_paths: Vec<PathBuf> = paths
-            .par_iter()
-            .filter(|path| !test_case(path))
-            .cloned()
-            .collect();
-
-        Ok(invalid_paths)
+    /// Checks if a path appears to be a ZIP file.
+    fn is_zip_file(path: &Path) -> bool {
+        path.extension()
+            .and_then(|e| e.to_str())
+            .map(|ext| ext.eq_ignore_ascii_case("zip"))
+            .unwrap_or(false)
     }
+
+    /// Extracts a ZIP file to a temporary directory.
+    fn extract_zip(zip_path: &Path) -> EResult<(PathBuf, TempDir)> {
+        let file = std::fs::File::open(zip_path).map_err(Error::Io)?;
+        let mut archive = zip::ZipArchive::new(file)?;
+
+        let temp_dir = tempfile::tempdir().map_err(Error::Io)?;
+        debug!(
+            "Extracting {} entries to {:?}",
+            archive.len(),
+            temp_dir.path()
+        );
+
+        archive.extract(temp_dir.path())?;
+
+        info!(
+            "Successfully extracted {} entries from ZIP",
+            archive.len()
+        );
+        Ok((temp_dir.path().to_path_buf(), temp_dir))
+    }
+}
+
+/// Natural sort comparison for directory paths by their name component.
+fn natural_sort_by_dir_path(a: &Path, b: &Path) -> std::cmp::Ordering {
+    let a_name = a.file_name().and_then(|s| s.to_str()).unwrap_or("");
+    let b_name = b.file_name().and_then(|s| s.to_str()).unwrap_or("");
+
+    crate::sorting::natural_sort_by_name(&PathBuf::from(a_name), &PathBuf::from(b_name))
 }

@@ -325,6 +325,16 @@ pub async fn conv_convert(
     ) {
         warn!("Failed to emit conversion complete event: {}", e);
     }
+
+    // Clean up temp directory if source was a ZIP file
+    {
+        let mut state = state.lock().await;
+        if state.temp_dir.is_some() {
+            debug!("Cleaning up temporary extraction directory");
+            state.temp_dir = None; // Dropping Arc<TempDir> triggers cleanup
+        }
+    }
+
     Ok(BaseResponse::default_duration(duration))
 }
 

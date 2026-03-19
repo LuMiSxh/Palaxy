@@ -1,8 +1,10 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use common::{BundleFlag, Direction, FileFormat, ImageOutputFormat};
 use serde::{Deserialize, Serialize};
 use specta::Type;
+use tempfile::TempDir;
 
 /// Conversion state for the application.
 #[derive(Serialize, Deserialize, Clone, Default, Type, Debug)]
@@ -37,6 +39,19 @@ pub struct ConvState {
     /// Custom separator string between project name and volume number.
     #[serde(default = "default_volume_separator")]
     pub volume_separator: String,
+    /// When true, merge all chapters into a single output volume.
+    pub flatten: bool,
+    /// Whether the input was detected as a flat structure (no chapter subdirectories).
+    #[serde(skip)]
+    pub is_flat: bool,
+    /// Non-image files found during scanning (for warning display).
+    #[serde(skip)]
+    pub skipped_files: Vec<PathBuf>,
+    /// Temp directory handle for ZIP extraction — not serialized.
+    /// Kept alive to prevent cleanup of extracted files.
+    #[serde(skip)]
+    #[specta(skip)]
+    pub temp_dir: Option<Arc<TempDir>>,
 }
 
 /// Default value for volume separator.

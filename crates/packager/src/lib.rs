@@ -17,10 +17,15 @@
 // Module declarations
 pub mod generator;
 pub mod image;
+pub mod pipeline;
 
 // Re-export commonly used items at crate root for short paths
 pub use generator::{cbz::Cbz, epub::EPub, Generator};
-pub use image::{process_images_to_memory, ProcessedPage};
+pub use image::{
+    convert_to_avif, convert_to_webp, process_images_to_memory,
+    process_images_to_memory_with_options, ProcessedPage,
+};
+pub use pipeline::{process_and_write_streaming, process_and_write_streaming_with_options};
 
 /// Prelude module for convenient imports.
 pub mod prelude {
@@ -28,7 +33,7 @@ pub mod prelude {
     pub use crate::generator::{cbz::Cbz, epub::EPub, Generator};
 
     // Image processing
-    pub use crate::image::{process_images_to_memory, ProcessedPage};
+    pub use crate::image::{convert_to_avif, convert_to_webp, process_images_to_memory, ProcessedPage};
 
     // Re-export common types from common crate
     pub use common::prelude::*;

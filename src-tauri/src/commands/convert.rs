@@ -3,7 +3,7 @@
 use crate::events::*;
 use crate::prelude::*;
 use log::{debug, error, info, trace, warn};
-use packager::{process_images_to_memory, Cbz, EPub, Generator};
+use packager::{process_and_write_streaming, process_images_to_memory, Cbz, EPub, Generator};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex as StdMutex};
@@ -166,57 +166,66 @@ pub async fn conv_convert(
 
             debug!("Volume {} has {} total images", volume_number, total_images);
 
-            // Progress tracking
+            // Progress callback
             let processed_images = Arc::new(AtomicUsize::new(0));
-            let processed_clone = Arc::clone(&processed_images);
             let app_clone = app_handle.clone();
             let vol_name_clone = volume_name.clone();
-
-            // Process images with progress callback
-            let pages = process_images_to_memory(
-                &all_images,
-                image_format,
-                Some(&|| {
-                    let current = processed_clone.fetch_add(1, Ordering::SeqCst) + 1;
+            let progress_cb: Arc<dyn Fn() + Send + Sync> = {
+                let processed = Arc::clone(&processed_images);
+                let app = app_clone.clone();
+                let vol_name = vol_name_clone.clone();
+                Arc::new(move || {
+                    let current = processed.fetch_add(1, Ordering::SeqCst) + 1;
                     if let Err(e) = emit_image_progress(
-                        &app_clone,
+                        &app,
                         vol_idx,
-                        vol_name_clone.clone(),
+                        vol_name.clone(),
                         current,
                         total_images,
                     ) {
                         trace!("Failed to emit image progress: {}", e);
                     }
-                }),
-                Some(rayon_chunk_size),
-            )
-            .ok()?;
-
-            debug!(
-                "Processed {} images for volume {}",
-                pages.len(),
-                volume_number
-            );
+                })
+            };
 
             debug!("Generating {:?} file: {}", format, volume_name);
 
             // Convert based on format
             let result = match format {
-                FileFormat::Cbz => convert_cbz_volume(
-                    &output_path_clone,
-                    &volume_name,
-                    &name_clone,
-                    volume_number,
-                    pages,
-                ),
-                FileFormat::Epub => convert_epub_volume(
-                    &output_path_clone,
-                    &volume_name,
-                    &name_clone,
-                    volume_number,
-                    direction,
-                    pages,
-                ),
+                FileFormat::Cbz => {
+                    // Streaming pipeline: encode + write overlap, bounded memory
+                    convert_cbz_volume_streaming(
+                        &output_path_clone,
+                        &volume_name,
+                        &name_clone,
+                        volume_number,
+                        &all_images,
+                        image_format,
+                        progress_cb,
+                    )
+                }
+                FileFormat::Epub => {
+                    // EPUB needs all pages in memory (epub-builder API)
+                    let cb = {
+                        let progress = Arc::clone(&progress_cb);
+                        move || progress()
+                    };
+                    let pages = process_images_to_memory(
+                        &all_images,
+                        image_format,
+                        Some(&cb),
+                        Some(rayon_chunk_size),
+                    )
+                    .ok()?;
+                    convert_epub_volume(
+                        &output_path_clone,
+                        &volume_name,
+                        &name_clone,
+                        volume_number,
+                        direction,
+                        pages,
+                    )
+                }
             };
 
             match result {
@@ -338,31 +347,30 @@ pub async fn conv_convert(
     Ok(BaseResponse::default_duration(duration))
 }
 
-fn convert_cbz_volume(
+fn convert_cbz_volume_streaming(
     output_path: &str,
     filename: &str,
     title: &str,
     volume_number: usize,
-    pages: Vec<packager::ProcessedPage>,
+    images: &[PathBuf],
+    image_format: ImageOutputFormat,
+    on_progress: Arc<dyn Fn() + Send + Sync>,
 ) -> EResult<()> {
     debug!(
-        "Creating CBZ: path={}, filename={}, volume={}",
-        output_path, filename, volume_number
+        "Creating CBZ (streaming): path={}, filename={}, volume={}, images={}",
+        output_path, filename, volume_number, images.len()
     );
 
     let mut cbz = Cbz::new(output_path, filename)?;
 
-    debug!("Adding {} pages to CBZ", pages.len());
-    for page in pages {
-        cbz.add_page_from_memory(&page.data, &page.extension)?;
-    }
+    process_and_write_streaming(images, image_format, &mut cbz, Some(on_progress), 8)?;
 
     cbz.set_metadata(title, volume_number)?;
 
     debug!("Saving CBZ file");
     cbz.save()?;
 
-    info!("CBZ volume {} created successfully", volume_number);
+    info!("CBZ volume {} created successfully (streaming)", volume_number);
     Ok(())
 }
 

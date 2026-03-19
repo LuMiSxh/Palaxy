@@ -1,0 +1,15 @@
+[package]
+name = "bench"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "bench"
+path = "src/main.rs"
+
+[dependencies]
+packager.workspace = true
+common.workspace = true
+image.workspace = true
+rayon.workspace = true
+tempfile = "3"

@@ -27,6 +27,7 @@ num_cpus = "1.16"
 regex = "1.11"
 lazy_static = "1.5"
 zip = "6.0"
+crossbeam-channel = "0.5"
 epub-builder = "0.8"
 tempfile = "3"
 # ---

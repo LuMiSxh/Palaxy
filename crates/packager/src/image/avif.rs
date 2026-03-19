@@ -100,10 +100,13 @@ pub fn convert_to_avif(img: &image::DynamicImage) -> Result<Vec<u8>, Error> {
 
     let img_ref = Img::new(rgb_slice, width, height);
 
+    // Single-threaded per encode: rayon handles parallelism across images.
+    // Without this, rav1e spawns N threads per encode × M rayon workers = thread explosion.
     let encoder = Encoder::new()
         .with_quality(quality)
         .with_speed(speed)
-        .with_alpha_quality(AVIF_ALPHA_QUALITY);
+        .with_alpha_quality(AVIF_ALPHA_QUALITY)
+        .with_num_threads(Some(1));
 
     let encoded = encoder.encode_rgb(img_ref).map_err(|e| {
         error!("AVIF encoding failed: {}", e);

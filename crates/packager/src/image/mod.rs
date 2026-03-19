@@ -4,7 +4,9 @@ mod avif;
 mod constants;
 mod webp;
 
+pub use avif::convert_to_avif;
 pub use constants::*;
+pub use webp::convert_to_webp;
 
 use common::prelude::*;
 use log::trace;
@@ -46,6 +48,23 @@ pub fn process_images_to_memory<F>(
 where
     F: Fn() + Sync + Send,
 {
+    process_images_to_memory_with_options(images, format, on_progress, rayon_chunk_size, None)
+}
+
+/// Batch converts images with full control over options including downscaling.
+///
+/// # Arguments
+/// * `max_dimension` - Optional max width/height. Images exceeding this are downscaled preserving aspect ratio.
+pub fn process_images_to_memory_with_options<F>(
+    images: &[PathBuf],
+    format: ImageOutputFormat,
+    on_progress: Option<&F>,
+    rayon_chunk_size: Option<usize>,
+    max_dimension: Option<u32>,
+) -> Result<Vec<ProcessedPage>, Error>
+where
+    F: Fn() + Sync + Send,
+{
     let num_threads = rayon::current_num_threads();
 
     // Calculate optimal chunk size for work distribution
@@ -63,7 +82,7 @@ where
         .with_min_len(chunk_size)
         .map(|img_path| {
             // Process single image
-            let result = process_single_image(img_path, format);
+            let result = process_single_image(img_path, format, max_dimension);
 
             // Trigger progress callback
             if let Some(cb) = on_progress {
@@ -78,15 +97,21 @@ where
 }
 
 /// Processes single image with passthrough or format conversion.
-fn process_single_image(path: &PathBuf, format: ImageOutputFormat) -> Result<ProcessedPage, Error> {
+///
+/// # Arguments
+/// * `max_dimension` - Optional max width/height. Images exceeding this are downscaled.
+pub(crate) fn process_single_image(
+    path: &PathBuf,
+    format: ImageOutputFormat,
+    max_dimension: Option<u32>,
+) -> Result<ProcessedPage, Error> {
     // Check if source format matches target format first (before file I/O)
     let source_ext = path.extension().and_then(|e| e.to_str()).unwrap_or("jpg");
 
     // Handle "None" (Original/Passthrough) case - fastest path
     if format == ImageOutputFormat::None {
-        let file = File::open(path).map_err(Error::from)?;
-        let mmap = unsafe { Mmap::map(&file).map_err(Error::from)? };
-        return Ok(ProcessedPage::new(mmap.to_vec(), source_ext));
+        let data = std::fs::read(path).map_err(Error::from)?;
+        return Ok(ProcessedPage::new(data, source_ext));
     }
 
     // Determine target extension
@@ -96,21 +121,36 @@ fn process_single_image(path: &PathBuf, format: ImageOutputFormat) -> Result<Pro
         ImageOutputFormat::None => unreachable!(),
     };
 
-    // Skip conversion if source already matches target
-    if source_ext.eq_ignore_ascii_case(target_ext) {
+    // Skip conversion if source already matches target and no downscaling needed
+    if source_ext.eq_ignore_ascii_case(target_ext) && max_dimension.is_none() {
         trace!(
             "Source matches target format ({}), skipping conversion",
             source_ext
         );
-        let file = File::open(path).map_err(Error::from)?;
-        let mmap = unsafe { Mmap::map(&file).map_err(Error::from)? };
-        return Ok(ProcessedPage::new(mmap.to_vec(), target_ext));
+        let data = std::fs::read(path).map_err(Error::from)?;
+        return Ok(ProcessedPage::new(data, target_ext));
     }
 
     // Load and convert image
     let file = File::open(path).map_err(Error::from)?;
     let mmap = unsafe { Mmap::map(&file).map_err(Error::from)? };
-    let img = image::load_from_memory(&mmap).map_err(Error::from)?;
+    let mut img = image::load_from_memory(&mmap).map_err(Error::from)?;
+
+    // Optional downscaling
+    if let Some(max_dim) = max_dimension {
+        let w = img.width();
+        let h = img.height();
+        if w > max_dim || h > max_dim {
+            let scale = max_dim as f64 / w.max(h) as f64;
+            let new_w = (w as f64 * scale) as u32;
+            let new_h = (h as f64 * scale) as u32;
+            trace!(
+                "Downscaling {}x{} -> {}x{} (max_dim={})",
+                w, h, new_w, new_h, max_dim
+            );
+            img = img.resize(new_w, new_h, image::imageops::FilterType::Lanczos3);
+        }
+    }
 
     // Perform conversion with auto-tuned parameters
     let data = match format {

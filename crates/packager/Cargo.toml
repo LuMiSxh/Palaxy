@@ -10,6 +10,7 @@ rayon.workspace = true
 log.workspace = true
 zip.workspace = true
 epub-builder.workspace = true
+crossbeam-channel.workspace = true
 memmap2 = "0.9"
 ravif = "0.12"
 webp = "0.3"

@@ -148,21 +148,34 @@ fn generate_grayscale_image(width: u32, height: u32) -> DynamicImage {
     DynamicImage::ImageRgb8(img)
 }
 
-/// Generates a color image with random colored rectangles.
+/// Generates a color image with dense colored content (comparable complexity to grayscale).
+/// Fills the entire image with varied color regions, gradients, and detail patterns
+/// to produce a realistic encoding workload.
 fn generate_color_image(width: u32, height: u32) -> DynamicImage {
-    let mut img: RgbImage = ImageBuffer::from_pixel(width, height, Rgb([240, 235, 220]));
+    let mut img: RgbImage = ImageBuffer::new(width, height);
 
     let mut seed: u64 = (width as u64) * 53 + (height as u64) * 37;
 
-    for _ in 0..15 {
+    // Fill background with a color gradient (not uniform)
+    for y in 0..height {
+        for x in 0..width {
+            let r = ((x * 200 / width) + 30) as u8;
+            let g = ((y * 180 / height) + 40) as u8;
+            let b = (((x + y) * 150 / (width + height)) + 50) as u8;
+            img.put_pixel(x, y, Rgb([r, g, b]));
+        }
+    }
+
+    // Overlay many colored rectangles (dense coverage)
+    for _ in 0..40 {
         seed = lcg(seed);
         let x1 = (seed % width as u64) as u32;
         seed = lcg(seed);
         let y1 = (seed % height as u64) as u32;
         seed = lcg(seed);
-        let w = (seed % (width as u64 / 2)).max(30) as u32;
+        let w = (seed % (width as u64 / 3)).max(20) as u32;
         seed = lcg(seed);
-        let h = (seed % (height as u64 / 2)).max(30) as u32;
+        let h = (seed % (height as u64 / 3)).max(20) as u32;
         seed = lcg(seed);
         let r = (seed % 256) as u8;
         seed = lcg(seed);
@@ -173,6 +186,27 @@ fn generate_color_image(width: u32, height: u32) -> DynamicImage {
         for y in y1..y1.saturating_add(h).min(height) {
             for x in x1..x1.saturating_add(w).min(width) {
                 img.put_pixel(x, y, Rgb([r, g, b]));
+            }
+        }
+    }
+
+    // Add colored lines (simulating detail/texture)
+    for i in 0..30 {
+        seed = lcg(seed);
+        let y = (seed % height as u64) as u32;
+        seed = lcg(seed);
+        let r = (seed % 200) as u8;
+        seed = lcg(seed);
+        let g = (seed % 200) as u8;
+        seed = lcg(seed);
+        let b = (seed % 200) as u8;
+        let thickness = ((seed % 3) + 1) as u32;
+        for dy in 0..thickness {
+            let yy = y.saturating_add(dy).min(height - 1);
+            for x in 0..width {
+                if (x + i) % 3 != 0 {
+                    img.put_pixel(x, yy, Rgb([r, g, b]));
+                }
             }
         }
     }

@@ -358,7 +358,7 @@ fn validate_permissions(chapter_dirs: &[PathBuf], pages: &[&PathBuf]) -> Validat
     trace!("Checking file and directory permissions");
     let mut findings = ValidationFindings::new();
 
-    fn has_perms(path: &PathBuf) -> bool {
+    fn has_perms(path: &std::path::Path) -> bool {
         path.metadata()
             .map(|meta| !meta.permissions().readonly())
             .unwrap_or(false)

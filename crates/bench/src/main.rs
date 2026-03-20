@@ -9,7 +9,7 @@ use packager::{
     process_and_write_streaming, process_images_to_memory,
     process_images_to_memory_with_options, Cbz, Generator,
 };
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 use tempfile::TempDir;
 
@@ -235,12 +235,12 @@ impl BenchResult {
 }
 
 fn bench_format_with_downscale(
-    path: &PathBuf,
+    path: &Path,
     format: ImageOutputFormat,
     iterations: usize,
     max_dimension: Option<u32>,
 ) -> BenchResult {
-    let paths = [path.clone()];
+    let paths = [path.to_path_buf()];
     let mut times = Vec::with_capacity(iterations);
     let mut output_size = 0;
 
@@ -257,8 +257,8 @@ fn bench_format_with_downscale(
     BenchResult { times, output_size }
 }
 
-fn bench_format(path: &PathBuf, format: ImageOutputFormat, iterations: usize) -> BenchResult {
-    let paths = [path.clone()];
+fn bench_format(path: &Path, format: ImageOutputFormat, iterations: usize) -> BenchResult {
+    let paths = [path.to_path_buf()];
     let mut times = Vec::with_capacity(iterations);
     let mut output_size = 0;
 

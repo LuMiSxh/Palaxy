@@ -3,6 +3,10 @@
 //! This module implements a 5-tier adaptive encoding system optimized for
 //! both conversion speed AND file size. The algorithm analyzes image dimensions
 //! to select optimal quality and speed parameters based on encoder characteristics.
+//!
+//! For grayscale images (typical manga pages), a specialized encoding path feeds
+//! the luma channel as Y with neutral chroma (Cb=Cr=128), allowing the encoder
+//! to compress chroma planes to near-zero overhead.
 
 use super::constants::*;
 use common::prelude::*;
@@ -28,13 +32,16 @@ pub fn auto_tune_avif_params(img: &image::DynamicImage, is_grayscale: bool) -> (
         (AVIF_QUALITY_HUGE, AVIF_SPEED_HUGE)
     };
 
-    // Optimization: Grayscale images are easier to encode.
-    // We can increase speed and slightly lower quality without visual loss.
+    // Optimization: Grayscale manga compresses exceptionally well.
+    // We can lower quality significantly and reduce speed for better compression
+    // without visible artifacts on line art / grayscale content.
     if is_grayscale {
-        // Boost speed by 1 (max 10)
-        speed = (speed + 1).min(10);
-        // Grayscale artifacts are less visible, so we can shave off a bit of quality for size
-        quality = (quality - 2.0).max(60.0);
+        // Lower speed = slower encoding but better compression ratio.
+        // Worth it for grayscale since the content is simpler.
+        speed = speed.saturating_sub(1).max(6);
+        // Grayscale line art is very resilient to quality reduction.
+        // -5 quality saves significant space with no visible loss on manga.
+        quality = (quality - AVIF_GRAYSCALE_QUALITY_REDUCTION).max(55.0);
     }
 
     trace!(
@@ -66,8 +73,6 @@ fn size_tier_name(pixel_count: u64) -> &'static str {
 }
 
 pub fn convert_to_avif(img: &image::DynamicImage) -> Result<Vec<u8>, Error> {
-    use ravif::{Encoder, Img, RGB8};
-
     let width = img.width() as usize;
     let height = img.height() as usize;
 
@@ -88,6 +93,65 @@ pub fn convert_to_avif(img: &image::DynamicImage) -> Result<Vec<u8>, Error> {
         is_grayscale
     );
 
+    // Single-threaded per encode: rayon handles parallelism across images.
+    // Without this, rav1e spawns N threads per encode × M rayon workers = thread explosion.
+    let encoder = ravif::Encoder::new()
+        .with_quality(quality)
+        .with_speed(speed)
+        .with_alpha_quality(AVIF_ALPHA_QUALITY)
+        .with_num_threads(Some(1));
+
+    if is_grayscale {
+        // Grayscale optimization: Feed luma as Y with neutral chroma (Cb=Cr=128).
+        // The encoder compresses the constant chroma planes to near-zero,
+        // producing significantly smaller files than encoding as RGB.
+        encode_grayscale_avif(&encoder, img, width, height)
+    } else {
+        encode_color_avif(&encoder, img, width, height)
+    }
+}
+
+/// Encodes a grayscale image using raw YCbCr planes with neutral chroma.
+/// The constant Cb/Cr=128 planes compress to near-zero overhead.
+fn encode_grayscale_avif(
+    encoder: &ravif::Encoder,
+    img: &image::DynamicImage,
+    width: usize,
+    height: usize,
+) -> Result<Vec<u8>, Error> {
+    // Extract luma channel directly — avoids full RGB conversion
+    let luma = img.to_luma8();
+    let luma_bytes = luma.as_raw();
+
+    // Feed as YCbCr: Y=luma, Cb=128, Cr=128 (neutral chroma)
+    let planes = luma_bytes.iter().map(|&y| [y, 128u8, 128u8]);
+
+    let encoded = encoder
+        .encode_raw_planes_8_bit(
+            width,
+            height,
+            planes,
+            None::<[u8; 0]>,
+            rav1e::prelude::PixelRange::Full,
+            ravif::MatrixCoefficients::BT601,
+        )
+        .map_err(|e| {
+            error!("AVIF grayscale encoding failed: {}", e);
+            Error::Unsupported(format!("AVIF encoding failed: {}", e))
+        })?;
+
+    Ok(encoded.avif_file)
+}
+
+/// Encodes a color image using the standard RGB path.
+fn encode_color_avif(
+    encoder: &ravif::Encoder,
+    img: &image::DynamicImage,
+    width: usize,
+    height: usize,
+) -> Result<Vec<u8>, Error> {
+    use ravif::{Img, RGB8};
+
     let rgb_cow = if let Some(rgb_ref) = img.as_rgb8() {
         std::borrow::Cow::Borrowed(rgb_ref)
     } else {
@@ -99,14 +163,6 @@ pub fn convert_to_avif(img: &image::DynamicImage) -> Result<Vec<u8>, Error> {
     };
 
     let img_ref = Img::new(rgb_slice, width, height);
-
-    // Single-threaded per encode: rayon handles parallelism across images.
-    // Without this, rav1e spawns N threads per encode × M rayon workers = thread explosion.
-    let encoder = Encoder::new()
-        .with_quality(quality)
-        .with_speed(speed)
-        .with_alpha_quality(AVIF_ALPHA_QUALITY)
-        .with_num_threads(Some(1));
 
     let encoded = encoder.encode_rgb(img_ref).map_err(|e| {
         error!("AVIF encoding failed: {}", e);

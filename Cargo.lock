@@ -3172,6 +3172,7 @@ dependencies = [
  "image",
  "log",
  "memmap2",
+ "rav1e",
  "ravif",
  "rayon",
  "webp",

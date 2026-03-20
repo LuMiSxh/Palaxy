@@ -26,11 +26,11 @@ pub fn auto_tune_webp_params(img: &image::DynamicImage, is_grayscale: bool) -> (
         (WEBP_QUALITY_HUGE, WEBP_METHOD_LARGE)
     };
 
-    // Optimization for grayscale
+    // Optimization for grayscale manga content.
+    // Grayscale line art compresses extremely well — we can lower quality
+    // significantly without visible artifacts.
     if is_grayscale {
-        // Grayscale compresses very well, we can slightly lower quality to save space
-        // without visible artifacts
-        quality = (quality - 2.0).max(60.0);
+        quality = (quality - WEBP_GRAYSCALE_QUALITY_REDUCTION).max(60.0);
     }
 
     trace!(

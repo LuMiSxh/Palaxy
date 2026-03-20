@@ -13,4 +13,5 @@ epub-builder.workspace = true
 crossbeam-channel.workspace = true
 memmap2 = "0.9"
 ravif = "0.12"
+rav1e = { version = "0.8", default-features = false }
 webp = "0.3"

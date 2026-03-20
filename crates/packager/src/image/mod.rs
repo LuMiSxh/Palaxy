@@ -71,9 +71,7 @@ where
     // Target: 3x chunks per thread for good load balancing
     let chunk_size = rayon_chunk_size.unwrap_or_else(|| {
         let target_chunks = num_threads * 3;
-        (images.len() / target_chunks)
-            .max(MIN_PARALLEL_CHUNK_SIZE)
-            .min(32)
+        (images.len() / target_chunks).clamp(MIN_PARALLEL_CHUNK_SIZE, 32)
     });
 
     // Pre-allocate result vector to avoid reallocations

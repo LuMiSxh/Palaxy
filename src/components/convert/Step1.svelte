@@ -6,12 +6,7 @@
 	import converter from '$states/converter.svelte';
 	import convState from '$states/converter.svelte';
 	import { truncatePath, wrapper } from '$lib/utils';
-	import {
-		IconFolder,
-		IconFolderOpen,
-		IconCheck,
-		IconFileZip,
-	} from '@tabler/icons-svelte';
+	import { IconFolder, IconFolderOpen, IconCheck, IconFileZip } from '@tabler/icons-svelte';
 
 	import { keyboard } from '$lib/keyboard';
 	import { VStack, HStack, BentoGrid, BentoItem } from 'waku/layout';
@@ -46,15 +41,15 @@
 		evt?.stopPropagation();
 		evt?.preventDefault();
 
-		convState.source =
-			(await open({
-				directory: true,
-				multiple: false,
-			})) ?? '';
+		const selected = await open({
+			directory: true,
+			multiple: false,
+		});
 
-		if (converter.source !== null) {
+		if (selected !== null) {
+			convState.source = selected;
 			isZipSource = false;
-			await wrapper(commands.convStateSet({ Source: convState.source ?? '' }));
+			await wrapper(commands.convStateSet({ Source: selected }));
 		}
 	}
 
@@ -62,16 +57,16 @@
 		evt?.stopPropagation();
 		evt?.preventDefault();
 
-		convState.source =
-			(await open({
-				directory: false,
-				multiple: false,
-				filters: [{ name: 'ZIP Archive', extensions: ['zip'] }],
-			})) ?? '';
+		const selected = await open({
+			directory: false,
+			multiple: false,
+			filters: [{ name: 'ZIP Archive', extensions: ['zip'] }],
+		});
 
-		if (converter.source !== null) {
+		if (selected !== null) {
+			convState.source = selected;
 			isZipSource = true;
-			await wrapper(commands.convStateSet({ Source: convState.source ?? '' }));
+			await wrapper(commands.convStateSet({ Source: selected }));
 		}
 	}
 </script>

@@ -14,7 +14,10 @@
 	let name = $state(
 		convState.name === ''
 			? convState.source
-				? (convState.source.split('/').pop() ?? '')
+				? (convState.source
+						.split('/')
+						.pop()
+						?.replace(/\.[^/.]+$/, '') ?? '')
 				: ''
 			: (convState.name ?? ''),
 	);

@@ -1,12 +1,9 @@
 [workspace]
-members = [
-    "src-tauri",
-    "crates/*",
-]
+members = ["src-tauri", "crates/*"]
 resolver = "2"
 
 [workspace.package]
-version = "0.5.0"
+version = "0.5.1"
 authors = ["LuMiSxh"]
 edition = "2021"
 license = "MIT"
@@ -14,19 +11,24 @@ license = "MIT"
 [workspace.dependencies]
 serde = { version = "1", features = ["derive"] }
 thiserror = "2.0"
-tokio = { version = "1.43", features = ["full"] }
+tokio = { version = "1.51", features = ["full"] }
 log = "0.4"
 specta = "=2.0.0-rc.22"
 tauri-specta = { version = "=2.0.0-rc.21", features = ["derive", "typescript"] }
-tauri = { version = "2.9", features = ["protocol-asset"] }
+tauri = { version = "2.10", features = ["protocol-asset"] }
 # ---
-image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "avif"] }
-rayon = "1.10"
-sysinfo = "0.37"
-num_cpus = "1.16"
-regex = "1.11"
+image = { version = "0.25", default-features = false, features = [
+    "jpeg",
+    "png",
+    "webp",
+    "avif",
+] }
+rayon = "1.12"
+sysinfo = "0.38"
+num_cpus = "1.17"
+regex = "1.12"
 lazy_static = "1.5"
-zip = "6.0"
+zip = "8.5"
 crossbeam-channel = "0.5"
 epub-builder = "0.8"
 tempfile = "3"

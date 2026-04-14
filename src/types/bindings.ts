@@ -58,19 +58,10 @@ async convStateReset() : Promise<Result<BaseResponse<null>, Error>> {
 }
 },
 /**
- * Analyzes the source directory structure for conversion preparation.
+ * Analyzes the source structure for conversion preparation.
  * 
- * Performs comprehensive validation and analysis of the source directory:
- * - Checks for proper directory structure and naming conventions
- * - Validates file formats and permissions
- * - Detects potential issues with file sizes, naming, and special characters
- * - Provides guidance on optimal bundling approaches
- * 
- * # Arguments
- * * `state` - Application state containing conversion parameters
- * 
- * # Returns
- * * `EResult<CommAnalyzeMeta>` - Analysis results with positive findings, warnings, and errors
+ * Supports both directories and ZIP files. Performs validation of structure,
+ * naming conventions, file formats, permissions, and provides bundling recommendations.
  */
 async convAnalyze() : Promise<Result<BaseResponse<AnalyzeResponse>, Error>> {
     try {
@@ -83,18 +74,12 @@ async convAnalyze() : Promise<Result<BaseResponse<AnalyzeResponse>, Error>> {
 /**
  * Bundles chapters into volumes based on directory structure or image analysis.
  * 
- * This function collects all chapters, sorts them according to the bundling strategy,
- * and organizes them into volumes. The strategy depends on the `bundle_flag`:
- * - `Manual`: Basic sorting by numeric values in filenames
- * - `Name`: Intelligent sorting using volume-chapter naming conventions
- * - `Image`: Advanced sorting using grayscale detection to identify volume boundaries
+ * Uses the new `Collector::discover()` API that supports ZIP input, flat structures,
+ * and arbitrary nesting depth. Sorts using `natural_sort` by default.
  * 
  * # Arguments
  * * `sensibility` - Optional sensitivity parameter for image analysis (0-100)
  * * `state` - Application state containing conversion parameters
- * 
- * # Returns
- * * `EResult<CommBundle>` - Bundle information including chapter counts and volume distribution
  */
 async convBundle(sensibility: number | null) : Promise<Result<BaseResponse<BundleResponse>, Error>> {
     try {
@@ -120,23 +105,6 @@ async convBundle(sensibility: number | null) : Promise<Result<BaseResponse<Bundl
 async convConvert() : Promise<Result<BaseResponse<null>, Error>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("conv_convert") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-/**
- * Retrieves the path to the application log files.
- * 
- * # Arguments
- * * `app_handle` - Tauri application handle
- * 
- * # Returns
- * * `EResult<BaseResponse<LogPath>>` - Path information for log files
- */
-async mgmtGetLogsPath() : Promise<Result<BaseResponse<LogPath>, Error>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("mgmt_get_logs_path") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -244,9 +212,9 @@ hide_single_volume_number: boolean;
 /**
  * Custom separator string between project name and volume number.
  */
-volume_separator?: string;
+volume_separator?: string; 
 /**
- * Whether to flatten all chapters into a single volume.
+ * When true, merge all chapters into a single output volume.
  */
 flatten: boolean }
 /**
@@ -317,18 +285,6 @@ export type ImageOutputFormat = "None" | "WebP" | "AVIF"
  * Emitted periodically to show image processing progress
  */
 export type ImageProgressEvent = { volume_index: number; volume_name: string; current_image: number; total_images: number }
-/**
- * Path information for application log files.
- */
-export type LogPath = { 
-/**
- * Directory where log files are stored.
- */
-directory: string; 
-/**
- * Full path to the main log file.
- */
-file: string }
 /**
  * Emitted for live status updates during conversion
  */

@@ -13,6 +13,10 @@ Convert your manga directories into CBZ or EPUB formats with intelligent auto-de
 
 </div>
 
+> [!WARNING]
+> **Deprecation Notice (As of May 23, 2026)**
+> Palaxy is no longer actively maintained. Please use its successor, **[Thasia](https://github.com/LuMiSxh/Thasia)**, which is now the recommended tool for this workflow.
+
 ---
 
 ## Features
